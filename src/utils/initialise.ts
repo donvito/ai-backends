@@ -5,7 +5,7 @@ import { cors } from 'hono/cors'
 
 function initialise(): OpenAPIHono {
 
-    const openaApiHono = new OpenAPIHono()
+    const openApiHono = new OpenAPIHono()
 
     let token: string | undefined = undefined;
     try {
@@ -16,7 +16,7 @@ function initialise(): OpenAPIHono {
     }
 
     // Add CORS middleware
-    openaApiHono.use('/*', cors({
+    openApiHono.use('/*', cors({
         origin: (origin) => {
             // Allow requests from webcontainer-api.io domains
             if (origin && origin.match(/.*\.local-credentialless\.webcontainer-api\.io$/)) {
@@ -31,9 +31,9 @@ function initialise(): OpenAPIHono {
         credentials: true,
     }))
 
-    configureApiSecurity(openaApiHono, token);
+    configureApiSecurity(openApiHono, token);
 
-    return openaApiHono
+    return openApiHono
 }
 
 function configureToken(): string {
