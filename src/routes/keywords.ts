@@ -1,14 +1,20 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
 import { Context } from 'hono'
-import { generateResponse } from '../services/openai'
+import { generateResponse, OpenAIError } from '../services/openai'
 import { keywordsPrompt } from '../utils/prompts'
-import { handleError, handleValidationError } from '../utils/errorHandler'
+import { handleError, handleValidationError, APIError } from '../utils/errorHandler'
 import { keywordsRequestSchema } from '../schemas/keywords'
+import { usageSchema } from '../schemas/responses'
 
 const router = new OpenAPIHono()
 
 const responseSchema = z.object({
-  keywords: z.array(z.string()).describe('List of keywords extracted from the text')  
+  keywords: z.array(z.string()).describe('List of keywords extracted from the text'),
+  usage: usageSchema
+})
+
+const keywordsOutputSchema = z.object({
+  keywords: z.array(z.string())
 })
 
 /**
@@ -16,19 +22,22 @@ const responseSchema = z.object({
  */
 async function handleKeywordsRequest(c: Context) {
   try {
-    const { text, maxKeywords } = await c.req.json()
+    const body = await c.req.json()
+    const validatedBody = keywordsRequestSchema.parse(body)
+    const { text, maxKeywords } = validatedBody
 
-    if (!text) {
-      return handleValidationError(c, 'Text')
-    }
+    // Generate the prompt with instructions for JSON output
+    const prompt = `${keywordsPrompt(text, maxKeywords)}
 
-    // Generate the prompt
-    const prompt = keywordsPrompt(text, maxKeywords)
+Please respond with a JSON object in this format:
+{
+  "keywords": ["keyword1", "keyword2", "keyword3"]
+}`
 
     // Get response using our service
     const { data, usage } = await generateResponse(
       prompt,
-      responseSchema
+      keywordsOutputSchema
     )
 
     return c.json({ 
@@ -36,13 +45,19 @@ async function handleKeywordsRequest(c: Context) {
       usage
     }, 200)
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return handleValidationError(c, 'Invalid request body')
+    }
+    if (error instanceof OpenAIError) {
+      return handleError(c, new APIError(error.message, error.statusCode, 'OPENAI_ERROR'))
+    }
     return handleError(c, error, 'Failed to extract keywords from text')
   }
 } 
 
 router.openapi(
   createRoute({
-    path: '/',  // Changed from /keywords since we'll mount at /api/keywords
+    path: '/',
     method: 'post',
     request: {
       body: {
@@ -61,13 +76,20 @@ router.openapi(
             schema: responseSchema
           }
         }
+      },
+      400: {
+        description: 'Bad request - validation error'
+      },
+      500: {
+        description: 'Internal server error'
       }
-    }
+    },
+    tags: ['Text Processing']
   }), 
-  handleKeywordsRequest as any
+  handleKeywordsRequest
 )  
 
 export default {
   handler: router,
-  mountPath: 'keywords'  // This will be mounted at /api/keywords
+  mountPath: 'keywords'
 } 

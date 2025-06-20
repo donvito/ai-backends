@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { usageSchema } from './responses'
 
 /**
  * Body sent by the client for tweet creation.
@@ -14,11 +15,7 @@ export const tweetResponseSchema = z.object({
   tweet: z.string().describe('The generated tweet content'),
   characterCount: z.number().describe('Number of characters in the tweet'),
   author: z.string().describe('The author signature of the tweet'),
-  usage: z.object({
-    input_tokens: z.number(),
-    output_tokens: z.number(),
-    total_tokens: z.number(),
-  }).optional(),
+  usage: usageSchema,
 })
 
 export type TweetReq = z.infer<typeof tweetRequestSchema>

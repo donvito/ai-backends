@@ -4,7 +4,6 @@ import { secureHeaders } from 'hono/secure-headers'
 import { cors } from 'hono/cors'
 
 function initialise(): OpenAPIHono {
-
     const openaApiHono = new OpenAPIHono()
 
     let token: string | undefined = undefined;
@@ -45,10 +44,9 @@ function configureToken(): string {
 }
 
 function configureApiSecurity(app: OpenAPIHono, token: string) {
-
     const devMode = process.env.NODE_ENV === 'development'
-    console.log('process.env.NODE_ENV', process.env.NODE_ENV)
-    console.log('devMode', devMode)
+    console.log('NODE_ENV:', process.env.NODE_ENV)
+    console.log('Development mode:', devMode)
 
     if (!devMode) {
         app.use(secureHeaders())
@@ -64,7 +62,6 @@ function configureApiSecurity(app: OpenAPIHono, token: string) {
         })
 
         // API Key Middleware
-        // We should also document this security scheme
         app.openAPIRegistry.registerComponent(
             'securitySchemes',
             'ApiKeyAuth',
