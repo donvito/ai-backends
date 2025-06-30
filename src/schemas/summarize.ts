@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { usageSchema } from './responses'
 
 /**
  * Body sent by the client.
@@ -10,16 +11,10 @@ export const summarizeRequestSchema = z.object({
 
 /**
  * Successful response returned to the client.
- * (Feel free to expand the `usage` object with any extra fields
- * you surface from OpenAI.)
  */
 export const summarizeResponseSchema = z.object({
   summary: z.string(),
-  usage: z.object({
-    promptTokens: z.number(),
-    completionTokens: z.number(),
-    totalTokens: z.number(),
-  }),
+  usage: usageSchema,
 })
 
 export type SummarizeReq = z.infer<typeof summarizeRequestSchema>

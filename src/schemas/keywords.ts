@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { usageSchema } from './responses'
 
 /**
  * Body sent by the client.
@@ -13,11 +14,7 @@ export const keywordsRequestSchema = z.object({
  */
 export const keywordsResponseSchema = z.object({
   keywords: z.array(z.string()),
-  usage: z.object({
-    promptTokens: z.number(),
-    completionTokens: z.number(),
-    totalTokens: z.number(),
-  }),
+  usage: usageSchema,
 })
 
 export type KeywordsReq = z.infer<typeof keywordsRequestSchema>

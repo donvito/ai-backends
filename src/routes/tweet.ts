@@ -1,7 +1,7 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
 import { Context } from 'hono'
-import { generateTweet } from '../services/openai'
-import { handleError, handleValidationError } from '../utils/errorHandler'
+import { generateTweet, OpenAIError } from '../services/openai'
+import { handleError, handleValidationError, APIError } from '../utils/errorHandler'
 import { tweetRequestSchema, tweetResponseSchema } from '../schemas/tweet'
 
 const router = new OpenAPIHono()
@@ -11,11 +11,9 @@ const router = new OpenAPIHono()
  */
 async function handleTweetRequest(c: Context) {
   try {
-    const { topic } = await c.req.json()
-
-    if (!topic) {
-      return handleValidationError(c, 'Topic')
-    }
+    const body = await c.req.json()
+    const validatedBody = tweetRequestSchema.parse(body)
+    const { topic } = validatedBody
 
     // Generate the tweet using our service
     const { tweet, characterCount, author, usage } = await generateTweet(topic)
@@ -27,6 +25,12 @@ async function handleTweetRequest(c: Context) {
       usage
     }, 200)
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return handleValidationError(c, 'Invalid request body')
+    }
+    if (error instanceof OpenAIError) {
+      return handleError(c, new APIError(error.message, error.statusCode, 'OPENAI_ERROR'))
+    }
     return handleError(c, error, 'Failed to generate tweet')
   }
 } 
@@ -52,11 +56,17 @@ router.openapi(
             schema: tweetResponseSchema
           }
         }
+      },
+      400: {
+        description: 'Bad request - validation error'
+      },
+      500: {
+        description: 'Internal server error'
       }
     },
-    tags: ['Tweet'], // Group in Swagger UI
+    tags: ['Content Generation']
   }), 
-  handleTweetRequest as any
+  handleTweetRequest
 )  
 
 export default {
