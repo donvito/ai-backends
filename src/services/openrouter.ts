@@ -20,16 +20,7 @@ export async function generateChatStructuredResponse<T extends z.ZodType>(
       temperature,
     });
 
-    return {
-      object: result.object,
-      finishReason: result.finishReason,
-      usage: {
-        promptTokens: result.usage?.promptTokens || 0,
-        completionTokens: result.usage?.completionTokens || 0,
-        totalTokens: result.usage?.totalTokens || 0,
-      },
-      warnings: result.warnings,
-    };
+    return result;
   } catch (error) {
     throw new Error(`OpenRouter structured response error: ${error}`);
   }
@@ -48,16 +39,7 @@ export async function generateChatTextResponse(
       prompt,
     });
 
-    return {
-      text: result.text,
-      finishReason: result.finishReason,
-      usage: {
-        promptTokens: result.usage?.promptTokens || 0,
-        completionTokens: result.usage?.completionTokens || 0,
-        totalTokens: result.usage?.totalTokens || 0,
-      },
-      warnings: result.warnings,
-    };
+    return result;
   } catch (error) {
     throw new Error(`OpenRouter text response error: ${error}`);
   }

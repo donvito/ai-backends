@@ -1,3 +1,5 @@
+import { RewriteTone } from '../schemas/v1/rewrite'
+
 /**
  * System prompt template for summarization
  */
@@ -266,4 +268,59 @@ Rules:
 - Ensure the plan is practical and achievable
 - Use clear, professional language
 - Structure the plan for easy reading and understanding`;
+}
+
+
+/**
+ * System prompt template for rewrite
+ */
+export type RewriteInstruction =
+  | 'improve_text'
+  | 'fix_spelling_grammar'
+  | 'brainstorm_ideas'
+  | 'shorten'
+  | 'rewrite_with_tone'
+
+export function rewritePrompt(
+  text: string,
+  instruction: RewriteInstruction,
+  opts?: { maxLength?: number; tone?: RewriteTone }
+): string {
+  const maxLength = opts?.maxLength
+  const tone = opts?.tone
+
+  const instructionText = (() => {
+    switch (instruction) {
+      case 'improve_text':
+        return 'Rewrite the text to improve clarity, grammar, and flow, preserving meaning and voice. Return only the rewritten text.'
+      case 'fix_spelling_grammar':
+        return 'Fix spelling, grammar, and punctuation without changing meaning or tone. Return only the corrected text.'
+      case 'brainstorm_ideas':
+        return 'Brainstorm 6-10 concise ideas based on the text. Use a bulleted list, each idea on its own line.'
+      case 'shorten':
+        return 'Rewrite the text to be significantly shorter (around 30-50% reduction) while preserving key points and tone. Return only the shortened version.'
+      case 'rewrite_with_tone': {
+        const t = (tone || '').toLowerCase()
+        return `Rewrite the text in a ${t} tone while preserving meaning and intent. Return only the rewritten text.`
+      }
+      default:
+        return 'Rewrite to improve clarity and readability while preserving meaning. Return only the rewritten text.'
+    }
+  })()
+
+  const lengthInstruction = maxLength ? ` Limit the output to ${maxLength} words or less.` : ''
+
+  return `Rewrite the text below according to the guidance.
+${instructionText}${lengthInstruction}
+
+Rules:
+- Preserve the original meaning and key details.
+- Keep the language and formatting unless the instruction says otherwise.
+- Do not add explanations or meta commentary.
+- Just return the rewritten text.
+
+<text>
+${text}
+</text>
+:`
 }
