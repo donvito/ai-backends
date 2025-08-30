@@ -42,7 +42,6 @@
                 </a>
                 <div class="flex items-center space-x-6">
                     <a href="/api/ui" target="_blank" class="text-gray-700 hover:text-brand-purple transition-colors duration-300">API Docs</a>
-                    <a href="/api/demos" class="text-gray-700 hover:text-brand-purple transition-colors duration-300">Demos</a>
                     <a href="/api/jsoneditor" target="_blank" class="text-gray-700 hover:text-brand-purple transition-colors duration-300">JSON Editor</a>
                     <a href="/api/models" class="text-gray-700 hover:text-brand-purple transition-colors duration-300">Models Guide</a>
                     <a href="https://github.com/donvito/ai-backend" 
@@ -74,7 +73,7 @@
                 </p>
                 
                 <div class="flex flex-col sm:flex-row justify-center gap-4 mb-12">
-                    <a href="/api/demos"
+                    <a href="#interactive-demos"
                        class="inline-flex items-center px-8 py-4 text-lg font-semibold text-white bg-[#B341F9] rounded-full hover:bg-[#9935D9] transition-all duration-300 shadow-lg hover:shadow-xl">
                         <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
@@ -139,175 +138,441 @@
             </div>
         </section>
 
-        <!-- Available Endpoints -->
-        <section class="mb-16">
+        <!-- Interactive Demos -->
+        <section id="interactive-demos" class="mb-16">
             <div class="max-w-6xl mx-auto">
                 <div class="text-center mb-12">
-                    <h2 class="text-4xl font-bold mb-4">Available Endpoints</h2>
+                    <h2 class="text-4xl font-bold mb-4">Interactive Demos</h2>
                     <p class="text-xl text-gray-600 max-w-3xl mx-auto">
-                        Powerful AI capabilities accessible through simple REST API endpoints
+                        Explore the capabilities of AI Backends through interactive demonstrations. 
+                        Try out different features and see the API in action.
                     </p>
                 </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- Text Summarization -->
-                    <div class="group relative overflow-hidden bg-white rounded-xl p-6 border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-300">
-                        <div class="flex items-center mb-4">
-                            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
-                                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+
+                <!-- Demos Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
+                    <!-- Highlighter Demo Card -->
+                    <div class="group relative overflow-hidden bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 h-full flex flex-col">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-brand opacity-10 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500"></div>
+
+                        <div class="p-8 flex flex-col h-full">
+                            <div class="w-12 h-12 bg-gradient-brand rounded-xl flex items-center justify-center text-white mb-4">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a6 6 0 00-2-4l-2-2V5a2 2 0 00-2-2h-4v14" />
                                 </svg>
                             </div>
-                            <div>
-                                <h3 class="font-semibold text-gray-900">Text Summarization</h3>
-                                <code class="text-sm text-blue-600 font-mono">/api/summarize</code>
+
+                            <h3 class="text-2xl font-bold text-gray-900 mb-3">Highlighter Demo</h3>
+                            <p class="text-gray-600 mb-6 leading-relaxed">
+                                Extract key highlights from conversations using AI. Automatically identify important moments, 
+                                topics, and insights from any text with intelligent categorization.
+                            </p>
+
+                            <div class="space-y-3 mb-6">
+                                <div class="flex items-center text-sm text-gray-600">
+                                    <svg class="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Multiple AI providers supported
+                                </div>
+                                <div class="flex items-center text-sm text-gray-600">
+                                    <svg class="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Real-time highlighting
+                                </div>
+                                <div class="flex items-center text-sm text-gray-600">
+                                    <svg class="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Token usage tracking
+                                </div>
                             </div>
+
+                            <a href="/api/highlighter-demo" 
+                               class="mt-auto inline-flex items-center justify-center relative px-6 pr-10 py-3 bg-gradient-brand text-white rounded-lg font-medium hover:opacity-90 transition-opacity duration-200 group">
+                                Try Demo
+                                <svg class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                </svg>
+                            </a>
                         </div>
-                        <p class="text-gray-600 text-sm">Extract key insights and create concise summaries from long text content</p>
                     </div>
 
-                    <!-- Language Translation -->
-                    <div class="group relative overflow-hidden bg-white rounded-xl p-6 border border-gray-200 hover:border-green-300 hover:shadow-lg transition-all duration-300">
-                        <div class="flex items-center mb-4">
-                            <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-3">
-                                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+                    <!-- Summarization Demo Card -->
+                    <div class="group relative overflow-hidden bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 h-full flex flex-col">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-brand opacity-10 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500"></div>
+
+                        <div class="p-8 flex flex-col h-full">
+                            <div class="w-12 h-12 bg-gradient-brand rounded-xl flex items-center justify-center text-white mb-4">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8s-9-3.582-9-8 4.03-8 9-8 9 3.582 9 8z" />
                                 </svg>
                             </div>
-                            <div>
-                                <h3 class="font-semibold text-gray-900">Language Translation</h3>
-                                <code class="text-sm text-green-600 font-mono">/api/translate</code>
+
+                            <h3 class="text-2xl font-bold text-gray-900 mb-3">Summarization Demo</h3>
+                            <p class="text-gray-600 mb-6 leading-relaxed">
+                                Create concise summaries using different models and providers. Try summarizing an article, conversation or any text.
+                            </p>
+
+                            <div class="space-y-3 mb-6">
+                                <div class="flex items-center text-sm text-gray-600">
+                                    <svg class="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Summarize long texts
+                                </div>
+                                <div class="flex items-center text-sm text-gray-600">
+                                    <svg class="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Adjustable length settings
+                                </div>
+                                <div class="flex items-center text-sm text-gray-600">
+                                    <svg class="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Real-time processing
+                                </div>
                             </div>
+
+                            <a href="/api/summarize-demo" 
+                               class="mt-auto inline-flex items-center justify-center relative px-6 pr-10 py-3 bg-gradient-brand text-white rounded-lg font-medium hover:opacity-90 transition-opacity duration-200 group">
+                                Try Demo
+                                <svg class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                </svg>
+                            </a>
                         </div>
-                        <p class="text-gray-600 text-sm">Translate text between multiple languages with high accuracy and context awareness</p>
                     </div>
 
-                    <!-- Sentiment Analysis -->
-                    <div class="group relative overflow-hidden bg-white rounded-xl p-6 border border-gray-200 hover:border-rose-300 hover:shadow-lg transition-all duration-300">
-                        <div class="flex items-center mb-4">
-                            <div class="w-10 h-10 bg-rose-100 rounded-lg flex items-center justify-center mr-3">
-                                <svg class="w-5 h-5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <!-- Sentiment Analysis Demo Card -->
+                    <div class="group relative overflow-hidden bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 h-full flex flex-col">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-brand opacity-10 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500"></div>
+
+                        <div class="p-8 flex flex-col h-full">
+                            <div class="w-12 h-12 bg-gradient-brand rounded-xl flex items-center justify-center text-white mb-4">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                             </div>
-                            <div>
-                                <h3 class="font-semibold text-gray-900">Sentiment Analysis</h3>
-                                <code class="text-sm text-rose-600 font-mono">/api/sentiment</code>
+
+                            <h3 class="text-2xl font-bold text-gray-900 mb-3">Sentiment Analysis Demo</h3>
+                            <p class="text-gray-600 mb-6 leading-relaxed">
+                                Analyze the emotional tone of text content. Get detailed sentiment scores and insights about the mood and attitude expressed in any text.
+                            </p>
+
+                            <div class="space-y-3 mb-6">
+                                <div class="flex items-center text-sm text-gray-600">
+                                    <svg class="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Positive/Negative detection
+                                </div>
+                                <div class="flex items-center text-sm text-gray-600">
+                                    <svg class="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Confidence scoring
+                                </div>
+                                <div class="flex items-center text-sm text-gray-600">
+                                    <svg class="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Emotional insights
+                                </div>
                             </div>
+
+                            <a href="/api/sentiment-demo" 
+                               class="mt-auto inline-flex items-center justify-center relative px-6 pr-10 py-3 bg-gradient-brand text-white rounded-lg font-medium hover:opacity-90 transition-opacity duration-200 group">
+                                Try Demo
+                                <svg class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                </svg>
+                            </a>
                         </div>
-                        <p class="text-gray-600 text-sm">Analyze emotional tone and sentiment in text content with detailed confidence scores</p>
                     </div>
 
-                    <!-- Keyword Extraction -->
-                    <div class="group relative overflow-hidden bg-white rounded-xl p-6 border border-gray-200 hover:border-amber-300 hover:shadow-lg transition-all duration-300">
-                        <div class="flex items-center mb-4">
-                            <div class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center mr-3">
-                                <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <!-- Keywords Demo Card -->
+                    <div class="group relative overflow-hidden bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 h-full flex flex-col">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-brand opacity-10 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500"></div>
+
+                        <div class="p-8 flex flex-col h-full">
+                            <div class="w-12 h-12 bg-gradient-brand rounded-xl flex items-center justify-center text-white mb-4">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5a4 4 0 010 8H7V3zm0 8h6a4 4 0 110 8H7v-8z" />
                                 </svg>
                             </div>
-                            <div>
-                                <h3 class="font-semibold text-gray-900">Keyword Extraction</h3>
-                                <code class="text-sm text-amber-600 font-mono">/api/keywords</code>
+
+                            <h3 class="text-2xl font-bold text-gray-900 mb-3">Keywords Demo</h3>
+                            <p class="text-gray-600 mb-6 leading-relaxed">
+                                Extract the most important keywords and phrases from any text. Perfect for SEO, content analysis, and understanding key topics.
+                            </p>
+
+                            <div class="space-y-3 mb-6">
+                                <div class="flex items-center text-sm text-gray-600">
+                                    <svg class="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Smart keyword extraction
+                                </div>
+                                <div class="flex items-center text-sm text-gray-600">
+                                    <svg class="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Relevance scoring
+                                </div>
+                                <div class="flex items-center text-sm text-gray-600">
+                                    <svg class="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Topic identification
+                                </div>
                             </div>
+
+                            <a href="/api/keywords-demo" 
+                               class="mt-auto inline-flex items-center justify-center relative px-6 pr-10 py-3 bg-gradient-brand text-white rounded-lg font-medium hover:opacity-90 transition-opacity duration-200 group">
+                                Try Demo
+                                <svg class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                </svg>
+                            </a>
                         </div>
-                        <p class="text-gray-600 text-sm">Extract important keywords and phrases from text with relevance scoring</p>
                     </div>
 
-                    <!-- Email Reply Generation -->
-                    <div class="group relative overflow-hidden bg-white rounded-xl p-6 border border-gray-200 hover:border-emerald-300 hover:shadow-lg transition-all duration-300">
-                        <div class="flex items-center mb-4">
-                            <div class="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center mr-3">
-                                <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    <!-- Translation Demo Card -->
+                    <div class="group relative overflow-hidden bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 h-full flex flex-col">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-brand opacity-10 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500"></div>
+
+                        <div class="p-8 flex flex-col h-full">
+                            <div class="w-12 h-12 bg-gradient-brand rounded-xl flex items-center justify-center text-white mb-4">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
                                 </svg>
                             </div>
-                            <div>
-                                <h3 class="font-semibold text-gray-900">Email Reply Generation</h3>
-                                <code class="text-sm text-emerald-600 font-mono">/api/email-reply</code>
-                            </div>
-                        </div>
-                        <p class="text-gray-600 text-sm">Generate contextual and professional email responses based on conversation history</p>
-                    </div>
 
-                    <!-- Image Analysis -->
-                    <div class="group relative overflow-hidden bg-white rounded-xl p-6 border border-gray-200 hover:border-purple-300 hover:shadow-lg transition-all duration-300">
-                        <div class="flex items-center mb-4">
-                            <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
-                                <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            <h3 class="text-2xl font-bold text-gray-900 mb-3">Translation Demo</h3>
+                            <p class="text-gray-600 mb-6 leading-relaxed">
+                                Translate text between multiple languages with high accuracy and context preservation. Perfect for global communication.
+                            </p>
+
+                            <div class="space-y-3 mb-6">
+                                <div class="flex items-center text-sm text-gray-600">
+                                    <svg class="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    100+ languages supported
+                                </div>
+                                <div class="flex items-center text-sm text-gray-600">
+                                    <svg class="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Context-aware translation
+                                </div>
+                                <div class="flex items-center text-sm text-gray-600">
+                                    <svg class="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Professional quality
+                                </div>
+                            </div>
+
+                            <a href="/api/translate-demo" 
+                               class="mt-auto inline-flex items-center justify-center relative px-6 pr-10 py-3 bg-gradient-brand text-white rounded-lg font-medium hover:opacity-90 transition-opacity duration-200 group">
+                                Try Demo
+                                <svg class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                                 </svg>
-                            </div>
-                            <div>
-                                <h3 class="font-semibold text-gray-900">Image Analysis</h3>
-                                <code class="text-sm text-purple-600 font-mono">/api/describeImage</code>
-                            </div>
+                            </a>
                         </div>
-                        <p class="text-gray-600 text-sm">Analyze and describe images with detailed visual understanding and context</p>
                     </div>
 
-                    <!-- Text Q&A -->
-                    <div class="group relative overflow-hidden bg-white rounded-xl p-6 border border-gray-200 hover:border-indigo-300 hover:shadow-lg transition-all duration-300">
-                        <div class="flex items-center mb-4">
-                            <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center mr-3">
-                                <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <!-- Ask Text Demo Card -->
+                    <div class="group relative overflow-hidden bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 h-full flex flex-col">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-brand opacity-10 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500"></div>
+
+                        <div class="p-8 flex flex-col h-full">
+                            <div class="w-12 h-12 bg-gradient-brand rounded-xl flex items-center justify-center text-white mb-4">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                             </div>
-                            <div>
-                                <h3 class="font-semibold text-gray-900">Text Q&A</h3>
-                                <code class="text-sm text-indigo-600 font-mono">/api/ask-text</code>
+
+                            <h3 class="text-2xl font-bold text-gray-900 mb-3">Ask Text Demo</h3>
+                            <p class="text-gray-600 mb-6 leading-relaxed">
+                                Ask questions about any text and get intelligent answers. Perfect for document analysis, research, and content exploration.
+                            </p>
+
+                            <div class="space-y-3 mb-6">
+                                <div class="flex items-center text-sm text-gray-600">
+                                    <svg class="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Context-aware Q&A
+                                </div>
+                                <div class="flex items-center text-sm text-gray-600">
+                                    <svg class="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Document analysis
+                                </div>
+                                <div class="flex items-center text-sm text-gray-600">
+                                    <svg class="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Intelligent responses
+                                </div>
                             </div>
+
+                            <a href="/api/asktext-demo" 
+                               class="mt-auto inline-flex items-center justify-center relative px-6 pr-10 py-3 bg-gradient-brand text-white rounded-lg font-medium hover:opacity-90 transition-opacity duration-200 group">
+                                Try Demo
+                                <svg class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                </svg>
+                            </a>
                         </div>
-                        <p class="text-gray-600 text-sm">Answer questions based on provided text context using LLM comprehension</p>
                     </div>
 
-                    <!-- Highlights Extraction -->
-                    <div class="group relative overflow-hidden bg-white rounded-xl p-6 border border-gray-200 hover:border-cyan-300 hover:shadow-lg transition-all duration-300">
-                        <div class="flex items-center mb-4">
-                            <div class="w-10 h-10 bg-cyan-100 rounded-lg flex items-center justify-center mr-3">
-                                <svg class="w-5 h-5 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    <!-- Email Reply Demo Card -->
+                    <div class="group relative overflow-hidden bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 h-full flex flex-col">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-brand opacity-10 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500"></div>
+
+                        <div class="p-8 flex flex-col h-full">
+                            <div class="w-12 h-12 bg-gradient-brand rounded-xl flex items-center justify-center text-white mb-4">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                                 </svg>
                             </div>
-                            <div>
-                                <h3 class="font-semibold text-gray-900">Highlights Extraction</h3>
-                                <code class="text-sm text-cyan-600 font-mono">/api/highlights</code>
-                            </div>
-                        </div>
-                        <p class="text-gray-600 text-sm">Extract and identify the most important highlights and key points from your text content</p>
-                    </div>
 
-                    <!-- Project Planner -->
-                    <div class="group relative overflow-hidden bg-white rounded-xl p-6 border border-gray-200 hover:border-teal-300 hover:shadow-lg transition-all duration-300">
-                        <div class="flex items-center mb-4">
-                            <div class="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center mr-3">
-                                <svg class="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                            <h3 class="text-2xl font-bold text-gray-900 mb-3">Email Reply Demo</h3>
+                            <p class="text-gray-600 mb-6 leading-relaxed">
+                                Generate professional email responses based on context and conversation history. Save time with intelligent email automation.
+                            </p>
+
+                            <div class="space-y-3 mb-6">
+                                <div class="flex items-center text-sm text-gray-600">
+                                    <svg class="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Context-aware replies
+                                </div>
+                                <div class="flex items-center text-sm text-gray-600">
+                                    <svg class="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Professional tone
+                                </div>
+                                <div class="flex items-center text-sm text-gray-600">
+                                    <svg class="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Time-saving automation
+                                </div>
+                            </div>
+
+                            <a href="/api/email-reply-demo" 
+                               class="mt-auto inline-flex items-center justify-center relative px-6 pr-10 py-3 bg-gradient-brand text-white rounded-lg font-medium hover:opacity-90 transition-opacity duration-200 group">
+                                Try Demo
+                                <svg class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                                 </svg>
-                            </div>
-                            <div>
-                                <h3 class="font-semibold text-gray-900">Project Planner</h3>
-                                <code class="text-sm text-teal-600 font-mono">/api/project-planner</code>
-                            </div>
+                            </a>
                         </div>
-                        <p class="text-gray-600 text-sm">Generate structured project plans with tasks, timelines, and dependencies for complex projects</p>
                     </div>
 
-                    <!-- Meeting Notes -->
-                    <div class="group relative overflow-hidden bg-white rounded-xl p-6 border border-gray-200 hover:border-slate-300 hover:shadow-lg transition-all duration-300">
-                        <div class="flex items-center mb-4">
-                            <div class="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center mr-3">
-                                <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <!-- Meeting Notes Demo Card -->
+                    <div class="group relative overflow-hidden bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 h-full flex flex-col">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-brand opacity-10 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500"></div>
+
+                        <div class="p-8 flex flex-col h-full">
+                            <div class="w-12 h-12 bg-gradient-brand rounded-xl flex items-center justify-center text-white mb-4">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                                 </svg>
                             </div>
-                            <div>
-                                <h3 class="font-semibold text-gray-900">Meeting Notes</h3>
-                                <code class="text-sm text-slate-600 font-mono">/api/meeting-notes</code>
+
+                            <h3 class="text-2xl font-bold text-gray-900 mb-3">Meeting Notes Demo</h3>
+                            <p class="text-gray-600 mb-6 leading-relaxed">
+                                Transform meeting transcripts into structured notes with attendees, decisions, action items, and summaries automatically extracted.
+                            </p>
+
+                            <div class="space-y-3 mb-6">
+                                <div class="flex items-center text-sm text-gray-600">
+                                    <svg class="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Structured summaries
+                                </div>
+                                <div class="flex items-center text-sm text-gray-600">
+                                    <svg class="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Action item extraction
+                                </div>
+                                <div class="flex items-center text-sm text-gray-600">
+                                    <svg class="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Decision tracking
+                                </div>
                             </div>
+
+                            <a href="/api/meeting-notes-demo" 
+                               class="mt-auto inline-flex items-center justify-center relative px-6 pr-10 py-3 bg-gradient-brand text-white rounded-lg font-medium hover:opacity-90 transition-opacity duration-200 group">
+                                Try Demo
+                                <svg class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                </svg>
+                            </a>
                         </div>
-                        <p class="text-gray-600 text-sm">Extract structured meeting notes with attendees, decisions, action items, and summaries</p>
+                    </div>
+
+                    <!-- Project Planner Demo Card -->
+                    <div class="group relative overflow-hidden bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 h-full flex flex-col">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-brand opacity-10 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500"></div>
+
+                        <div class="p-8 flex flex-col h-full">
+                            <div class="w-12 h-12 bg-gradient-brand rounded-xl flex items-center justify-center text-white mb-4">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                                </svg>
+                            </div>
+
+                            <h3 class="text-2xl font-bold text-gray-900 mb-3">Project Planner Demo</h3>
+                            <p class="text-gray-600 mb-6 leading-relaxed">
+                                Generate detailed project plans with tasks, timelines, dependencies, and considerations automatically from your project description.
+                            </p>
+
+                            <div class="space-y-3 mb-6">
+                                <div class="flex items-center text-sm text-gray-600">
+                                    <svg class="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Detailed task breakdown
+                                </div>
+                                <div class="flex items-center text-sm text-gray-600">
+                                    <svg class="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Timeline estimation
+                                </div>
+                                <div class="flex items-center text-sm text-gray-600">
+                                    <svg class="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Risk assessment
+                                </div>
+                            </div>
+
+                            <a href="/api/project-planner-demo" 
+                               class="mt-auto inline-flex items-center justify-center relative px-6 pr-10 py-3 bg-gradient-brand text-white rounded-lg font-medium hover:opacity-90 transition-opacity duration-200 group">
+                                Try Demo
+                                <svg class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                </svg>
+                            </a>
+                        </div>
                     </div>
                 </div>
 

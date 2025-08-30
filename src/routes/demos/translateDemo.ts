@@ -4,12 +4,12 @@ import { join } from 'path'
 
 const router = new OpenAPIHono()
 
-const demosRoute = createRoute({
+const demoRoute = createRoute({
   method: 'get',
   path: '/',
   responses: {
     200: {
-      description: 'Returns the demos index page.',
+      description: 'Returns the Translate demo page.',
       content: {
         'text/html': {
           schema: { type: 'string' }
@@ -20,14 +20,14 @@ const demosRoute = createRoute({
   tags: ['Demos']
 })
 
-function getDemosHtml() {
-  const templatePath = join(process.cwd(), 'src', 'templates', 'demos.html')
+function getTranslateDemoHtml() {
+  const templatePath = join(process.cwd(), 'src', 'templates', 'translateDemo.html')
   return readFileSync(templatePath, 'utf-8')
 }
 
-router.openapi(demosRoute, (c) => c.html(getDemosHtml()))
+router.openapi(demoRoute, (c) => c.html(getTranslateDemoHtml()))
 
 export default {
   handler: router,
-  mountPath: 'demos'
+  mountPath: 'translate-demo'
 }

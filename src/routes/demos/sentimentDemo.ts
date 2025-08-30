@@ -9,7 +9,7 @@ const demoRoute = createRoute({
   path: '/',
   responses: {
     200: {
-      description: 'Returns the Translate demo page.',
+      description: 'Returns the Sentiment Analysis demo page.',
       content: {
         'text/html': {
           schema: { type: 'string' }
@@ -20,16 +20,14 @@ const demoRoute = createRoute({
   tags: ['Demos']
 })
 
-function getTranslateDemoHtml() {
-  const templatePath = join(process.cwd(), 'src', 'templates', 'translateDemo.html')
+function getSentimentDemoHtml() {
+  const templatePath = join(process.cwd(), 'src', 'templates', 'sentimentDemo.html')
   return readFileSync(templatePath, 'utf-8')
 }
 
-router.openapi(demoRoute, (c) => c.html(getTranslateDemoHtml()))
+router.openapi(demoRoute, (c) => c.html(getSentimentDemoHtml()))
 
 export default {
   handler: router,
-  mountPath: 'translate-demo'
+  mountPath: 'sentiment-demo'
 }
-
-

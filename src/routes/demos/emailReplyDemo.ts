@@ -9,7 +9,7 @@ const demoRoute = createRoute({
   path: '/',
   responses: {
     200: {
-      description: 'Returns the Summarization demo page.',
+      description: 'Returns the Email Reply demo page.',
       content: {
         'text/html': {
           schema: { type: 'string' }
@@ -20,16 +20,14 @@ const demoRoute = createRoute({
   tags: ['Demos']
 })
 
-function getSummarizeDemoHtml() {
-  const templatePath = join(process.cwd(), 'src', 'templates', 'summarizeDemo.html')
+function getEmailReplyDemoHtml() {
+  const templatePath = join(process.cwd(), 'src', 'templates', 'emailReplyDemo.html')
   return readFileSync(templatePath, 'utf-8')
 }
 
-router.openapi(demoRoute, (c) => c.html(getSummarizeDemoHtml()))
+router.openapi(demoRoute, (c) => c.html(getEmailReplyDemoHtml()))
 
 export default {
   handler: router,
-  mountPath: 'summarize-demo'
+  mountPath: 'email-reply-demo'
 }
-
-

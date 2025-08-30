@@ -65,11 +65,11 @@ async function loadTopLevelRoutes(): Promise<LoadedRoute[]> {
     const baseDir = path.join(__dirname, '../routes')
     if (!fs.existsSync(baseDir) || !fs.statSync(baseDir).isDirectory()) return []
 
-    const routeFiles = fs
-        .readdirSync(baseDir)
-        .filter((file) => file.endsWith('.ts') && !file.endsWith('.test.ts'))
-
+    const entries = fs.readdirSync(baseDir)
     const routes: LoadedRoute[] = []
+
+    // Load direct .ts files in routes directory
+    const routeFiles = entries.filter((file) => file.endsWith('.ts') && !file.endsWith('.test.ts'))
     for (const file of routeFiles) {
         const routePath = path.join(baseDir, file)
         const routeModule = await import(routePath)
@@ -98,6 +98,49 @@ async function loadTopLevelRoutes(): Promise<LoadedRoute[]> {
             }
         }
     }
+
+    // Load routes from subdirectories (like demos)
+    const directories = entries.filter((entry) => {
+        const fullPath = path.join(baseDir, entry)
+        return fs.statSync(fullPath).isDirectory() && !entry.startsWith('v') // exclude versioned directories
+    })
+
+    for (const dir of directories) {
+        const subDirPath = path.join(baseDir, dir)
+        const subRouteFiles = fs
+            .readdirSync(subDirPath)
+            .filter((file) => file.endsWith('.ts') && !file.endsWith('.test.ts'))
+
+        for (const file of subRouteFiles) {
+            const routePath = path.join(subDirPath, file)
+            const routeModule = await import(routePath)
+            const moduleExport = routeModule.default
+
+            const handler = moduleExport?.handler || moduleExport
+            const mountPath: string = moduleExport?.mountPath || file.replace('.ts', '')
+
+            if (
+                handler &&
+                typeof handler === 'object' &&
+                'routes' in handler &&
+                Array.isArray((handler as any).routes) &&
+                typeof (handler as any).fetch === 'function' &&
+                typeof (handler as any).route === 'function'
+            ) {
+                routes.push({ handler, mountPath })
+            } else {
+                console.warn(
+                    `[WARN] Subdirectory route file '${dir}/${file}' (resolved handler type: ${typeof handler}) does not export a valid Hono router instance. Expected an object with an array 'routes' property and fetch/route methods. Skipping.`
+                )
+                if (handler && typeof handler === 'object') {
+                    console.warn(
+                        `[DEBUG] Problematic handler for ${dir}/${file} has keys: ${Object.keys(handler).join(', ')}. Is routes an array? ${Array.isArray((handler as any).routes)}`
+                    )
+                }
+            }
+        }
+    }
+
     return routes
 }
 
