@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Backends - Compose Demo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'brand-purple': '#B341F9',
+            'brand-pink': '#E453C0'
+          },
+          backgroundImage: {
+            'gradient-brand': 'linear-gradient(135deg, #B341F9, #E453C0)',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .md-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      margin: 1rem 0;
+      overflow: hidden;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      background: white;
+    }
+    .md-table thead th {
+      background: #f9fafb;
+      color: #374151;
+      font-weight: 600;
+      padding: 0.75rem 0.875rem;
+      border-bottom: 1px solid #e5e7eb;
+      white-space: nowrap;
+    }
+    .md-table td {
+      padding: 0.75rem 0.875rem;
+      border-bottom: 1px solid #f3f4f6;
+      color: #1f2937;
+      vertical-align: top;
+    }
+    .md-table tbody tr:nth-child(odd) td { background: #fafafa; }
+    .md-table tbody tr:last-child td { border-bottom: none; }
+  </style>
+  <script src="/api/shared/safedom.js"></script>
+  <style>
+    /* Fullscreen styles for maximize mode */
+    .fullscreen-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(17, 24, 39, 0.5);
+      z-index: 50;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s ease-in-out;
+    }
+    .fullscreen-backdrop.active { opacity: 1; pointer-events: auto; }
+    .fullscreen-output {
+      position: fixed !important;
+      inset: 4% 4% auto 4% !important;
+      z-index: 60;
+      height: 92vh;           /* ensure inner 100% heights compute */
+      max-height: 92vh;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+    }
+    .fullscreen-output .fullscreen-inner {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    .fullscreen-output .fullscreen-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #e5e7eb;
+      margin-bottom: 8px;
+    }
+    .fullscreen-output .fullscreen-body {
+      flex: 1 1 auto;
+      overflow: auto;
+      height: auto;
+      padding-right: 4px;
+    }
+    .close-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: white;
+      border: 1px solid #e5e7eb;
+      color: #374151;
+      padding: 6px 8px;
+      border-radius: 8px;
+    }
+    .close-button:hover { background: #f9fafb; }
+    /* Hide maximize button when in fullscreen; exit with X button */
+    .fullscreen-output #fullscreenButton { display: none !important; }
+  </style>
+</head>
+<body class="bg-white min-h-screen">
+  <nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100">
+    <div class="container mx-auto px-6 py-4">
+      <div class="flex justify-between items-center">
+        <a href="/" class="flex items-center space-x-2">
+          <div class="w-10 h-10 rounded-xl bg-[#B341F9] flex items-center justify-center">
+            <span class="text-white font-bold text-xl">AI</span>
+          </div>
+          <span class="text-2xl font-bold text-gray-900">Backends</span>
+        </a>
+        <div class="flex items-center space-x-6">
+          <a href="/api/ui" target="_blank" class="text-gray-700 hover:text-brand-purple">API Docs</a>
+          <a href="/api/demos" class="text-gray-700 hover:text-brand-purple">Demos</a>
+          <a href="/api/jsoneditor" target="_blank" class="text-gray-700 hover:text-brand-purple">JSON Editor</a>
+          <a href="/api/models" class="text-gray-700 hover:text-brand-purple">Models Guide</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container mx-auto px-6 py-12">
+    <nav class="mb-6 text-sm">
+      <ol class="flex items-center space-x-2 text-gray-500">
+        <li><a href="/" class="hover:text-gray-700">Home</a></li>
+        <li><span>/</span></li>
+        <li><a href="/api/demos" class="hover:text-gray-700">Demos</a></li>
+        <li><span>/</span></li>
+        <li class="text-gray-900 font-medium">Compose</li>
+      </ol>
+    </nav>
+
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-bold text-gray-900 mb-3">Compose Demo</h1>
+      <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+        Compose a piece of text given a topic
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
+      <section class="bg-white p-6 rounded-2xl border border-gray-100 shadow-lg">
+        <h2 class="text-lg font-semibold mb-3">Input</h2>
+
+        <label class="block text-sm font-medium text-gray-700 mb-1">Topic</label>
+        <input id="topic" type="text" class="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple bg-white" placeholder="Enter a topic to compose about..." />
+
+        <div class="mt-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Max Words</label>
+          <input id="maxLength" type="number" min="0" class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple" value="120" />
+        </div>
+        <div class="grid grid-cols-2 gap-3 mt-3">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Provider</label>
+            <select id="provider" class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple"></select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Model</label>
+            <select id="model" class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple"></select>
+          </div>
+        </div>
+
+        <div class="mt-3">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input id="streaming" type="checkbox" class="w-4 h-4 text-brand-purple rounded focus:ring-2 focus:ring-brand-purple" checked />
+            <span class="text-sm font-medium text-gray-700">Enable Streaming</span>
+          </label>
+        </div>
+
+        <div class="mt-3">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Bearer Token (optional)</label>
+          <input id="token" type="password" placeholder="Only needed in production deployments" class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple" />
+        </div>
+
+        <div class="mt-4 flex items-center gap-2">
+          <button id="runBtn" class="px-4 py-2 rounded-lg bg-brand-purple text-white hover:bg-[#9935D9]">Compose</button>
+          <button id="cancelBtn" class="hidden px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700">Cancel</button>
+          <button id="loadSample" class="px-4 py-2 rounded-lg bg-gray-100 text-gray-800 hover:bg-gray-200">Load Sample</button>
+        </div>
+      </section>
+
+      <section id="outputPanel" class="bg-white p-6 rounded-2xl border border-gray-100 shadow-lg relative">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-lg font-semibold">Output</h2>
+          <div class="flex items-center gap-2">
+            <button id="copyButton" onclick="copyOutput()" class="inline-flex items-center px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-200 transition-colors" title="Copy Output">
+              <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+              </svg>
+              Copy
+            </button>
+            <button id="fullscreenButton" onclick="toggleOutputFullscreen()" class="inline-flex items-center px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-200 transition-colors" title="Maximize Output">⛶ Maximize</button>
+          </div>
+        </div>
+
+        <!-- Metrics Bar -->
+        <div id="metricsBar" class="hidden grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 bg-gray-100 border border-gray-200 rounded-xl p-3">
+          <div class="flex items-center gap-3 bg-white border border-gray-200 rounded-lg px-3 py-2">
+            <div class="w-8 h-8 rounded-md bg-orange-50 text-orange-600 flex items-center justify-center">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <div>
+              <div class="text-[10px] uppercase tracking-wide text-gray-500">Response</div>
+              <div id="metricResponse" class="text-sm font-semibold text-gray-900">—</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 bg-white border border-gray-200 rounded-lg px-3 py-2">
+            <div class="w-8 h-8 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h10m4-8a4 4 0 00-4-4H7"/></svg>
+            </div>
+            <div>
+              <div class="text-[10px] uppercase tracking-wide text-gray-500">Input</div>
+              <div id="metricInput" class="text-sm font-semibold text-gray-900">—</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 bg-white border border-gray-200 rounded-lg px-3 py-2">
+            <div class="w-8 h-8 rounded-md bg-green-50 text-green-600 flex items-center justify-center">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12h16M4 12a8 8 0 018-8v16a8 8 0 01-8-8z"/></svg>
+            </div>
+            <div>
+              <div class="text-[10px] uppercase tracking-wide text-gray-500">Output</div>
+              <div id="metricOutput" class="text-sm font-semibold text-gray-900">—</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 bg-white border border-gray-200 rounded-lg px-3 py-2">
+            <div class="w-8 h-8 rounded-md bg-purple-50 text-purple-600 flex items-center justify-center">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 11V3a1 1 0 012 0v8m-2 0a4 4 0 11-4 4h8a4 4 0 11-4-4z"/></svg>
+            </div>
+            <div>
+              <div class="text-[10px] uppercase tracking-wide text-gray-500">Total</div>
+              <div id="metricTotal" class="text-sm font-semibold text-gray-900">—</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Output Box -->
+        <div class="rounded-xl border border-gray-200 bg-white p-4">
+          <div id="outputText" class="prose prose-sm max-w-none min-h-[180px] text-gray-900"></div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const topicEl = document.getElementById('topic');
+    const maxLengthEl = document.getElementById('maxLength');
+    const providerEl = document.getElementById('provider');
+    const modelEl = document.getElementById('model');
+    const streamingEl = document.getElementById('streaming');
+    const tokenEl = document.getElementById('token');
+    const runBtn = document.getElementById('runBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const loadSampleBtn = document.getElementById('loadSample');
+    const outputText = document.getElementById('outputText');
+    const outputPanel = document.getElementById('outputPanel');
+    const fullscreenButton = document.getElementById('fullscreenButton');
+    function getMetricsEls() {
+      return {
+        metricsBar: document.getElementById('metricsBar'),
+        metricResponse: document.getElementById('metricResponse'),
+        metricInput: document.getElementById('metricInput'),
+        metricOutput: document.getElementById('metricOutput'),
+        metricTotal: document.getElementById('metricTotal'),
+      };
+    }
+    const jsonPreview = null;
+
+    let abortController = null;
+    let modelOptions = null;
+
+    function buildRequest() {
+      return {
+        payload: {
+          topic: topicEl.value.trim(),
+          maxLength: Math.max(0, Number(maxLengthEl.value) || 0)
+        },
+        config: {
+          provider: providerEl.value,
+          model: modelEl.value,
+          stream: streamingEl.checked
+        }
+      };
+    }
+
+    function updatePreview() {
+      const req = buildRequest();
+      if (jsonPreview) jsonPreview.textContent = JSON.stringify(req, null, 2);
+    }
+
+    function createOptions(items) {
+      const frag = document.createDocumentFragment();
+      for (const it of items) {
+        const opt = document.createElement('option');
+        if (typeof it === 'string') { opt.value = it; opt.textContent = it; }
+        else { opt.value = it.value; opt.textContent = it.label; }
+        frag.appendChild(opt);
+      }
+      return frag;
+    }
+
+    function setContent(el, content) { el.innerHTML = ''; el.appendChild(content instanceof Node ? content : document.createTextNode(String(content))); }
+
+    async function fetchComposeModels() {
+      const headers = {};
+      const token = tokenEl.value.trim();
+      if (token) headers['Authorization'] = 'Bearer ' + token;
+      const res = await fetch('/api/v1/services/models?source=config&view=capability', { headers });
+      if (!res.ok) throw new Error('Failed to load models: ' + res.status);
+      const data = await res.json();
+      const compose = data && data.byCapability && data.byCapability.compose;
+      if (!compose || typeof compose !== 'object') throw new Error('Invalid models response');
+      const mapped = {};
+      for (const provider in compose) {
+        const list = Array.isArray(compose[provider]) ? compose[provider] : [];
+        mapped[provider] = list.map(name => ({ value: name, label: name }));
+      }
+      return mapped;
+    }
+
+    async function initModels() {
+      try { modelOptions = await fetchComposeModels(); } catch (e) { modelOptions = null; }
+      const providers = modelOptions ? Object.keys(modelOptions) : ['ollama', 'openai', 'openrouter', 'lmstudio'];
+      setContent(providerEl, createOptions(providers));
+      providerEl.value = providers[0] || '';
+      updateModelOptions();
+    }
+
+    function updateModelOptions() {
+      const provider = providerEl.value;
+      const models = modelOptions && modelOptions[provider] ? modelOptions[provider] : [];
+      setContent(modelEl, createOptions(models));
+      updatePreview();
+    }
+
+    // Basic Markdown renderer (safe: escapes HTML first)
+    function renderMarkdownSimple(md) {
+      if (!md) return '';
+      let s = escapeHtml(String(md));
+
+      // Tables
+      s = s.replace(/(^|\n)(\|.*\|)\n(\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?)\n([\s\S]*?)(\n{2,}|$)/g, (m, pfx, header, sep, _g, body, tail) => {
+        const split = line => line.trim().replace(/^\|/, '').replace(/\|$/, '').split(/\s*\|\s*/);
+        const headers = split(header);
+        const aligns = split(sep).map(c => {
+          const t = c.trim();
+          const left = t.startsWith(':');
+          const right = t.endsWith(':');
+          if (left && right) return 'center';
+          if (right) return 'right';
+          if (left) return 'left';
+          return 'left';
+        });
+        const rows = [];
+        body.split('\n').forEach(line => {
+          if (line.trim().startsWith('|')) rows.push(split(line));
+        });
+        let html = '<table class="md-table"><thead><tr>' + headers.map((h, i) => `<th style=\"text-align:${aligns[i] || 'left'}\">${h}</th>`).join('') + '</tr></thead>';
+        if (rows.length) {
+          html += '<tbody>' + rows.map(r => '<tr>' + r.map((c, i) => `<td style=\"text-align:${aligns[i] || 'left'}\">${c}</td>`).join('') + '</tr>').join('') + '</tbody>';
+        }
+        html += '</table>';
+        return (pfx || '\n') + html + (tail || '\n');
+      });
+
+      // Code blocks
+      s = s.replace(/```([\s\S]*?)```/g, (m, p1) => {
+        const code = p1.replace(/^\w+\n/, '');
+        return `<pre class=\"bg-gray-900 text-gray-100 rounded-lg p-3 overflow-auto\"><code>${code}</code></pre>`;
+      });
+
+      // Headings
+      s = s
+        .replace(/^# (.+)$/gm, '<h2 class=\"text-2xl font-bold text-gray-900 mt-4 mb-2\">$1</h2>')
+        .replace(/^## (.+)$/gm, '<h3 class=\"text-xl font-semibold text-gray-800 mt-3 mb-2\">$1</h3>')
+        .replace(/^### (.+)$/gm, '<h4 class=\"text-lg font-medium text-gray-700 mt-2 mb-2\">$1</h4>');
+
+      // Bold and italics
+      s = s.replace(/\*\*(.+?)\*\*/g, '<strong class=\"font-semibold\">$1</strong>');
+      s = s.replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+      // Inline code
+      s = s.replace(/`([^`]+)`/g, '<code class=\"bg-gray-100 px-1 py-0.5 rounded text-gray-800\">$1</code>');
+
+      // Lists
+      s = s
+        .replace(/^\* (.+)$/gm, '<li class=\"ml-4 mb-1\">$1</li>')
+        .replace(/^- (.+)$/gm, '<li class=\"ml-4 mb-1\">$1</li>')
+        .replace(/^\d+\. (.+)$/gm, '<li class=\"ml-4 mb-1\">$1</li>');
+      s = s
+        .replace(/^<li/gm, '<ul class=\"list-disc list-inside mb-3\">\n<li')
+        .replace(/<\/li>\n(?!<li)/g, '</li></ul>');
+
+      // Paragraphs
+      const blocks = s.split(/\n{2,}/);
+      s = blocks.map(block => {
+        const b = block.trim();
+        if (!b) return '';
+        if (b.startsWith('<pre') || b.startsWith('<ul') || b.startsWith('<h2') || b.startsWith('<h3') || b.startsWith('<h4')) {
+          return b;
+        }
+        return '<p class=\"mb-3\">' + b.replace(/\n/g, '<br />') + '</p>';
+      }).join('\n');
+
+      return s;
+    }
+
+    function showMetrics(usage, elapsedMs) {
+      const { metricsBar, metricResponse, metricInput, metricOutput, metricTotal } = getMetricsEls();
+      if (!metricsBar) return;
+      if (metricResponse) metricResponse.textContent = `${elapsedMs.toFixed(2)} ms`;
+      if (usage) {
+        if (metricInput) metricInput.textContent = String(usage.input_tokens ?? '—');
+        if (metricOutput) metricOutput.textContent = String(usage.output_tokens ?? '—');
+        if (metricTotal) metricTotal.textContent = String(usage.total_tokens ?? '—');
+      } else {
+        if (metricInput) metricInput.textContent = '—';
+        if (metricOutput) metricOutput.textContent = '—';
+        if (metricTotal) metricTotal.textContent = '—';
+      }
+      metricsBar.classList.remove('hidden');
+    }
+
+    // --- Fullscreen support (maximize mode) ---
+    let isFullscreen = false;
+    let originalOutputHTML = null;
+    let backdropEl = null;
+
+    function ensureBackdrop() {
+      if (!backdropEl) {
+        backdropEl = document.createElement('div');
+        backdropEl.className = 'fullscreen-backdrop';
+        backdropEl.addEventListener('click', exitFullscreen);
+        document.body.appendChild(backdropEl);
+      }
+    }
+
+    function enterFullscreen() {
+      if (isFullscreen) return;
+      ensureBackdrop();
+      originalOutputHTML = outputPanel.innerHTML;
+      outputPanel.classList.add('fullscreen-output');
+      backdropEl.classList.add('active');
+
+      const content = `
+        <button onclick="exitFullscreen()" class="close-button" title="Close (ESC)">✕</button>
+        <div class="fullscreen-inner">
+          <div class="fullscreen-body">${originalOutputHTML}</div>
+        </div>`;
+      outputPanel.innerHTML = content;
+      isFullscreen = true;
+      document.addEventListener('keydown', handleEsc);
+      // Bind close button explicitly to ensure it works across browsers
+      const closeBtn = outputPanel.querySelector('.close-button');
+      if (closeBtn) closeBtn.addEventListener('click', exitFullscreen);
+      // In fullscreen, rely on the X button to exit (maximize button is hidden via CSS)
+    }
+
+    function exitFullscreen() {
+      if (!isFullscreen) return;
+      outputPanel.classList.remove('fullscreen-output');
+      if (backdropEl) backdropEl.classList.remove('active');
+      outputPanel.innerHTML = originalOutputHTML;
+      isFullscreen = false;
+      document.removeEventListener('keydown', handleEsc);
+      // Rebind button after restore
+      const btn = document.getElementById('fullscreenButton');
+      if (btn) btn.onclick = toggleOutputFullscreen;
+    }
+
+    function handleEsc(e) { if (e.key === 'Escape') exitFullscreen(); }
+    function toggleOutputFullscreen() { isFullscreen ? exitFullscreen() : enterFullscreen(); }
+    // Expose for inline handlers
+    window.exitFullscreen = exitFullscreen;
+    window.toggleOutputFullscreen = toggleOutputFullscreen;
+
+    function copyOutput() {
+      const el = document.querySelector('#outputPanel #outputText') || document.getElementById('outputText');
+      if (!el) return;
+      const text = el.innerText || '';
+      const btn = document.querySelector('#outputPanel #copyButton') || document.getElementById('copyButton');
+      const setCopiedUI = () => {
+        if (!btn) return;
+        const original = btn.getAttribute('data-original') || btn.textContent;
+        btn.setAttribute('data-original', original);
+        btn.textContent = 'Copied!';
+        btn.classList.add('bg-green-100','text-green-700','border-green-200');
+        setTimeout(() => {
+          btn.textContent = btn.getAttribute('data-original') || 'Copy';
+          btn.classList.remove('bg-green-100','text-green-700','border-green-200');
+        }, 1200);
+      };
+
+      const doCopy = () => {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(setCopiedUI).catch(() => {
+            // Fallback
+            const ta = document.createElement('textarea');
+            ta.value = text; document.body.appendChild(ta); ta.select();
+            try { document.execCommand('copy'); } catch {}
+            document.body.removeChild(ta);
+            setCopiedUI();
+          });
+        } else {
+          const ta = document.createElement('textarea');
+          ta.value = text; document.body.appendChild(ta); ta.select();
+          try { document.execCommand('copy'); } catch {}
+          document.body.removeChild(ta);
+          setCopiedUI();
+        }
+      };
+
+      doCopy();
+    }
+
+    function setOutput(content, isHtml = false) {
+      const el = document.getElementById('outputText');
+      if (!el) return;
+      if (isHtml) el.innerHTML = content; else el.textContent = content;
+    }
+
+    async function run() {
+      const req = buildRequest();
+      updatePreview();
+      const headers = { 'Content-Type': 'application/json' };
+      const token = tokenEl.value.trim();
+      if (token) headers['Authorization'] = 'Bearer ' + token;
+
+      abortController = new AbortController();
+      runBtn.classList.add('hidden');
+      cancelBtn.classList.remove('hidden');
+      setOutput('');
+      const { metricsBar } = getMetricsEls();
+      if (metricsBar) metricsBar.classList.add('hidden');
+
+      const startTime = performance.now();
+      try {
+        if (req.config.stream) {
+          const response = await fetch('/api/v1/compose', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(req),
+            signal: abortController.signal
+          });
+
+          if (!response.ok) {
+            const txt = await response.text();
+            throw new Error('Request failed: ' + response.status + ' ' + txt);
+          }
+
+          const contentType = response.headers.get('content-type');
+          if (!contentType || !contentType.includes('text/event-stream')) {
+            const data = await response.json();
+            const text = data?.text || data?.data?.text || '';
+            setOutput(renderMarkdownSimple(text || ''), true);
+            const elapsed = performance.now() - startTime;
+            showMetrics(data?.usage, elapsed);
+            return;
+          }
+
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder('utf-8');
+          let buffer = '';
+          let fullText = '';
+
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const parts = buffer.split('\n\n');
+            buffer = parts.pop() || '';
+            for (const part of parts) {
+              if (!part.startsWith('data:')) continue;
+              const json = part.replace(/^data:\s*/, '');
+              try {
+                const evt = JSON.parse(json);
+                if (evt.chunk) { fullText += evt.chunk; setOutput(renderMarkdownSimple(fullText), true); }
+                if (evt.done) {
+                  const elapsed = performance.now() - startTime;
+                  showMetrics(evt.usage, elapsed);
+                }
+              } catch { /* ignore */ }
+            }
+          }
+        } else {
+          const res = await fetch('/api/v1/compose', { method: 'POST', headers, body: JSON.stringify(req), signal: abortController.signal });
+          if (!res.ok) throw new Error('Request failed: ' + res.status);
+          const data = await res.json();
+          const text = data?.text || '';
+          setOutput(renderMarkdownSimple(text || ''), true);
+          const elapsed = performance.now() - startTime;
+          showMetrics(data?.usage, elapsed);
+        }
+      } catch (err) {
+        setOutput('Error: ' + (err?.message || String(err)));
+      } finally {
+        cancelBtn.classList.add('hidden');
+        runBtn.classList.remove('hidden');
+        abortController = null;
+      }
+    }
+
+    function cancel() { if (abortController) abortController.abort(); }
+
+    function setSample() {
+      topicEl.value = 'The benefits of mindful breaks during work';
+      maxLengthEl.value = 120;
+      updatePreview();
+    }
+
+    providerEl.addEventListener('change', updateModelOptions);
+    [topicEl, maxLengthEl, streamingEl, providerEl, modelEl].forEach(el => el.addEventListener('input', updatePreview));
+    runBtn.addEventListener('click', (e) => { e.preventDefault(); run(); });
+    cancelBtn.addEventListener('click', (e) => { e.preventDefault(); cancel(); });
+    loadSampleBtn.addEventListener('click', (e) => { e.preventDefault(); setSample(); });
+
+    initModels();
+    updatePreview();
+  </script>
+</body>
+</html>

@@ -3,6 +3,8 @@ import * as path from 'path'
 
 export type ModelCapability =
   | 'summarize'
+  | 'rewrite'
+  | 'compose'
   | 'keywords'
   | 'sentiment'
   | 'planning'
@@ -65,5 +67,4 @@ export function getModelsCatalogByProvider(): Record<string, ProviderModelConfig
   }
   return result
 }
-
 
