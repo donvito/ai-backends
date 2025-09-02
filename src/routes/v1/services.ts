@@ -62,27 +62,29 @@ const modelsSchema = z.object({
   available: z.boolean()
 })
 
-const capabilityEnum = z.enum(['summarize', 'keywords', 'sentiment', 'emailReply', 'vision', 'askText', 'translate', 'meetingNotes', 'planning'])
+const capabilityEnum = z.enum(['summarize', 'rewrite', 'compose', 'keywords', 'sentiment', 'emailReply', 'vision', 'askText', 'translate', 'meetingNotes', 'planning'])
 const byProviderSchema = z.record(z.array(z.string()))
 const providerViewSchema = z.record(z.array(z.object({
   name: z.string(),
   capabilities: z.array(capabilityEnum),
   notes: z.string().optional()
 })))
-const modelsGuidanceSchema = z.object({
-  source: z.literal('config'),
-  byCapability: z.object({
-    summarize: byProviderSchema,
-    keywords: byProviderSchema,
-    sentiment: byProviderSchema,
-    emailReply: byProviderSchema,
-    planning: byProviderSchema,
-    vision: byProviderSchema,
-    askText: byProviderSchema,
-    translate: byProviderSchema,
-    meetingNotes: byProviderSchema,
+  const modelsGuidanceSchema = z.object({
+    source: z.literal('config'),
+    byCapability: z.object({
+      summarize: byProviderSchema,
+      rewrite: byProviderSchema,
+      compose: byProviderSchema,
+      keywords: byProviderSchema,
+      sentiment: byProviderSchema,
+      emailReply: byProviderSchema,
+      planning: byProviderSchema,
+      vision: byProviderSchema,
+      askText: byProviderSchema,
+      translate: byProviderSchema,
+      meetingNotes: byProviderSchema,
+    })
   })
-})
 
 async function handleServiceStatus(c: Context) {
   try {
@@ -102,6 +104,8 @@ async function handleGetModels(c: Context) {
     if (source === 'config') {
       const byCapability = {
         summarize: getModelsByCapability('summarize'),
+        rewrite: getModelsByCapability('rewrite'),
+        compose: getModelsByCapability('compose'),
         keywords: getModelsByCapability('keywords'),
         sentiment: getModelsByCapability('sentiment'),
         emailReply: getModelsByCapability('emailReply'),
@@ -275,5 +279,4 @@ export default {
   handler: router,
   mountPath: 'services'
 }
-
 

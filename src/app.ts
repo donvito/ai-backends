@@ -33,10 +33,25 @@ function configureApiSecurity(app: OpenAPIHono, tokenConfig: string) {
                 path === '/api/sentiment-demo' ||
                 path === '/api/keywords-demo' ||
                 path === '/api/email-reply-demo' ||
+                path === '/api/rewrite-demo' ||
+                path === '/api/compose-demo' ||
                 path === '/api/translate-demo' ||
                 path === '/api/meeting-notes-demo' ||
                 path === '/api/asktext-demo' ||
                 path === '/api/project-planner-demo' ||
+                // Versioned demo pages (v1)
+                path === '/api/v1/demos' ||
+                path === '/api/v1/highlighter-demo' ||
+                path === '/api/v1/summarize-demo' ||
+                path === '/api/v1/sentiment-demo' ||
+                path === '/api/v1/keywords-demo' ||
+                path === '/api/v1/email-reply-demo' ||
+                path === '/api/v1/rewrite-demo' ||
+                path === '/api/v1/compose-demo' ||
+                path === '/api/v1/translate-demo' ||
+                path === '/api/v1/meeting-notes-demo' ||
+                path === '/api/v1/asktext-demo' ||
+                path === '/api/v1/project-planner-demo' ||
                 path === '/api/models' ||
                 path === '/api/jsoneditor' ||
                 // Public read-only service catalog for demos
