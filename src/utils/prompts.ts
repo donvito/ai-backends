@@ -15,6 +15,24 @@ Just return the summary of the conversation.
 ${text}
 </text>
 :`;
+} 
+
+/**
+ * System prompt template for composing text from a topic
+ */
+export function composePrompt(
+  topic: string,
+  maxLength?: number
+): string {
+  const lengthInstruction = maxLength ? ` Limit to ${maxLength} words or less.` : ''
+  const styleInstruction = ' Use Markdown formatting for paragraphs and lists. Do not add headings.'
+  return `Compose a clear, informative piece about the topic below.${lengthInstruction}${styleInstruction}
+Just return the composed text without extra explanations.
+
+<topic>
+${topic}
+</topic>
+:`
 }
 
 /**
