@@ -26,6 +26,8 @@ Since APIs are ready to use, you don't need to understand prompt engineering. Ju
 | **/api/highlighter** | Identify and highlight the most important information in text |
 | **/api/meeting-notes** | Transform meeting notes into structured summaries |
 | **/api/project-planner** | Create detailed project plans with steps, timelines, and considerations |
+| **/api/rewrite** | Rewrite text with instructions (improve, shorten, fix grammar, tone) |
+| **/api/compose** | Compose short-form text given a topic |
 
 ### Image Processing
 
