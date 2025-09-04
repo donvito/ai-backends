@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { generateObject, generateText, streamText } from "ai";
 import { anthropic } from '@ai-sdk/anthropic';
+import type { AIProvider } from './interfaces';
 
 //fallback to cheapest model
 const ANTHROPIC_MODEL = process.env.ANTHROPIC_MODEL || 'claude-3-haiku-20240307';
@@ -85,3 +86,14 @@ export async function getAvailableModels(): Promise<string[]> {
     'claude-3-haiku-20240307',
   ];
 }
+
+const provider: AIProvider = {
+  name: 'anthropic',
+  generateChatStructuredResponse,
+  generateChatTextResponse,
+  generateChatTextStreamResponse,
+  getAvailableModels,
+  // no vision support
+};
+
+export default provider;

@@ -3,6 +3,10 @@ import { aigatewayConfig } from '../config/services'
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { generateText, streamText, generateObject } from 'ai'
 import OpenAI from 'openai'
+import type { AIProvider } from './interfaces'
+
+const normalizedBase = (aigatewayConfig.baseURL || '').replace(/\/$/, '')
+const AIGATEWAY_BASE_URL = `${normalizedBase}`
 
 const aigateway = createOpenAICompatible({
   name: 'aigateway',
@@ -126,4 +130,14 @@ function parseAiGatewayStructuredResponse<T>(
   }
 }
 
+const provider: AIProvider = {
+  name: 'aigateway',
+  generateChatStructuredResponse,
+  generateChatTextResponse,
+  generateChatTextStreamResponse,
+  getAvailableModels,
+  // no vision support
+};
+
+export default provider;
 export { AIGATEWAY_BASE_URL }

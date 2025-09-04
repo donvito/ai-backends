@@ -2,6 +2,7 @@ import OpenAI from "openai";
 import { z } from "zod";
 import { openai } from '@ai-sdk/openai';
 import { generateObject, generateText, streamText } from "ai";
+import type { AIProvider } from './interfaces';
 
 const OPENAI_MODEL = 'gpt-4.1-nano'
 
@@ -83,3 +84,14 @@ export async function getAvailableModels(): Promise<string[]> {
     'gpt-4.1-nano',
   ];
 }
+
+const provider: AIProvider = {
+  name: 'openai',
+  generateChatStructuredResponse,
+  generateChatTextResponse,
+  generateChatTextStreamResponse,
+  getAvailableModels,
+  // no vision support
+};
+
+export default provider;

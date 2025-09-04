@@ -4,6 +4,7 @@ import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { generateText, streamText } from 'ai'
 import { zodToJsonSchema } from 'zod-to-json-schema'
 import OpenAI from 'openai'
+import type { AIProvider } from './interfaces'
 
 // Build base URL ensuring single trailing /v1
 const normalizedBase = (lmstudioConfig.baseURL || 'http://localhost:1234').replace(/\/$/, '')
@@ -136,6 +137,15 @@ function parseLmStudioStructuredResponse<T>(
   }
 }
 
+const provider: AIProvider = {
+  name: 'lmstudio',
+  generateChatStructuredResponse,
+  generateChatTextResponse,
+  generateChatTextStreamResponse,
+  getAvailableModels,
+  // no vision support
+};
+
+export default provider;
+
 export { LMSTUDIO_BASE_URL }
-
-

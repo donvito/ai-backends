@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { describeImagePrompt } from "../utils/prompts";
+import type { AIProvider } from './interfaces';
 
 // Configuration
 const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
@@ -101,11 +102,11 @@ export async function getAvailableModels(): Promise<string[]> {
  */
 export async function getAvailableVisionModels(): Promise<string[]> {
   try {
-   const supportedModels = await getAvailableModels()
-   return supportedModels.filter(model => model.includes('vision'))
+   const supportedModels = await getAvailableModels();
+   return supportedModels.filter(model => model.includes('vision'));
   } catch (error) {
-    console.warn('Failed to get supported models:', error)
-    return []
+    console.warn('Failed to get supported models:', error);
+    return [];
   }
 }
 
@@ -114,12 +115,12 @@ export async function getAvailableVisionModels(): Promise<string[]> {
  */
 export async function isVisionModelSupported(service: string, model: string): Promise<boolean> {
   
-  const ollamaVisionModels = ['llama3.2-vision:11b']
+  const ollamaVisionModels = ['llama3.2-vision:11b'];
   if (service === 'ollama') {
-    return ollamaVisionModels.includes(model)
+    return ollamaVisionModels.includes(model);
   }
 
-  return false
+  return false;
 }
 
 /**
@@ -154,7 +155,7 @@ export async function describeImage(
       content: describeImagePrompt(),
       images: images
     }
-  ]
+  ];
   
   const payload = {
     model: modelToUse,
@@ -235,5 +236,15 @@ export async function generateChatTextStreamResponse(
   return result;
 }
 
+const provider: AIProvider = {
+  name: 'ollama',
+  generateChatStructuredResponse,
+  generateChatTextResponse,
+  generateChatTextStreamResponse,
+  getAvailableModels,
+  describeImage,
+};
+
+export default provider;
 
 export { OLLAMA_BASE_URL, OLLAMA_MODEL, OLLAMA_CHAT_MODEL, OLLAMA_VISION_MODEL }; 

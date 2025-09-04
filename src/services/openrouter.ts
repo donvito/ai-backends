@@ -2,6 +2,7 @@ import { openrouter } from '@openrouter/ai-sdk-provider';
 import { generateObject, generateText, streamText } from 'ai';
 import { z } from 'zod';
 import { openrouterConfig } from '../config/services';
+import type { AIProvider } from './interfaces';
 
 /**
  * Generate a structured response for chat using OpenRouter
@@ -75,3 +76,14 @@ export async function getAvailableModels(): Promise<string[]> {
     'openai/gpt-4.1-nano',
   ];
 }
+
+const provider: AIProvider = {
+  name: 'openrouter',
+  generateChatStructuredResponse,
+  generateChatTextResponse,
+  generateChatTextStreamResponse,
+  getAvailableModels,
+  // no vision support
+};
+
+export default provider;

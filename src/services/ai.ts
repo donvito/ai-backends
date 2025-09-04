@@ -1,10 +1,4 @@
 import { z } from "zod";
-import * as openaiService from "./openai";
-import * as ollamaService from "./ollama";
-import * as anthropicService from "./anthropic";
-import * as openrouterService from "./openrouter";
-import * as lmstudioService from "./lmstudio";
-import * as aigatewayService from "./aigateway";
 import { 
   openaiConfig, 
   ollamaConfig, 
@@ -15,6 +9,8 @@ import {
   isServiceEnabled 
 } from "../config/services";
 import { llmRequestSchema } from "../schemas/v1/llm";
+import { serviceRegistry } from "./registry";
+import type { ProviderName } from "./interfaces";
 
 enum Provider {
   openai = 'openai',
@@ -26,7 +22,7 @@ enum Provider {
 }
 
 // Service types
-export type AIService = 'openai' | 'anthropic' | 'ollama' | 'openrouter' | 'lmstudio' | 'aigateway';
+export type AIService = ProviderName;
 
 export interface ImageDescriptionResponse {
   model: string;
@@ -83,28 +79,24 @@ export async function generateImageResponse(
   stream: boolean = false,
   temperature: number = 0.3
 ): Promise<ImageDescriptionResponse> {
-  
-  try {
-    let result;
-    
-    switch (service) {
-      case 'ollama':
-        result = await ollamaService.describeImage(images, model, stream, temperature);
-        return {
-          ...result,
-          usage: {
-            input_tokens: result.prompt_eval_count || 0,
-            output_tokens: result.eval_count || 0,
-            total_tokens: (result.prompt_eval_count || 0) + (result.eval_count || 0),
-          },
-          service: service
-        };              
-      default:
-        throw new Error(`Vision capabilities not supported for service: ${service}`);
-    }
-  } catch (error) {
-    throw error;
+  const provider = serviceRegistry.get(service);
+  if (!provider) {
+    throw new Error(`Provider not registered: ${service}`);
   }
+  if (typeof provider.describeImage !== 'function') {
+    throw new Error(`Vision capabilities not supported for service: ${service}`);
+  }
+
+  const result = await provider.describeImage(images, model, stream, temperature);
+  return {
+    ...result,
+    usage: {
+      input_tokens: result.prompt_eval_count || 0,
+      output_tokens: result.eval_count || 0,
+      total_tokens: (result.prompt_eval_count || 0) + (result.eval_count || 0),
+    },
+    service: service
+  };
 }
 
 /**
@@ -115,26 +107,9 @@ export async function getAvailableModels(service: AIService): Promise<string[]> 
     return [];
   }
   
-  switch (service) {
-    case Provider.openai:
-      return openaiService.getAvailableModels();
-
-    case Provider.anthropic:      
-      return anthropicService.getAvailableModels();
-      
-    case Provider.ollama:
-      return await ollamaService.getAvailableModels();
-
-    case Provider.openrouter:
-      return await openrouterService.getAvailableModels();
-    case Provider.lmstudio:
-      return await lmstudioService.getAvailableModels();
-    case Provider.aigateway:
-      return await aigatewayService.getAvailableModels();
-      
-    default:
-      return [];
-  }
+  const provider = serviceRegistry.get(service);
+  if (!provider) return [];
+  return provider.getAvailableModels();
 }
 
 /**
@@ -208,32 +183,21 @@ export async function processStructuredOutputRequest(
   config: z.infer<typeof llmRequestSchema>,
   temperature: number = 0
 ): Promise<any> {
-  const provider = config.provider;
+  const providerName = config.provider as ProviderName;
   const model = config.model;
 
-  switch (provider) {
-    case Provider.ollama:
-      return await ollamaService.generateChatStructuredResponse(prompt, schema, model, temperature);
-    case Provider.openai:
-      return await openaiService.generateChatStructuredResponse(prompt, schema, model, temperature);
-    case Provider.anthropic:
-      return await anthropicService.generateChatStructuredResponse(prompt, schema, model, temperature);
-    case Provider.openrouter:
-      return await openrouterService.generateChatStructuredResponse(prompt, schema, model, temperature);
-    case Provider.lmstudio:
-      return await lmstudioService.generateChatStructuredResponse(prompt, schema, model, temperature);
-    case Provider.aigateway:
-      return await aigatewayService.generateChatStructuredResponse(prompt, schema, model, temperature);
-    default:
-      throw new Error(`Unsupported service: ${provider}`);
+  const provider = serviceRegistry.get(providerName);
+  if (!provider) {
+    throw new Error(`Unsupported service: ${providerName}`);
   }
+  return provider.generateChatStructuredResponse(prompt, schema, model, temperature);
 }   
 
 export async function processTextOutputRequest(
   prompt: string,
   config: z.infer<typeof llmRequestSchema>,  
 ): Promise<any> {
-  const provider = config.provider;
+  const providerName = config.provider as ProviderName;
   const model = config.model;
   const stream = config.stream || false;
 
@@ -244,47 +208,25 @@ export async function processTextOutputRequest(
     return processTextOutputStreamRequest(prompt, config);
   }
 
-  switch (provider) {
-    case Provider.ollama:
-      return await ollamaService.generateChatTextResponse(prompt, model); 
-    case Provider.openai:
-      return await openaiService.generateChatTextResponse(prompt, model);
-    case Provider.anthropic:
-      return await anthropicService.generateChatTextResponse(prompt, model);
-    case Provider.openrouter:
-      return await openrouterService.generateChatTextResponse(prompt, model);
-    case Provider.lmstudio:
-      return await lmstudioService.generateChatTextResponse(prompt, model);
-    case Provider.aigateway:
-      return await aigatewayService.generateChatTextResponse(prompt, model);
-    default:
-      throw new Error(`Unsupported service: ${provider}`);
+  const provider = serviceRegistry.get(providerName);
+  if (!provider) {
+    throw new Error(`Unsupported service: ${providerName}`);
   }
+  return provider.generateChatTextResponse(prompt, model);
 }
 
 export async function processTextOutputStreamRequest(
   prompt: string,
   config: z.infer<typeof llmRequestSchema>,  
 ): Promise<any> {
-  const provider = config.provider;
+  const providerName = config.provider as ProviderName;
   const model = config.model;
 
   console.log('STREAMING MODEL TO USE', model);
 
-  switch (provider) {
-    case Provider.ollama:
-      return await ollamaService.generateChatTextStreamResponse(prompt, model);
-    case Provider.openai:
-      return await openaiService.generateChatTextStreamResponse(prompt, model);
-    case Provider.anthropic:
-      return await anthropicService.generateChatTextStreamResponse(prompt, model);
-    case Provider.openrouter:
-      return await openrouterService.generateChatTextStreamResponse(prompt, model);
-    case Provider.lmstudio:
-      return await lmstudioService.generateChatTextStreamResponse(prompt, model);
-    case Provider.aigateway:
-      return await aigatewayService.generateChatTextStreamResponse(prompt, model);
-    default:
-      throw new Error(`Unsupported service: ${provider}`);
+  const provider = serviceRegistry.get(providerName);
+  if (!provider) {
+    throw new Error(`Unsupported service: ${providerName}`);
   }
+  return provider.generateChatTextStreamResponse(prompt, model);
 }   
