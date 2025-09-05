@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { generateObject, generateText, streamText } from "ai";
 import { anthropic } from '@ai-sdk/anthropic';
+import type { AIProvider } from './interfaces';
 
 //fallback to cheapest model
 const ANTHROPIC_MODEL = process.env.ANTHROPIC_MODEL || 'claude-3-haiku-20240307';
@@ -17,71 +18,73 @@ export function getAnthropicClient() {
   });
 }
 
-export async function generateChatStructuredResponse(
-  prompt: string,
-  schema: z.ZodType,
-  model?: string,
-  temperature: number = 0
-): Promise<any> {
-  
-  const modelToUse = anthropic(model || ANTHROPIC_MODEL);
+class AnthropicProvider implements AIProvider {
+  name = 'anthropic' as const;
 
-  const result = await generateObject({
-    model: modelToUse,
-    schema: schema,
-    prompt: prompt,
-    temperature: temperature
-  });
+  async generateChatStructuredResponse(
+    prompt: string,
+    schema: z.ZodType,
+    model?: string,
+    temperature: number = 0
+  ): Promise<any> {
+    try {
+      const modelToUse = anthropic(model || ANTHROPIC_MODEL);
+      const result = await generateObject({
+        model: modelToUse,
+        schema,
+        prompt,
+        temperature
+      });
+      return result;
+    } catch (error) {
+      console.error('Anthropic structured response error: ', error);
+      throw new Error(`Anthropic structured response error: ${error}`);
+    }
+  }
 
-  return result;
+  async generateChatTextResponse(
+    prompt: string,
+    model?: string,
+  ): Promise<any> {
+    try {      
+      const modelToUse = anthropic(model || ANTHROPIC_MODEL);
+      const result = await generateText({
+        model: modelToUse,
+        prompt
+      });
+      console.log('ANTHROPIC RESULT', result);
+      return result;
+    } catch (error) {
+      console.error('Anthropic text response error: ', error);
+      throw new Error(`Anthropic text response error: ${error}`);
+    }
+  }
+
+  async generateChatTextStreamResponse(
+    prompt: string,
+    model?: string,
+  ): Promise<any> {
+    try {
+      const modelToUse = anthropic(model || ANTHROPIC_MODEL);
+      const result = await streamText({
+        model: modelToUse,
+        prompt
+      });
+      return result;
+    } catch (error) {
+      console.error('Anthropic streaming response error: ', error);
+      throw new Error(`Anthropic streaming response error: ${error}`);
+    }
+  }
+
+  async getAvailableModels(): Promise<string[]> {
+    return [
+      'claude-3-haiku-20240307',
+    ];
+  }
 }
 
-export async function generateChatTextResponse(
-  prompt: string,
-  model?: string,
-): Promise<any> {  
-
-  console.log('model', model);
-  
-  const modelToUse = anthropic(model || ANTHROPIC_MODEL);
-
-  const result = await generateText({
-    model: modelToUse,
-    prompt: prompt
-  });
-
-  console.log('ANTHROPIC RESULT', result);
-
-  return result;
-}
-
-export async function generateChatTextStreamResponse(
-  prompt: string,
-  model?: string,
-): Promise<any> {  
-
-  console.log('streaming model', model);
-  
-  const modelToUse = anthropic(model || ANTHROPIC_MODEL);
-
-  const result = await streamText({
-    model: modelToUse,
-    prompt: prompt
-  });
-
-  return result;
-}
+const provider = new AnthropicProvider();
 
 export { ANTHROPIC_MODEL };
-
-/**
- * Get available models from Anthropic
- * Note: Anthropic supports hundreds of models, this returns commonly used ones
- */
-export async function getAvailableModels(): Promise<string[]> {
-  // Anthropic supports hundreds of models
-  // Returning some popular ones as examples
-  return [
-    'claude-3-haiku-20240307',
-  ];
-}
+export default provider;

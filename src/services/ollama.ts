@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { describeImagePrompt } from "../utils/prompts";
+import type { AIProvider } from './interfaces';
 
 // Configuration
 const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
@@ -36,17 +37,17 @@ interface OllamaChatResponse {
 async function ollamaRequest(endpoint: string, payload: any): Promise<any> {
   const url = `${OLLAMA_BASE_URL}${endpoint}`;
   const startTime = Date.now();
-  
+
   console.log('[OLLAMA REQUEST]');
   console.log('URL:', url);
   console.log('Payload:', JSON.stringify(payload, null, 2));
-  
+
   const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(payload),    
+    body: JSON.stringify(payload),
   });
 
   const duration = Date.now() - startTime;
@@ -61,12 +62,12 @@ async function ollamaRequest(endpoint: string, payload: any): Promise<any> {
   }
 
   const responseData = await response.json();
-  
+
   console.log('[OLLAMA RESPONSE]');
   console.log('Duration:', `${duration}ms`);
   console.log('Status:', response.status);
   console.log('Raw Response:', JSON.stringify(responseData, null, 2));
-  
+
   // Log key metrics if available
   if (responseData.prompt_eval_count || responseData.eval_count) {
     console.log('Token Usage:');
@@ -78,162 +79,142 @@ async function ollamaRequest(endpoint: string, payload: any): Promise<any> {
   return responseData;
 }
 
+class OllamaProvider implements AIProvider {
+  name = 'ollama' as const;
 
-/**
- * Get available models from Ollama
- */
-export async function getAvailableModels(): Promise<string[]> {
-  try {
-    const response = await fetch(`${OLLAMA_BASE_URL}/api/tags`);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch models: ${response.status}`);
+  async describeImage(
+    images: string[],
+    model?: string,
+    stream: boolean = false,
+    temperature: number = 0.3
+  ): Promise<{
+    model: string;
+    created_at: string;
+    message: {
+      role: string;
+      content: string;
+    };
+    done_reason: string;
+    done: boolean;
+    total_duration?: number;
+    load_duration?: number;
+    prompt_eval_count?: number;
+    prompt_eval_duration?: number;
+    eval_count?: number;
+    eval_duration?: number;
+  }> {
+    const modelToUse = model || OLLAMA_VISION_MODEL;
+
+    const messages = [
+      {
+        role: 'user',
+        content: describeImagePrompt(),
+        images: images
+      }
+    ];
+
+    const payload = {
+      model: modelToUse,
+      messages: messages,
+      stream: stream,
+      options: {
+        temperature: temperature,
+      }
+    };
+
+    const response: OllamaChatResponse = await ollamaRequest('/api/chat', payload);
+
+    return {
+      model: response.model,
+      created_at: response.created_at,
+      message: response.message,
+      done_reason: response.done ? 'stop' : 'length',
+      done: response.done,
+      total_duration: response.total_duration,
+      load_duration: response.load_duration,
+      prompt_eval_count: response.prompt_eval_count,
+      prompt_eval_duration: response.prompt_eval_duration,
+      eval_count: response.eval_count,
+      eval_duration: response.eval_duration
+    };
+  }
+
+  async generateChatStructuredResponse(
+    prompt: string,
+    schema: z.ZodType,
+    model?: string,
+    temperature: number = 0
+  ): Promise<any> {
+    try {
+      const modelToUse = ollama(model || OLLAMA_CHAT_MODEL);
+
+      const result = await generateObject({
+        model: modelToUse,
+        prompt: prompt,
+        schema: schema,
+        temperature: temperature,
+      });
+
+      return result;
+    } catch (error) {
+      console.error('Ollama structured response error: ', error);
+      throw new Error(`Ollama structured response error: ${error}`);
     }
-    const data = await response.json();
-    return data.models?.map((model: any) => model.name) || [];
-  } catch (error) {
-    console.warn('Failed to fetch available models:', error);
-    return [];
+  }
+
+  async generateChatTextResponse(
+    prompt: string,
+    model?: string,
+  ): Promise<any> {
+    try {
+    const modelToUse = ollama(model || OLLAMA_CHAT_MODEL);
+    console.log('OLLAMA_BASE_URL', OLLAMA_BASE_URL);
+    const result = await generateText({
+      model: modelToUse,
+      prompt: prompt
+      });
+      return result;
+    } catch (error) {
+      console.error('Ollama text response error: ', error);
+      throw new Error(`Ollama text response error: ${error}`);
+    }
+  }
+
+  async generateChatTextStreamResponse(
+    prompt: string,
+    model?: string,
+  ): Promise<any> {
+    try {
+    const modelToUse = ollama(model || OLLAMA_CHAT_MODEL);
+    console.log('OLLAMA STREAMING - BASE_URL', OLLAMA_BASE_URL);
+    const result = await streamText({
+      model: modelToUse,
+      prompt: prompt
+    });
+      return result;
+    } catch (error) {
+      console.error('Ollama streaming response error: ', error);
+      throw new Error(`Ollama streaming response error: ${error}`);
+    }
+  }
+
+  async getAvailableModels(): Promise<string[]> {
+    try {
+      const response = await fetch(`${OLLAMA_BASE_URL}/api/tags`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch models: ${response.status}`);
+      }
+      const data = await response.json();
+      return data.models?.map((model: any) => model.name) || [];
+    } catch (error) {
+      console.warn('Failed to fetch available models:', error);
+      return [];
+    }
   }
 }
 
-/**
- * Get available vision models from Ollama
- */
-export async function getAvailableVisionModels(): Promise<string[]> {
-  try {
-   const supportedModels = await getAvailableModels()
-   return supportedModels.filter(model => model.includes('vision'))
-  } catch (error) {
-    console.warn('Failed to get supported models:', error)
-    return []
-  }
-}
+const provider = new OllamaProvider();
 
-/**
- * Validate if a model is supported for vision tasks
- */
-export async function isVisionModelSupported(service: string, model: string): Promise<boolean> {
-  
-  const ollamaVisionModels = ['llama3.2-vision:11b']
-  if (service === 'ollama') {
-    return ollamaVisionModels.includes(model)
-  }
+export default provider;
 
-  return false
-}
-
-/**
- * Describe an image using Ollama vision model
- */
-export async function describeImage(
-  images: string[],
-  model?: string,
-  stream: boolean = false,
-  temperature: number = 0.3
-): Promise<{
-  model: string;
-  created_at: string;
-  message: {
-    role: string;
-    content: string;
-  };
-  done_reason: string;
-  done: boolean;
-  total_duration?: number;
-  load_duration?: number;
-  prompt_eval_count?: number;
-  prompt_eval_duration?: number;
-  eval_count?: number;
-  eval_duration?: number;
-}> {
-  const modelToUse = model || OLLAMA_VISION_MODEL;
-
-  const messages = [
-    {
-      role: 'user',
-      content: describeImagePrompt(),
-      images: images
-    }
-  ]
-  
-  const payload = {
-    model: modelToUse,
-    messages: messages,
-    stream: stream,
-    options: {
-      temperature: temperature,
-    }
-  };
-
-  const response: OllamaChatResponse = await ollamaRequest('/api/chat', payload);
-  
-  return {
-    model: response.model,
-    created_at: response.created_at,
-    message: response.message,
-    done_reason: response.done ? 'stop' : 'length',
-    done: response.done,
-    total_duration: response.total_duration,
-    load_duration: response.load_duration,
-    prompt_eval_count: response.prompt_eval_count,
-    prompt_eval_duration: response.prompt_eval_duration,
-    eval_count: response.eval_count,
-    eval_duration: response.eval_duration
-  };
-}
-
-export async function generateChatStructuredResponse(
-  prompt: string,
-  schema: z.ZodType,
-  model?: string,
-  temperature: number = 0
-): Promise<any> {  
-  
-  const modelToUse = ollama(model || OLLAMA_CHAT_MODEL);
-
-  const result = await generateObject({
-    model: modelToUse,
-    prompt: prompt,
-    schema: schema,
-    temperature: temperature,    
-  });
-
-  return result;
-}
-
-export async function generateChatTextResponse(
-  prompt: string,
-  model?: string,
-): Promise<any> {  
-  
-  const modelToUse = ollama(model || OLLAMA_CHAT_MODEL);
-  
-  console.log('OLLAMA_BASE_URL', OLLAMA_BASE_URL);
-
-  const result = await generateText({
-    model: modelToUse,
-    prompt: prompt
-  });
-
-  return result;
-}
-
-export async function generateChatTextStreamResponse(
-  prompt: string,
-  model?: string,
-): Promise<any> {  
-  
-  const modelToUse = ollama(model || OLLAMA_CHAT_MODEL);
-  
-  console.log('OLLAMA STREAMING - BASE_URL', OLLAMA_BASE_URL);
-
-  const result = await streamText({
-    model: modelToUse,
-    prompt: prompt
-  });
-
-  return result;
-}
-
-
-export { OLLAMA_BASE_URL, OLLAMA_MODEL, OLLAMA_CHAT_MODEL, OLLAMA_VISION_MODEL }; 
+export { OLLAMA_BASE_URL, OLLAMA_MODEL, OLLAMA_CHAT_MODEL, OLLAMA_VISION_MODEL };
