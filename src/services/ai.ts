@@ -6,6 +6,7 @@ import {
   openrouterConfig,
   lmstudioConfig,
   aigatewayConfig,
+  llamacppConfig,
   isServiceEnabled 
 } from "../config/services";
 import { llmRequestSchema } from "../schemas/v1/llm";
@@ -173,11 +174,10 @@ export async function getServiceStatus() {
       }
     },
     llamacpp: {
-      enabled: true,
+      enabled: isServiceEnabled('LlamaCpp'),
       available: await checkServiceAvailability(Provider.llamacpp),
       config: {
-        baseURL: 'http://localhost:8080',
-        model: 'default',
+        baseURL: llamacppConfig.baseURL,
       }
     }
   };

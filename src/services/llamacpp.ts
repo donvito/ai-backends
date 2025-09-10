@@ -29,7 +29,7 @@ function parseLlamaCppStructuredResponse<T>(
   const contentRaw = choice?.message?.content;
 
   if (typeof contentRaw !== 'string') {
-    throw new Error('LM Studio returned non-string content for structured response');
+    throw new Error('LlamaCpp returned non-string content for structured response');
   }
 
   let parsedObject: unknown;
@@ -69,7 +69,6 @@ class LlamaCppProvider implements AIProvider {
   ): Promise<any> {
     const modelId = model || llamacppConfig.chatModel;
 
-    // Convert Zod schema to JSON Schema for LM Studio's OpenAI-compatible endpoint
     const jsonSchema = zodToJsonSchema(schema);
 
     const completion = await openAIClient.chat.completions.create({
