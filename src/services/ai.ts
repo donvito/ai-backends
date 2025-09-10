@@ -6,6 +6,7 @@ import {
   openrouterConfig,
   lmstudioConfig,
   aigatewayConfig,
+  llamacppConfig,
   isServiceEnabled 
 } from "../config/services";
 import { llmRequestSchema } from "../schemas/v1/llm";
@@ -19,6 +20,7 @@ enum Provider {
   openrouter = 'openrouter',
   lmstudio = 'lmstudio',
   aigateway = 'aigateway',
+  llamacpp = 'llamacpp',
 }
 
 // Service types
@@ -64,6 +66,8 @@ export async function checkServiceAvailability(service: AIService): Promise<bool
       return isServiceEnabled('LMStudio');
     case Provider.aigateway:
       return isServiceEnabled('AIGateway');
+    case Provider.llamacpp:
+      return isServiceEnabled('LlamaCpp');
     default:
       return false;
   }
@@ -167,6 +171,13 @@ export async function getServiceStatus() {
         baseURL: aigatewayConfig.baseURL,
         model: aigatewayConfig.model,
         chatModel: aigatewayConfig.chatModel,
+      }
+    },
+    llamacpp: {
+      enabled: isServiceEnabled('LlamaCpp'),
+      available: await checkServiceAvailability(Provider.llamacpp),
+      config: {
+        baseURL: llamacppConfig.baseURL,
       }
     }
   };

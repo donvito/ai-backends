@@ -21,6 +21,7 @@ This document outlines coding standards and best practices for the AI Backends p
 - Document APIs using OpenAPI/Swagger via Hono's built-in support
 - Return appropriate HTTP status codes
 - Implement proper error handling and validation
+- Routes should be in the src/routes folder and named with dash-separated lowercase words
 
 ## Error Handling
 
