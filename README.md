@@ -47,6 +47,7 @@ More to come...check swagger docs for updated endpoints.
 | [Anthropic](https://www.anthropic.com/) | Claude models | Available |
 | [OpenRouter](https://openrouter.ai/) | Open source and private models |  Available |
 | [Vercel AI Gateway](https://vercel.com/ai-gateway) | Open source and private models | Available |
+| [LlamaCpp](https://github.com/ggml-org/llama.cpp) | Local models via llama.cpp server (self-hosted) | Available |
 | [Google](https://ai.google.dev/) | Gemini models | In Progress |
 
 
@@ -148,6 +149,11 @@ OLLAMA_BASE_URL=http://localhost:11434
 OLLAMA_TIMEOUT=30000
 
 # You can change OLLAMA_BASE_URL to use a remote Ollama instance
+ 
+# LlamaCpp Configuration
+LLAMACPP_BASE_URL=http://localhost:8080
+
+# You can change LLAMACPP_BASE_URL to use a remote LlamaCpp instance
  
 # LM Studio Configuration 
 LMSTUDIO_ENABLED=true
