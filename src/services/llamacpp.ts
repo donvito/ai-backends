@@ -7,7 +7,7 @@ import { zodToJsonSchema } from 'zod-to-json-schema';
 import { llamacppConfig } from '../config/services';
 
 // Build base URL ensuring single trailing /v1
-const normalizedBase = 'http://localhost:8080'.replace(/\/$/, '');
+const normalizedBase = (llamacppConfig.baseURL || 'http://localhost:8080').replace(/\/$/, '');
 const LLAMACPP_BASE_URL = `${normalizedBase}`;
 
 const llamacpp = createOpenAICompatible({
