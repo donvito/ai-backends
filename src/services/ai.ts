@@ -66,7 +66,7 @@ export async function checkServiceAvailability(service: AIService): Promise<bool
     case Provider.aigateway:
       return isServiceEnabled('AIGateway');
     case Provider.llamacpp:
-      return true;
+      return isServiceEnabled('LlamaCpp');
     default:
       return false;
   }
