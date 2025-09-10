@@ -16,7 +16,7 @@ const llamacpp = createOpenAICompatible({
 });
 
 const openAIClient = new OpenAI({
-  baseURL: `${LLAMACPP_BASE_URL}`,
+  baseURL: `${LLAMACPP_BASE_URL}/v1`,
   apiKey: process.env.LLAMACPP_API_KEY || 'llama-cpp',
 });
 
