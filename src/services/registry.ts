@@ -6,6 +6,7 @@ import ollamaProvider from './ollama';
 import openrouterProvider from './openrouter';
 import lmstudioProvider from './lmstudio';
 import aigatewayProvider from './aigateway';
+import llamacppProvider from './llamacpp';
 
 export class ServiceRegistry {
   private providers = new Map<ProviderName, AIProvider>();
@@ -40,6 +41,7 @@ serviceRegistry.register(ollamaProvider);
 serviceRegistry.register(openrouterProvider);
 serviceRegistry.register(lmstudioProvider);
 serviceRegistry.register(aigatewayProvider);
+serviceRegistry.register(llamacppProvider);
 
 // Helper for tests to replace the registry content
 export function replaceRegistryForTests(registry: ServiceRegistry) {

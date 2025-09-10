@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export type ProviderName = 'openai' | 'anthropic' | 'ollama' | 'openrouter' | 'lmstudio' | 'aigateway';
+export type ProviderName = 'openai' | 'anthropic' | 'ollama' | 'openrouter' | 'lmstudio' | 'aigateway' | 'llamacpp';
 
 export interface AIProvider {
   name: ProviderName;

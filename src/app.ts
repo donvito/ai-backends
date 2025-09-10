@@ -156,6 +156,7 @@ export async function checkProvidersAvailability() {
     
     const ollamaBaseUrl = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
     const llmStudioBaseUrl = process.env.LLMSTUDIO_BASE_URL || 'http://localhost:1234';
+    const llamaCppBaseUrl = process.env.LLAMACPP_BASE_URL || '';
     const availableProviders: string[] = [];
 
     // Try local providers Ollama and LLMStudio first
@@ -174,11 +175,14 @@ export async function checkProvidersAvailability() {
     }
 
     // Try external providers OpenAI, Anthropic, and OpenRouter
-    try {
+    try {               
         const llmProviders = await checkLLMProvidersAvailability();
         if (llmProviders.length > 0) {
             availableProviders.push(...llmProviders);            
         } 
+        if (llamaCppBaseUrl) {
+            availableProviders.push('LlamaCpp');
+        }
     } catch (llmProvidersError) {
         console.log('[WARN] No external LLM providers available. Set one of: OPENAI_API_KEY, ANTHROPIC_API_KEY, or OPENROUTER_API_KEY in .env');
     }

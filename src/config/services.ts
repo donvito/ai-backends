@@ -44,6 +44,13 @@ export interface AIGatewayConfig extends ServiceConfig {
   baseURL?: string;
 }
 
+export interface LlamaCppConfig extends ServiceConfig {
+  baseURL: string;
+  model: string;
+  chatModel: string;
+  timeout?: number;
+}
+
 // OpenAI Configuration
 export const openaiConfig: OpenAIConfig = {
   name: 'OpenAI',
@@ -105,8 +112,19 @@ export const aigatewayConfig: AIGatewayConfig = {
   baseURL: process.env.AIGATEWAY_BASE_URL || 'https://ai-gateway.vercel.sh/v1',
 };
 
+// LlamaCpp Configuration
+export const llamacppConfig: LlamaCppConfig = {
+  name: 'LlamaCpp',
+  enabled: true,
+  priority: 7,
+  baseURL: process.env.LLAMACPP_BASE_URL || 'http://localhost:8080',
+  model: process.env.LLAMACPP_MODEL || 'default',
+  chatModel: process.env.LLAMACPP_CHAT_MODEL || process.env.LLAMACPP_MODEL || 'default',
+  timeout: parseInt(process.env.LLAMACPP_TIMEOUT || '30000'),
+};
+
 // Available services
-export const availableServices = [openaiConfig, anthropicConfig, ollamaConfig, openrouterConfig, lmstudioConfig, aigatewayConfig];
+export const availableServices = [openaiConfig, anthropicConfig, ollamaConfig, openrouterConfig, lmstudioConfig, aigatewayConfig, llamacppConfig];
 
 // Get the primary service (highest priority enabled service)
 export function getPrimaryService(): ServiceConfig | null {
