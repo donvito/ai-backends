@@ -3,20 +3,49 @@
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'ai-backends'
+app = 'ai-backends-test'
 primary_region = 'sin'
 
 [build]
 
-[http_service]
+# This is the service for our application
+[[services]]
   internal_port = 3000
-  force_https = true
-  auto_stop_machines = 'stop'
+  processes = ['app']
+  protocol = 'tcp'
+  auto_stop_machines = true
   auto_start_machines = true
   min_machines_running = 0
+
+  [services.concurrency]
+    hard_limit = 25
+    soft_limit = 20
+    type = 'connections'
+
+  [[services.ports]]
+    handlers = ['http']
+    port = 80
+    force_https = true
+
+  [[services.ports]]
+    handlers = ['tls', 'http']
+    port = 443
+
+# This is the service for Ollama
+[[services]]
+  internal_port = 11434
   processes = ['app']
+  protocol = 'tcp'
+  
+  [services.concurrency]
+    hard_limit = 25
+    soft_limit = 20
+    type = 'connections'
+
+  [[services.ports]]
+    port = 11434
 
 [[vm]]
-  memory = '1gb'
+  memory = '2gb'
   cpu_kind = 'shared'
   cpus = 1
