@@ -13,6 +13,7 @@ export type ModelCapability =
   | 'translate'
   | 'askText'
   | 'meetingNotes'
+  | 'outline'
 
 export interface ProviderModelConfigItem {
   name: string

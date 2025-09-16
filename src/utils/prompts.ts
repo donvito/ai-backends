@@ -342,3 +342,85 @@ ${text}
 </text>
 :`
 }
+
+/**
+ * System prompt for creating an outline from text
+ */
+export function outlinePrompt(
+  text: string,
+  maxDepth?: number,
+  style?: 'numbered' | 'bulleted' | 'mixed',
+  includeIntro?: boolean,
+  includeConclusion?: boolean
+): string {
+  const depth = maxDepth || 3;
+  const outlineStyle = style || 'numbered';
+  
+  const styleInstructions = {
+    numbered: 'Use numbered lists (1., 1.1., 1.1.1., etc.)',
+    bulleted: 'Use bulleted lists with dashes (-) and indentation',
+    mixed: 'Use numbered lists for main sections and bullets for subsections'
+  };
+
+  const introInstruction = includeIntro ? '\nInclude a brief introduction paragraph before the outline.' : '';
+  const conclusionInstruction = includeConclusion ? '\nInclude a brief conclusion paragraph after the outline.' : '';
+
+  return `Create a structured outline from the following text.
+
+Guidelines:
+- Extract the main topics and organize them hierarchically
+- Create up to ${depth} levels of depth
+- ${styleInstructions[outlineStyle]}
+- Focus on key concepts, main ideas, and important details
+- Maintain logical flow and coherent structure${introInstruction}${conclusionInstruction}
+
+Return the outline in markdown code. Use headers notation # when making the outline output without any additional explanations. Add new lines.
+Use proper spacing and indentation so markdown can render it correctly. Do not return in a code block just the markdown. Indentation should be 
+also followed for subsections.
+
+<example_output_markdown>
+# Project Outline
+
+## 1. Main Topic
+- Overview of subject  
+- Key importance  
+
+### 1.1 Subtopic A
+1. Definition  
+2. Examples  
+
+#### 1.1.1 Detailed Point
+- Explanation of concept  
+- Related terminology  
+
+##### 1.1.1.1 Sub-detail
+- Supporting fact A  
+- Supporting fact B  
+
+###### 1.1.1.1.1 Deep Detail
+- Edge case 1  
+- Edge case 2  
+
+### 1.2 Subtopic B
+- Applications  
+- Challenges  
+
+## 2. Another Main Topic
+1. Category 1  
+   - Item A  
+   - Item B  
+2. Category 2  
+   - Item C  
+   - Item D  
+
+### 2.1 Subtopic C
+- Nested insight  
+   - Further breakdown  
+      - Even more granular  
+</example_output_markdown>
+
+<text>
+${text}
+</text>
+:`;
+}
