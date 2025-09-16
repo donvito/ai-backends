@@ -8,6 +8,7 @@ import { createSummarizeResponse } from '../../schemas/v1/summarize'
 import { processTextOutputRequest } from '../../services/ai'
 import { apiVersion } from './versionConfig'
 import { createFinalResponse } from './finalResponse'
+import { writeTextStreamSSE } from './streamUtils'
 
 const router = new OpenAPIHono()
 
@@ -30,42 +31,11 @@ async function handleSummarizeRequest(c: Context) {
       
       return streamSSE(c, async (stream) => {
         try {
-          // Get the text stream from the result
-          const textStream = result.textStream
-          
-          if (!textStream) {
-            throw new Error('Streaming not supported for this provider/model')
-          }
-          
-          // Stream chunks to the client
-          for await (const chunk of textStream) {
-            await stream.writeSSE({
-              data: JSON.stringify({
-                chunk: chunk,
-                provider: provider,
-                model: model,
-                version: apiVersion
-              })
-            })
-          }
-          
-          // Send final message with usage stats if available
-          const usage = await result.usage
-          if (usage) {
-            await stream.writeSSE({
-              data: JSON.stringify({
-                done: true,
-                usage: {
-                  input_tokens: usage.promptTokens,
-                  output_tokens: usage.completionTokens,
-                  total_tokens: usage.totalTokens
-                },
-                provider: provider,
-                model: model,
-                version: apiVersion
-              })
-            })
-          }
+          await writeTextStreamSSE(
+            stream,
+            result,
+            { provider, model, version: apiVersion }
+          )
         } catch (error) {
           console.error('Streaming error:', error)
           try {
