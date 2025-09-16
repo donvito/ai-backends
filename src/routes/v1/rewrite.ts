@@ -9,7 +9,6 @@ import { createFinalResponse } from './finalResponse'
 import { rewriteRequestSchema, rewriteResponseSchema, createRewriteResponse } from '../../schemas/v1/rewrite'
 import { canonicalizeTone } from '../../schemas/v1/rewrite'
 import { writeTextStreamSSE } from './streamUtils'
-import path from "path";
 
 const router = new OpenAPIHono()
 

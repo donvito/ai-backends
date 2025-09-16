@@ -33,8 +33,7 @@ export interface ModelsCatalogConfig {
 export function loadModelsCatalog(): ModelsCatalogConfig {
   const filePath = path.resolve(process.cwd(), 'src/config/models.json')
   const raw = fs.readFileSync(filePath, 'utf-8')
-  const parsed = JSON.parse(raw) as ModelsCatalogConfig
-  return parsed
+    return JSON.parse(raw) as ModelsCatalogConfig
 }
 
 export function getModelsByCapability(capability: ModelCapability): Record<string, string[]> {
