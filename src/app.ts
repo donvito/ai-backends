@@ -39,6 +39,7 @@ function configureApiSecurity(app: OpenAPIHono, tokenConfig: string) {
                 path === '/api/meeting-notes-demo' ||
                 path === '/api/asktext-demo' ||
                 path === '/api/project-planner-demo' ||
+                path === '/api/outline-demo' ||
                 // Versioned demo pages (v1)
                 path === '/api/v1/demos' ||
                 path === '/api/v1/highlighter-demo' ||
@@ -52,6 +53,7 @@ function configureApiSecurity(app: OpenAPIHono, tokenConfig: string) {
                 path === '/api/v1/meeting-notes-demo' ||
                 path === '/api/v1/asktext-demo' ||
                 path === '/api/v1/project-planner-demo' ||
+                path === '/api/v1/outline-demo' ||
                 path === '/api/models' ||
                 path === '/api/jsoneditor' ||
                 // Public read-only service catalog for demos

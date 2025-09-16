@@ -8,6 +8,7 @@ import { apiVersion } from './versionConfig'
 import { createFinalResponse } from './finalResponse'
 import { rewriteRequestSchema, rewriteResponseSchema, createRewriteResponse } from '../../schemas/v1/rewrite'
 import { canonicalizeTone } from '../../schemas/v1/rewrite'
+import { writeTextStreamSSE } from './streamUtils'
 
 const router = new OpenAPIHono()
 
@@ -34,55 +35,24 @@ async function handleRewriteRequest(c: Context) {
       c.header('Cache-Control', 'no-cache')
       c.header('Connection', 'keep-alive')
 
-      return streamSSE(c, async (stream) => {
-        try {
-          const textStream = result.textStream
-          if (!textStream) {
-            throw new Error('Streaming not supported for this provider/model')
-          }
-
-          for await (const chunk of textStream) {
-            await stream.writeSSE({
-              data: JSON.stringify({
-                chunk: chunk,
-                provider: provider,
-                model: model,
-                version: apiVersion
-              })
-            })
-          }
-
-          const usage = await result.usage
-          if (usage) {
-            await stream.writeSSE({
-              data: JSON.stringify({
-                done: true,
-                usage: {
-                  input_tokens: usage.promptTokens,
-                  output_tokens: usage.completionTokens,
-                  total_tokens: usage.totalTokens
-                },
-                provider: provider,
-                model: model,
-                version: apiVersion
-              })
-            })
-          }
-        } catch (error) {
-          try {
-            await stream.writeSSE({
-              data: JSON.stringify({
-                error: error instanceof Error ? error.message : 'Streaming error',
-                done: true
-              })
-            })
-          } finally {
-            // no-op
-          }
-        } finally {
-          await stream.close()
-        }
-      })
+        return streamSSE(c, async (stream) => {
+            try {
+                await writeTextStreamSSE(
+                    stream,
+                    result,
+                    { provider, model, version: apiVersion }
+                )
+            } catch (error) {
+                await stream.writeSSE({
+                    data: JSON.stringify({
+                        error: error instanceof Error ? error.message : 'Streaming error',
+                        done: true
+                    })
+                })
+            } finally {
+                await stream.close()
+            }
+        })
     }
 
     // Non-streaming response

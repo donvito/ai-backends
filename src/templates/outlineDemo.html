@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Backends - Outline Generator Demo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'brand-purple': '#B341F9',
+            'brand-pink': '#E453C0',
+            'terminal-bg': '#1C2128',
+            'terminal-text': '#A7B5C4'
+          },
+          backgroundImage: {
+            'gradient-brand': 'linear-gradient(135deg, #B341F9, #E453C0)',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .outline-preview {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 24px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      white-space: normal;
+      overflow-x: auto;
+      line-height: 1.6;
+    }
+
+    /* Headings */
+    .outline-preview h1 {
+      font-size: 1.875rem;
+      font-weight: 700;
+      color: #1f2937;
+      margin: 1.5rem 0 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid #e5e7eb;
+    }
+
+    .outline-preview h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #374151;
+      margin: 1.25rem 0 0.75rem;
+      padding-bottom: 0.25rem;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .outline-preview h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #4b5563;
+      margin: 1rem 0 0.5rem;
+    }
+
+    .outline-preview h4 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #6b7280;
+      margin: 0.75rem 0 0.25rem;
+    }
+
+    /* Additional markdown styling */
+    .prose h1 {
+      margin-top: 1.5em;
+      margin-bottom: 0.5em;
+      font-weight: 700;
+      color: #111827;
+      font-size: 2em;
+      line-height: 1.2;
+    }
+
+    .prose h2 {
+      margin-top: 1.5em;
+      margin-bottom: 0.5em;
+      font-weight: 600;
+      color: #1f2937;
+      font-size: 1.5em;
+      line-height: 1.3;
+    }
+
+    .prose h3 {
+      margin-top: 1.5em;
+      margin-bottom: 0.5em;
+      font-weight: 600;
+      color: #374151;
+      font-size: 1.25em;
+      line-height: 1.4;
+    }
+
+    .prose h4 {
+      margin-top: 1.5em;
+      margin-bottom: 0.5em;
+      font-weight: 600;
+      color: #4b5563;
+      font-size: 1.125em;
+      line-height: 1.4;
+    }
+
+    .prose h5 {
+      margin-top: 1.5em;
+      margin-bottom: 0.5em;
+      font-weight: 500;
+      color: #6b7280;
+      font-size: 1em;
+      line-height: 1.5;
+    }
+
+    .prose h6 {
+      margin-top: 1.5em;
+      margin-bottom: 0.5em;
+      font-weight: 500;
+      color: #6b7280;
+      font-size: 0.875em;
+      line-height: 1.5;
+    }
+
+    .prose p {
+      margin-bottom: 1em;
+      line-height: 1.6;
+    }
+
+    .prose ul, .prose ol {
+      margin-bottom: 1em;
+      padding-left: 1.5em;
+    }
+
+    .prose li {
+      margin-bottom: 0.25em;
+    }
+
+    .prose code {
+      background-color: #f3f4f6;
+      padding: 0.125em 0.25em;
+      border-radius: 0.25rem;
+      font-size: 0.875em;
+      color: #dc2626;
+    }
+
+    .prose pre {
+      background-color: #1f2937;
+      color: #f9fafb;
+      padding: 1em;
+      border-radius: 0.5rem;
+      overflow-x: auto;
+      margin-bottom: 1em;
+    }
+
+    .prose pre code {
+      background-color: transparent;
+      padding: 0;
+      color: inherit;
+    }
+
+    .prose table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1em;
+    }
+
+    .prose th, .prose td {
+      border: 1px solid #e5e7eb;
+      padding: 0.5em;
+      text-align: left;
+    }
+
+    .prose th {
+      background-color: #f9fafb;
+      font-weight: 600;
+    }
+
+    .outline-preview h5, .outline-preview h6 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #6b7280;
+      margin: 0.5rem 0 0.25rem;
+    }
+
+    /* Lists */
+    .outline-preview ol, .outline-preview ul {
+      margin: 1rem 0;
+      padding-left: 2rem;
+    }
+
+    .outline-preview ol {
+      list-style-type: decimal;
+    }
+
+    .outline-preview ul {
+      list-style-type: disc;
+    }
+
+    .outline-preview ol ol {
+      list-style-type: lower-alpha;
+      margin-top: 0.25rem;
+    }
+
+    .outline-preview ol ol ol {
+      list-style-type: lower-roman;
+      margin-top: 0.25rem;
+    }
+
+    .outline-preview ul ul {
+      list-style-type: circle;
+      margin-top: 0.25rem;
+    }
+
+    .outline-preview ul ul ul {
+      list-style-type: square;
+      margin-top: 0.25rem;
+    }
+
+    /* List items */
+    .outline-preview li {
+      margin: 0.25rem 0;
+      padding: 0.125rem 0;
+    }
+
+    .outline-preview li::marker {
+      color: #6b7280;
+    }
+
+    /* Paragraphs and text */
+    .outline-preview p {
+      margin: 1rem 0;
+      color: #374151;
+    }
+
+    .outline-preview strong {
+      font-weight: 600;
+      color: #1f2937;
+    }
+
+    .outline-preview em {
+      font-style: italic;
+      color: #4b5563;
+    }
+
+    .outline-preview code {
+      background: #f3f4f6;
+      color: #dc2626;
+      padding: 0.125rem 0.25rem;
+      border-radius: 0.25rem;
+      font-family: ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+      font-size: 0.875rem;
+    }
+
+    .outline-preview pre {
+      background: #1f2937;
+      color: #f9fafb;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+
+    .outline-preview pre code {
+      background: none;
+      color: inherit;
+      padding: 0;
+    }
+
+    .outline-preview blockquote {
+      border-left: 4px solid #d1d5db;
+      margin: 1rem 0;
+      padding-left: 1rem;
+      color: #6b7280;
+      font-style: italic;
+    }
+
+    /* Links */
+    .outline-preview a {
+      color: #7c3aed;
+      text-decoration: underline;
+    }
+
+    .outline-preview a:hover {
+      color: #6d28d9;
+    }
+
+    /* Horizontal rules */
+    .outline-preview hr {
+      border: none;
+      border-top: 1px solid #e5e7eb;
+      margin: 2rem 0;
+    }
+
+    /* Tables */
+    .outline-preview table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+    }
+
+    .outline-preview th, .outline-preview td {
+      border: 1px solid #e5e7eb;
+      padding: 0.5rem 1rem;
+      text-align: left;
+    }
+
+    .outline-preview th {
+      background: #f9fafb;
+      font-weight: 600;
+      color: #374151;
+    }
+
+    .outline-preview tr:nth-child(even) {
+      background: #f9fafb;
+    }
+
+    /* Fullscreen styles for maximize mode */
+    .fullscreen-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(17, 24, 39, 0.5);
+      z-index: 50;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s ease-in-out;
+    }
+    .fullscreen-backdrop.active { opacity: 1; pointer-events: auto; }
+    .fullscreen-output {
+      position: fixed !important;
+      inset: 2% 4% auto 6% !important;
+      z-index: 60;
+      height: 96vh;           /* ensure inner 100% heights compute */
+      max-height: 96vh;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+    }
+    .fullscreen-output .fullscreen-inner {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    .fullscreen-output .fullscreen-header {
+      padding: 16px 16px 8px 16px;
+      border-bottom: 1px solid #e5e7eb;
+      margin-bottom: 8px;
+    }
+    .fullscreen-output .fullscreen-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-right: 80px; /* Space for close button */
+    }
+    .fullscreen-output .fullscreen-body {
+      flex: 1 1 auto;
+      overflow: auto;
+      height: auto;
+      padding: 0 16px 16px 16px;
+      max-height: calc(92vh - 200px); /* Account for header, metrics, and padding */
+    }
+
+    /* Style metrics in fullscreen mode */
+    .fullscreen-output #metrics {
+      margin: 0 16px 16px 16px;
+      padding: 16px;
+      background: rgba(249, 250, 251, 0.8);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(229, 231, 235, 0.5);
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Ensure proper spacing in fullscreen */
+    .fullscreen-output .prose {
+      max-width: none;
+      padding: 0 8px;
+    }
+
+    /* Handle streaming mode in fullscreen - preserve existing structure */
+    .fullscreen-output.streaming-mode #outline-container {
+      padding: 16px;
+      min-height: 200px;
+      overflow-y: auto;
+      max-height: calc(92vh - 200px); /* Allow scrolling during streaming */
+    }
+
+    .fullscreen-output.streaming-mode #metrics {
+      margin: 0 16px 16px 16px;
+      background: rgba(249, 250, 251, 0.8);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(229, 231, 235, 0.5);
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    .close-button {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: #ef4444;
+      border: 1px solid #dc2626;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+      min-width: 40px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .close-button:hover {
+      background: #dc2626;
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+      border-color: #b91c1c;
+    }
+    .close-button:hover {
+      background: #f3f4f6;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      border-color: #d1d5db;
+    }
+    /* Hide maximize button when in fullscreen; exit with X button */
+    .fullscreen-output #fullscreenButton { display: none !important; }
+  </style>
+  </head>
+<body class="bg-white min-h-screen">
+  <!-- Navigation -->
+  <nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100">
+    <div class="container mx-auto px-6 py-4">
+      <div class="flex justify-between items-center">
+        <a href="/" class="flex items-center space-x-2">
+          <div class="w-10 h-10 rounded-xl bg-[#B341F9] flex items-center justify-center">
+            <span class="text-white font-bold text-xl">AI</span>
+          </div>
+          <span class="text-2xl font-bold text-gray-900">Backends</span>
+          <span class="ml-2 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-50 text-green-700">
+            <svg class="w-4 h-4 mr-1" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0020 10.017C20 4.484 15.522 0 10 0z"/>
+            </svg>
+            Open Source
+          </span>
+        </a>
+        <div class="flex items-center space-x-6">
+          <a href="/api/ui" target="_blank" class="text-gray-700 hover:text-brand-purple transition-colors duration-300">API Docs</a>
+          <a href="/api/demos" class="text-gray-700 hover:text-brand-purple transition-colors duration-300">Demos</a>
+          <a href="/api/jsoneditor" target="_blank" class="text-gray-700 hover:text-brand-purple transition-colors duration-300">JSON Editor</a>
+          <a href="/api/models" class="text-gray-700 hover:text-brand-purple transition-colors duration-300">Models Guide</a>
+          <a href="https://github.com/donvito/ai-backend" class="inline-flex items-center px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors duration-300">
+            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 0C4.477 0 0 4.484 0 10.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0020 10.017C20 4.484 15.522 0 10 0z" clip-rule="evenodd"/>
+            </svg>
+            GitHub
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container mx-auto px-6 py-12">
+    <!-- Breadcrumb -->
+    <nav class="mb-6 text-sm">
+      <ol class="flex items-center space-x-2 text-gray-500">
+        <li><a href="/" class="hover:text-gray-700">Home</a></li>
+        <li><span>/</span></li>
+        <li><a href="/api/demos" class="hover:text-gray-700">Demos</a></li>
+        <li><span>/</span></li>
+        <li class="font-medium text-gray-900">Outline Generator</li>
+      </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="mb-8">
+    <!-- Demo Title and Description -->
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-bold text-gray-900 mb-3">Outline Generator Demo</h1>
+      <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+        Transform your text into well-structured outlines using models from multiple providers
+      </p>
+    </div>
+    </div>
+
+    <!-- Demo Interface -->
+    <div class="grid lg:grid-cols-2 gap-8">
+      <!-- Input Section -->
+      <div class="space-y-6">
+        <div>
+          <label for="text-input" class="block text-sm font-semibold text-gray-700 mb-2">
+            Input Text
+          </label>
+          <textarea 
+            id="text-input" 
+            rows="10"
+            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-brand-purple focus:border-transparent transition-colors duration-200 resize-none"
+            placeholder="Paste or type your text here to generate an outline..."
+          >The solar system is a fascinating cosmic neighborhood consisting of the Sun and all the objects that orbit around it. At the center lies our Sun, a medium-sized yellow dwarf star that contains 99.86% of the system's mass. The Sun's powerful gravitational pull keeps everything else in orbit, from the smallest dust particles to the largest planets.
+
+The eight planets of our solar system can be divided into two main categories: terrestrial planets and gas giants. The four inner planets - Mercury, Venus, Earth, and Mars - are rocky worlds with solid surfaces. Mercury, the closest to the Sun, is a small, cratered world with extreme temperature variations. Venus, Earth's twin in size, has a thick atmosphere that creates a runaway greenhouse effect. Earth, our home, is the only known planet with liquid water and life. Mars, the red planet, features the largest volcano in the solar system and evidence of ancient river valleys.
+
+Beyond Mars lies the asteroid belt, a region filled with rocky debris left over from the solar system's formation. The four outer planets are gas giants: Jupiter, Saturn, Uranus, and Neptune. Jupiter, the largest planet, has a powerful magnetic field and over 70 known moons. Saturn is famous for its spectacular ring system. Uranus rotates on its side, while Neptune, the windiest planet, has storms with winds reaching 1,200 mph.</textarea>
+        </div>
+
+        <!-- Options Section -->
+        <div class="bg-gray-50 p-6 rounded-lg space-y-4">
+          <h3 class="font-semibold text-gray-900 mb-3">Options</h3>
+          
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label for="provider" class="block text-sm font-medium text-gray-700 mb-1">
+                Provider
+              </label>
+              <select
+                id="provider"
+                class="w-full px-3 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-brand-purple focus:border-transparent"
+              >
+                <option value="ollama">ollama</option>
+                <option value="openai">openai</option>
+                <option value="openrouter">openrouter</option>
+                <option value="lmstudio">lmstudio</option>
+              </select>
+            </div>
+
+            <div>
+              <label for="model" class="block text-sm font-medium text-gray-700 mb-1">
+                Model
+              </label>
+              <select
+                id="model"
+                class="w-full px-3 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-brand-purple focus:border-transparent"
+              ></select>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <label class="flex items-center">
+              <input type="checkbox" id="include-intro" class="mr-2 rounded text-brand-purple focus:ring-brand-purple">
+              <span class="text-sm text-gray-700">Include introduction paragraph</span>
+            </label>
+            <label class="flex items-center">
+              <input type="checkbox" id="include-conclusion" class="mr-2 rounded text-brand-purple focus:ring-brand-purple">
+              <span class="text-sm text-gray-700">Include conclusion paragraph</span>
+            </label>
+            <label class="flex items-center">
+              <input type="checkbox" id="streaming" class="mr-2 rounded text-brand-purple focus:ring-brand-purple" checked>
+              <span class="text-sm text-gray-700">Enable streaming (real-time response)</span>
+            </label>
+          </div>
+
+          <div class="mt-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Bearer Token (optional)</label>
+            <input
+              id="token"
+              type="password"
+              placeholder="Only needed in production deployments"
+              class="w-full px-3 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-brand-purple focus:border-transparent"
+            />
+          </div>
+
+          <div class="grid grid-cols-2 gap-4 mt-4">
+            <div>
+              <label for="max-depth" class="block text-sm font-medium text-gray-700 mb-1">
+                Maximum Depth
+              </label>
+              <select
+                id="max-depth"
+                class="w-full px-3 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-brand-purple focus:border-transparent"
+              >
+                <option value="2">2 levels</option>
+                <option value="3" selected>3 levels</option>
+                <option value="4">4 levels</option>
+                <option value="5">5 levels</option>
+              </select>
+            </div>
+
+            <div>
+              <label for="outline-style" class="block text-sm font-medium text-gray-700 mb-1">
+                Outline Style
+              </label>
+              <select
+                id="outline-style"
+                class="w-full px-3 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-brand-purple focus:border-transparent"
+              >
+                <option value="numbered" selected>Numbered</option>
+                <option value="bulleted">Bulleted</option>
+                <option value="mixed">Mixed</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button
+            id="generate-btn"
+            class="px-4 py-2 rounded-lg bg-brand-purple text-white hover:bg-[#9935D9] flex items-center space-x-2"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            </svg>
+            <span>Generate Outline</span>
+          </button>
+          <button id="cancel-btn" class="hidden px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 flex items-center space-x-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+            <span>Cancel</span>
+          </button>
+          <button id="load-sample-btn" class="px-4 py-2 rounded-lg bg-gray-100 text-gray-800 hover:bg-gray-200 flex items-center space-x-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+            </svg>
+            <span>Load Sample</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Output Section -->
+      <section id="outputPanel" class="space-y-4">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+          <div class="flex-1">
+            <h2 class="text-xl font-semibold text-gray-900 mb-2">Generated Outline</h2>
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="copy-btn" onclick="copyOutput()" class="inline-flex items-center px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-200 transition-colors" title="Copy Output">
+              <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+              </svg>
+              Copy
+            </button>
+            <button id="fullscreenButton" onclick="toggleOutputFullscreen()" disabled class="inline-flex items-center px-3 py-1.5 text-sm bg-gray-50 text-gray-400 rounded-lg border border-gray-200 cursor-not-allowed transition-colors" title="Maximize Output (available when content is generated)">⛶ Maximize</button>
+          </div>
+        </div>
+
+        <!-- Metrics Display -->
+        <div id="metrics" class="hidden grid grid-cols-2 md:grid-cols-4 gap-3 bg-gray-100 border border-gray-200 rounded-xl p-3">
+          <div class="flex items-center gap-3 bg-white border border-gray-200 rounded-lg px-3 py-2">
+            <div class="w-8 h-8 rounded-md bg-orange-50 text-orange-600 flex items-center justify-center">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <div>
+              <div class="text-[10px] uppercase tracking-wide text-gray-500">Response</div>
+              <div id="response-time" class="text-sm font-semibold text-gray-900">—</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 bg-white border border-gray-200 rounded-lg px-3 py-2">
+            <div class="w-8 h-8 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h10m4-8a4 4 0 00-4-4H7"/></svg>
+            </div>
+            <div>
+              <div class="text-[10px] uppercase tracking-wide text-gray-500">Input</div>
+              <div id="input-tokens" class="text-sm font-semibold text-gray-900">—</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 bg-white border border-gray-200 rounded-lg px-3 py-2">
+            <div class="w-8 h-8 rounded-md bg-green-50 text-green-600 flex items-center justify-center">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12h16M4 12a8 8 0 018-8v16a8 8 0 01-8-8z"/></svg>
+            </div>
+            <div>
+              <div class="text-[10px] uppercase tracking-wide text-gray-500">Output</div>
+              <div id="output-tokens" class="text-sm font-semibold text-gray-900">—</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 bg-white border border-gray-200 rounded-lg px-3 py-2">
+            <div class="w-8 h-8 rounded-md bg-purple-50 text-purple-600 flex items-center justify-center">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 11V3a1 1 0 012 0v8m-2 0a4 4 0 11-4 4h8a4 4 0 11-4-4z"/></svg>
+            </div>
+            <div>
+              <div class="text-[10px] uppercase tracking-wide text-gray-500">Model</div>
+              <div id="model-info" class="text-sm font-semibold text-gray-900">—</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-xl border border-gray-200 bg-white p-4">
+          <div id="outline-container" class="prose prose-sm max-w-none min-h-[180px] text-gray-900">
+            <p class="text-gray-500 text-center">Your outline will appear here...</p>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Error Display -->
+    <div id="error-message" class="hidden mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700"></div>
+  </main>
+
+  <script>
+    const samplePayload = {
+      payload: {
+        text: "The solar system is a fascinating cosmic neighborhood consisting of the Sun and all the objects that orbit around it. At the center lies our Sun, a medium-sized yellow dwarf star that contains 99.86% of the system's mass. The Sun's powerful gravitational pull keeps everything else in orbit, from the smallest dust particles to the largest planets.\n\nThe eight planets of our solar system can be divided into two main categories: terrestrial planets and gas giants. The four inner planets - Mercury, Venus, Earth, and Mars - are rocky worlds with solid surfaces. Mercury, the closest to the Sun, is a small, cratered world with extreme temperature variations. Venus, Earth's twin in size, has a thick atmosphere that creates a runaway greenhouse effect. Earth, our home, is the only known planet with liquid water and life. Mars, the red planet, features the largest volcano in the solar system and evidence of ancient river valleys.\n\nBeyond Mars lies the asteroid belt, a region filled with rocky debris left over from the solar system's formation. The four outer planets are gas giants: Jupiter, Saturn, Uranus, and Neptune. Jupiter, the largest planet, has a powerful magnetic field and over 70 known moons. Saturn is famous for its spectacular ring system. Uranus rotates on its side, while Neptune, the windiest planet, has storms with winds reaching 1,200 mph.",
+        maxDepth: 3,
+        style: "numbered",
+        includeIntro: true,
+        includeConclusion: true
+      },
+      config: {
+        provider: "ollama",
+        model: "gemma3:4b",
+        temperature: 0.3,
+        maxTokens: 1000,
+        stream: true
+      }
+    };
+
+    // Fetch available models and populate the config section
+    let modelOptions = null;
+
+    // Fallback options if fetch fails or endpoint is unavailable
+    const fallbackModelOptions = {
+      ollama: [
+        { value: 'gemma3:4b', label: 'gemma3:4b (default)' }
+      ],
+      openai: [
+        { value: 'gpt-4o-mini', label: 'gpt-4o-mini' },
+        { value: 'gpt-4.1-nano', label: 'gpt-4.1-nano' },
+        { value: 'gpt-5-nano', label: 'gpt-5-nano' }
+      ],
+      openrouter: [
+        { value: 'openai/gpt-4o-mini', label: 'openai/gpt-4o-mini' }
+      ],
+      lmstudio: [
+        { value: 'gemma-3-270m-it', label: 'gemma-3-270m-it' },
+        { value: 'llama-3.2-3b-instruct', label: 'llama-3.2-3b-instruct' }
+      ]
+    };
+
+    function updateModelOptions() {
+      const provider = document.getElementById('provider').value;
+      const modelEl = document.getElementById('model');
+      const source = modelOptions || fallbackModelOptions;
+      const models = (source && source[provider]) ? source[provider] : [];
+
+      // Clear existing options
+      modelEl.innerHTML = '';
+
+      // Add new options
+      models.forEach(model => {
+        const option = document.createElement('option');
+        option.value = model.value;
+        option.textContent = model.label;
+        modelEl.appendChild(option);
+      });
+    }
+
+    async function fetchOutlineModels() {
+      const token = document.getElementById('token').value.trim();
+      const headers = {};
+      if (token) headers['Authorization'] = 'Bearer ' + token;
+
+      const res = await fetch('/api/v1/services/models?source=config&view=capability', { headers });
+      if (!res.ok) throw new Error('Failed to load models: ' + res.status);
+
+      const data = await res.json();
+      const outline = data && data.byCapability && data.byCapability.outline;
+      if (!outline || typeof outline !== 'object') throw new Error('Invalid models response');
+
+      const mapped = {};
+      for (const provider in outline) {
+        const list = Array.isArray(outline[provider]) ? outline[provider] : [];
+        mapped[provider] = list.map(name => ({ value: name, label: name }));
+      }
+      return mapped;
+    }
+
+    async function initModels() {
+      try {
+        modelOptions = await fetchOutlineModels();
+      } catch (e) {
+        console.warn('Failed to fetch outline models, using fallback:', e);
+        modelOptions = null; // fall back to static options
+      }
+      updateModelOptions();
+    }
+
+    // Add event listeners
+    document.getElementById('provider').addEventListener('change', updateModelOptions);
+    document.getElementById('token').addEventListener('change', () => {
+      initModels(); // Re-fetch models with new token
+    });
+
+    const textInput = document.getElementById('text-input');
+    const providerEl = document.getElementById('provider');
+    const modelEl = document.getElementById('model');
+    const tokenEl = document.getElementById('token');
+    const maxDepthEl = document.getElementById('max-depth');
+    const styleEl = document.getElementById('outline-style');
+    const includeIntroEl = document.getElementById('include-intro');
+    const includeConclusionEl = document.getElementById('include-conclusion');
+    const streamingEl = document.getElementById('streaming');
+    const generateBtn = document.getElementById('generate-btn');
+    const cancelBtn = document.getElementById('cancel-btn');
+    const loadSampleBtn = document.getElementById('load-sample-btn');
+    const outlineContainer = document.getElementById('outline-container');
+    const copyBtn = document.getElementById('copy-btn');
+    const metrics = document.getElementById('metrics');
+    const errorMessage = document.getElementById('error-message');
+    const outputPanel = document.getElementById('outputPanel');
+    const fullscreenButton = document.getElementById('fullscreenButton');
+
+    let abortController = null;
+    let isFullscreen = false;
+    let originalOutputHTML = null;
+    let backdropEl = null;
+
+    // Load models on page load
+    initModels();
+
+  
+    function buildRequest() {
+      return {
+        payload: {
+          text: textInput.value.trim(),
+          maxDepth: parseInt(maxDepthEl.value),
+          style: styleEl.value,
+          includeIntro: includeIntroEl.checked,
+          includeConclusion: includeConclusionEl.checked
+        },
+        config: {
+          provider: providerEl.value,
+          model: modelEl.value,
+          temperature: 0.3,
+          maxTokens: 1000,
+          stream: streamingEl.checked
+        }
+      };
+    }
+
+    function setFromSample() {
+      textInput.value = samplePayload.payload.text;
+      maxDepthEl.value = samplePayload.payload.maxDepth;
+      styleEl.value = samplePayload.payload.style;
+      includeIntroEl.checked = samplePayload.payload.includeIntro;
+      includeConclusionEl.checked = samplePayload.payload.includeConclusion;
+      streamingEl.checked = samplePayload.config.stream !== false;
+      providerEl.value = samplePayload.config.provider;
+      updateModelOptions();
+      modelEl.value = samplePayload.config.model;
+    }
+
+    async function run() {
+      const req = buildRequest();
+      const headers = { 'Content-Type': 'application/json' };
+      const token = tokenEl.value.trim();
+      if (token) headers['Authorization'] = 'Bearer ' + token;
+
+      abortController = new AbortController();
+
+      generateBtn.classList.add('hidden');
+      cancelBtn.classList.remove('hidden');
+
+      // Ensure we're working with the correct outline container
+      const currentOutlineContainer = document.querySelector('#outline-container');
+      if (currentOutlineContainer) {
+        currentOutlineContainer.innerHTML = '<p class="text-gray-500 text-center">Creating your outline...</p>';
+        // Update the global reference
+        window.outlineContainer = currentOutlineContainer;
+      }
+      copyBtn.classList.add('opacity-0', 'invisible');
+      fullscreenButton.disabled = true;
+      fullscreenButton.classList.remove('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
+      fullscreenButton.classList.add('bg-gray-50', 'text-gray-400', 'cursor-not-allowed');
+      fullscreenButton.title = 'Maximize Output (available when content is generated)';
+      metrics.classList.add('hidden');
+      errorMessage.classList.add('hidden');
+
+      const startTime = Date.now();
+
+      try {
+        if (req.config.stream) {
+          // Streaming mode using Server-Sent Events
+          const response = await fetch('/api/v1/outline', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(req),
+            signal: abortController.signal
+          });
+
+          if (!response.ok) {
+            const txt = await response.text();
+            throw new Error('Request failed: ' + response.status + ' ' + txt);
+          }
+
+          // Check if we got SSE content type
+          const contentType = response.headers.get('content-type');
+          if (!contentType || !contentType.includes('text/event-stream')) {
+            // Fallback to non-streaming if server didn't return SSE
+            const data = await response.json();
+            const currentOutlineContainer = document.querySelector('#outline-container');
+            if (currentOutlineContainer) {
+              currentOutlineContainer.innerHTML = marked.parse(data.outline || 'No outline returned.');
+            }
+            const endTime = Date.now();
+            const responseTime = endTime - startTime;
+            displayUsageMetrics(data.usage || {}, responseTime, data.provider || 'Unknown', data.model || 'Unknown');
+            copyBtn.classList.remove('opacity-0', 'invisible');
+      fullscreenButton.disabled = false;
+      fullscreenButton.classList.remove('bg-gray-50', 'text-gray-400', 'cursor-not-allowed');
+      fullscreenButton.classList.add('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
+      fullscreenButton.title = 'Maximize Output';
+            return;
+          }
+
+          // Clear the initial message
+          const currentOutlineContainer = document.querySelector('#outline-container');
+          if (currentOutlineContainer) {
+            currentOutlineContainer.innerHTML = '';
+            // Update the global reference
+            window.outlineContainer = currentOutlineContainer;
+          }
+          let accumulatedText = '';
+          let usage = null;
+          let provider = '';
+          let model = '';
+
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = '';
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+
+            for (const line of lines) {
+              if (line.trim().startsWith('data:')) {
+                const data = line.replace(/^data:\s*/, '');
+                if (data.trim() === '[DONE]' || data.trim() === '') {
+                  continue;
+                }
+                try {
+                  const parsed = JSON.parse(data);
+                  if (parsed.chunk) {
+                    accumulatedText += parsed.chunk;
+                    const currentOutlineContainer = document.querySelector('#outline-container');
+                    if (currentOutlineContainer) {
+                      currentOutlineContainer.innerHTML = marked.parse(accumulatedText);
+                      currentOutlineContainer.scrollTop = currentOutlineContainer.scrollHeight;
+                      // Update the global reference
+                      window.outlineContainer = currentOutlineContainer;
+                    }
+                    // Enable maximize button on first chunk
+                    if (fullscreenButton.disabled) {
+                      fullscreenButton.disabled = false;
+                      fullscreenButton.classList.remove('bg-gray-50', 'text-gray-400', 'cursor-not-allowed');
+                      fullscreenButton.classList.add('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
+                      fullscreenButton.title = 'Maximize Output';
+                    }
+                  }
+                  if (parsed.done && parsed.usage) {
+                    usage = parsed.usage;
+                  }
+                  if (parsed.provider) provider = parsed.provider;
+                  if (parsed.model) model = parsed.model;
+                  if (parsed.error) {
+                    throw new Error(parsed.error);
+                  }
+                } catch (e) {
+                  if (e instanceof SyntaxError) {
+                    console.warn('Failed to parse SSE data:', data);
+                  } else {
+                    throw e;
+                  }
+                }
+              }
+            }
+          }
+
+          const endTime = Date.now();
+          const responseTime = endTime - startTime;
+
+          // Display usage metrics if available
+          displayUsageMetrics(usage || {}, responseTime, provider, model);
+          // Show copy button after streaming completes
+          copyBtn.classList.remove('opacity-0', 'invisible');
+        } else {
+          // Non-streaming mode
+          const res = await fetch('/api/v1/outline', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(req),
+            signal: abortController.signal
+          });
+          const endTime = Date.now();
+          const responseTime = endTime - startTime;
+
+          if (!res.ok) {
+            const txt = await res.text();
+            throw new Error('Request failed: ' + res.status + ' ' + txt);
+          }
+          const data = await res.json();
+          const currentOutlineContainer = document.querySelector('#outline-container');
+          if (currentOutlineContainer) {
+            currentOutlineContainer.innerHTML = marked.parse(data.outline || 'No outline returned.');
+            // Update the global reference
+            window.outlineContainer = currentOutlineContainer;
+          }
+
+          displayUsageMetrics(data.usage || {}, responseTime, data.provider || 'Unknown', data.model || 'Unknown');
+        }
+      } catch (err) {
+        if (err.name === 'AbortError') {
+          const currentOutlineContainer = document.querySelector('#outline-container');
+          if (currentOutlineContainer) {
+            currentOutlineContainer.innerHTML = '<div class="text-amber-600">Request cancelled by user</div>';
+            // Update the global reference
+            window.outlineContainer = currentOutlineContainer;
+          }
+          copyBtn.classList.add('opacity-0', 'invisible');
+          fullscreenButton.disabled = true;
+          fullscreenButton.classList.remove('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
+          fullscreenButton.classList.add('bg-gray-50', 'text-gray-400', 'cursor-not-allowed');
+          fullscreenButton.title = 'Maximize Output (available when content is generated)';
+        } else {
+          showError(err.message || 'Unknown error');
+        }
+      } finally {
+        generateBtn.classList.remove('hidden');
+        cancelBtn.classList.add('hidden');
+        abortController = null;
+      }
+    }
+
+    function displayUsageMetrics(usage, responseTime, provider, model) {
+      metrics.classList.remove('hidden');
+
+      const inputTokens = usage.input_tokens || usage.prompt_tokens || 0;
+      const outputTokens = usage.output_tokens || usage.completion_tokens || 0;
+
+      // Safely update metrics elements
+      const inputTokensEl = document.getElementById('input-tokens');
+      const outputTokensEl = document.getElementById('output-tokens');
+      const responseTimeEl = document.getElementById('response-time');
+      const modelInfoEl = document.getElementById('model-info');
+
+      if (inputTokensEl) inputTokensEl.textContent = inputTokens.toLocaleString();
+      if (outputTokensEl) outputTokensEl.textContent = outputTokens.toLocaleString();
+      if (responseTimeEl) responseTimeEl.textContent = `${responseTime}ms`;
+      if (modelInfoEl) modelInfoEl.textContent = `${provider} - ${model}`;
+    }
+
+    function showError(message) {
+      errorMessage.textContent = message;
+      errorMessage.classList.remove('hidden');
+      copyBtn.classList.add('opacity-0', 'invisible');
+      fullscreenButton.disabled = true;
+      fullscreenButton.classList.remove('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
+      fullscreenButton.classList.add('bg-gray-50', 'text-gray-400', 'cursor-not-allowed');
+      fullscreenButton.title = 'Maximize Output (available when content is generated)';
+    }
+
+    // Event listeners
+    generateBtn.addEventListener('click', run);
+    cancelBtn.addEventListener('click', () => {
+      if (abortController) abortController.abort();
+    });
+    loadSampleBtn.addEventListener('click', () => setFromSample());
+
+    // --- Fullscreen support (maximize mode) ---
+    function ensureBackdrop() {
+      if (!backdropEl) {
+        backdropEl = document.createElement('div');
+        backdropEl.className = 'fullscreen-backdrop';
+        backdropEl.addEventListener('click', exitFullscreen);
+        document.body.appendChild(backdropEl);
+      }
+    }
+
+    function enterFullscreen() {
+      if (isFullscreen) return;
+      ensureBackdrop();
+
+      // Store the original HTML structure
+      originalOutputHTML = outputPanel.innerHTML;
+
+      // Check if we're currently streaming
+      const isStreaming = abortController !== null;
+
+      // Add fullscreen classes without replacing content initially
+      outputPanel.classList.add('fullscreen-output');
+      if (isStreaming) {
+        outputPanel.classList.add('streaming-mode');
+      }
+      backdropEl.classList.add('active');
+
+      // Insert close button at the beginning without replacing content
+      const closeBtn = document.createElement('button');
+      closeBtn.innerHTML = '✕';
+      closeBtn.className = 'close-button';
+      closeBtn.title = 'Close (ESC)';
+      closeBtn.onclick = exitFullscreen;
+      outputPanel.insertBefore(closeBtn, outputPanel.firstChild);
+
+      // If we're not streaming, restructure for proper fullscreen layout
+      if (!isStreaming) {
+        // Get current content and metrics
+        const currentContent = outlineContainer.innerHTML.trim() || '<p class="text-gray-500 text-center">No content to display</p>';
+        const metricsEl = document.getElementById('metrics');
+        // Only include metrics if they're not hidden
+        const metricsContent = (metricsEl && !metricsEl.classList.contains('hidden')) ? metricsEl.outerHTML : '';
+
+        // Create new fullscreen structure with metrics at top
+        const fullscreenContent = [
+          '<div class="fullscreen-inner">',
+          '  <div class="fullscreen-header">',
+          '    <div class="flex items-center justify-between">',
+          '      <h3 class="text-lg font-semibold text-gray-900 pr-16">Outline Preview</h3>',
+          '      <div class="fullscreen-actions flex items-center gap-2">',
+          '        <button id="fullscreen-copy-btn" onclick="copyOutput()" class="inline-flex items-center px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-200 transition-colors" title="Copy Output">',
+          '          <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">',
+          '            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />',
+          '          </svg>',
+          '          Copy',
+          '        </button>',
+          '      </div>',
+          '    </div>',
+          '  </div>',
+          '  ' + metricsContent,
+          '  <div class="fullscreen-body">',
+          '    <div id="outline-container" class="prose prose-sm max-w-none text-gray-900">' + currentContent + '</div>',
+          '  </div>',
+          '</div>'
+        ].join('\n');
+
+        // Replace the content (but preserve the close button)
+        const existingCloseBtn = outputPanel.querySelector('.close-button');
+        outputPanel.innerHTML = fullscreenContent;
+        if (existingCloseBtn) {
+          outputPanel.insertBefore(existingCloseBtn, outputPanel.firstChild);
+        }
+
+        // Update the outlineContainer reference to point to the new element
+        window.outlineContainer = document.querySelector('#outline-container');
+
+        // Update button references for fullscreen mode
+        window.copyBtn = document.querySelector('#copy-btn');
+        window.fullscreenButton = document.querySelector('#fullscreenButton');
+      }
+
+      isFullscreen = true;
+      document.addEventListener('keydown', handleEsc);
+    }
+
+    function exitFullscreen() {
+      if (!isFullscreen) return;
+
+      // Check if we're currently streaming
+      const isStreaming = abortController !== null;
+
+      // Remove the close button we added
+      const closeBtn = outputPanel.querySelector('.close-button');
+      if (closeBtn) {
+        closeBtn.remove();
+      }
+
+      outputPanel.classList.remove('fullscreen-output', 'streaming-mode');
+      if (backdropEl) backdropEl.classList.remove('active');
+
+      // If we're not streaming, restore the original structure
+      if (!isStreaming) {
+        // Save current content before exiting
+        const currentContent = outlineContainer.innerHTML;
+
+        // Restore original structure
+        outputPanel.innerHTML = originalOutputHTML;
+
+        // Update the outlineContainer reference back to the original element
+        window.outlineContainer = document.querySelector('#outline-container');
+
+        // Restore button references back to original elements
+        window.copyBtn = document.getElementById('copy-btn');
+        window.fullscreenButton = document.getElementById('fullscreenButton');
+
+        // Restore the current content
+        if (outlineContainer) {
+          outlineContainer.innerHTML = currentContent;
+        }
+      } else {
+        // If streaming, just remove fullscreen classes and keep content as-is
+        // Update the outlineContainer reference back to the original element
+        window.outlineContainer = document.querySelector('#outline-container');
+
+        // Restore button references back to original elements
+        window.copyBtn = document.getElementById('copy-btn');
+        window.fullscreenButton = document.getElementById('fullscreenButton');
+      }
+
+      isFullscreen = false;
+      document.removeEventListener('keydown', handleEsc);
+      // Rebind button after restore
+      const btn = document.getElementById('fullscreenButton');
+      if (btn) btn.onclick = toggleOutputFullscreen;
+    }
+
+    // Helper functions (defined after dependent functions)
+    function handleEsc(e) { if (e.key === 'Escape') exitFullscreen(); }
+    function toggleOutputFullscreen() { isFullscreen ? exitFullscreen() : enterFullscreen(); }
+
+    // Expose for inline handlers
+    window.exitFullscreen = exitFullscreen;
+    window.toggleOutputFullscreen = toggleOutputFullscreen;
+
+    // Copy functionality
+    function copyOutput() {
+      const el = document.querySelector('#outputPanel #outline-container') || document.getElementById('outline-container');
+      if (!el) return;
+      const text = el.innerText || '';
+      const btn = document.querySelector('#outputPanel #copy-btn') || document.getElementById('copy-btn');
+      const setCopiedUI = () => {
+        if (!btn) return;
+        const original = btn.getAttribute('data-original') || btn.innerHTML;
+        btn.setAttribute('data-original', original);
+        btn.innerHTML = `
+          <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+          Copied!
+        `;
+        btn.classList.add('bg-green-100','text-green-700','border-green-200');
+        setTimeout(() => {
+          btn.innerHTML = btn.getAttribute('data-original') || `
+            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+            </svg>
+            Copy
+          `;
+          btn.classList.remove('bg-green-100','text-green-700','border-green-200');
+        }, 1200);
+      };
+
+      const doCopy = () => {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(setCopiedUI).catch(() => {
+            // Fallback
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand('copy'); } catch {}
+            document.body.removeChild(ta);
+            setCopiedUI();
+          });
+        } else {
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          document.body.appendChild(ta);
+          ta.select();
+          try { document.execCommand('copy'); } catch {}
+          document.body.removeChild(ta);
+          setCopiedUI();
+        }
+      };
+
+      doCopy();
+    }
+
+    // Initialize and load sample
+    initModels().then(() => setFromSample());
+
+    // Load marked.js for markdown rendering
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/marked/marked.min.js';
+    script.onload = function() {
+      // Configure marked for better rendering
+      marked.setOptions({
+        breaks: true,
+        gfm: true,
+        headerIds: true,
+        headerPrefix: 'heading-',
+        langPrefix: 'language-',
+        mangle: false,
+        sanitize: false,
+        silent: true,
+        smartLists: true,
+        smartypants: true,
+        xhtml: false
+      });
+    };
+    document.head.appendChild(script);
+
+  
+  </script>
+</body>
+</html>
+

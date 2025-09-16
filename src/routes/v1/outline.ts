@@ -1,24 +1,29 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
 import { Context } from 'hono'
 import { streamSSE } from 'hono/streaming'
-import { summarizePrompt } from '../../utils/prompts'
+import { outlinePrompt } from '../../utils/prompts'
 import { handleError } from '../../utils/errorHandler'
-import { summarizeRequestSchema, summarizeResponseSchema } from '../../schemas/v1/summarize'
-import { createSummarizeResponse } from '../../schemas/v1/summarize'
+import { outlineRequestSchema, outlineResponseSchema } from '../../schemas/v1/outline'
+import { createOutlineResponse } from '../../schemas/v1/outline'
 import { processTextOutputRequest } from '../../services/ai'
 import { apiVersion } from './versionConfig'
 import { createFinalResponse } from './finalResponse'
-import { writeTextStreamSSE } from './streamUtils'
 
 const router = new OpenAPIHono()
 
-async function handleSummarizeRequest(c: Context) {
+async function handleOutlineRequest(c: Context) {
   try {
     const { payload, config } = await c.req.json()
     const provider = config.provider
     const model = config.model
     const isStreaming = config.stream || false
-    const prompt = summarizePrompt(payload.text, payload.maxLength)
+    const prompt = outlinePrompt(
+      payload.text,
+      payload.maxDepth,
+      payload.style,
+      payload.includeIntro,
+      payload.includeConclusion
+    )
     
     // Handle streaming response
     if (isStreaming) {
@@ -31,11 +36,42 @@ async function handleSummarizeRequest(c: Context) {
       
       return streamSSE(c, async (stream) => {
         try {
-          await writeTextStreamSSE(
-            stream,
-            result,
-            { provider, model, version: apiVersion }
-          )
+          // Get the text stream from the result
+          const textStream = result.textStream
+          
+          if (!textStream) {
+            throw new Error('Streaming not supported for this provider/model')
+          }
+          
+          // Stream chunks to the client
+          for await (const chunk of textStream) {
+            await stream.writeSSE({
+              data: JSON.stringify({
+                chunk: chunk,
+                provider: provider,
+                model: model,
+                version: apiVersion
+              })
+            })
+          }
+          
+          // Send final message with usage stats if available
+          const usage = await result.usage
+          if (usage) {
+            await stream.writeSSE({
+              data: JSON.stringify({
+                done: true,
+                usage: {
+                  input_tokens: usage.promptTokens,
+                  output_tokens: usage.completionTokens,
+                  total_tokens: usage.totalTokens
+                },
+                provider: provider,
+                model: model,
+                version: apiVersion
+              })
+            })
+          }
         } catch (error) {
           console.error('Streaming error:', error)
           try {
@@ -58,9 +94,9 @@ async function handleSummarizeRequest(c: Context) {
       })
     }
     
-    // Handle non-streaming response (existing logic)
+    // Handle non-streaming response
     const result = await processTextOutputRequest(prompt, config)
-    const finalResponse = createSummarizeResponse(result.text, provider, model, {
+    const finalResponse = createOutlineResponse(result.text, provider, model, {
       input_tokens: result.usage.promptTokens,
       output_tokens: result.usage.completionTokens,
       total_tokens: result.usage.totalTokens,
@@ -70,7 +106,7 @@ async function handleSummarizeRequest(c: Context) {
 
     return c.json(finalResponseWithVersion, 200)
   } catch (error) {
-    return handleError(c, error, 'Failed to summarize text')
+    return handleError(c, error, 'Failed to create outline')
   }
 }
 
@@ -83,17 +119,17 @@ router.openapi(
       body: {
         content: {
           'application/json': {
-            schema: summarizeRequestSchema
+            schema: outlineRequestSchema
           }
         }
       }
     },
     responses: {
       200: {
-        description: 'Returns the summarized text.',
+        description: 'Returns the generated outline.',
         content: {
           'application/json': {
-            schema: summarizeResponseSchema
+            schema: outlineResponseSchema
           }
         }
       },
@@ -108,16 +144,17 @@ router.openapi(
         }
       }
     },
-    summary: 'Summarize text',
-    description: 'This endpoint receives a text and uses an LLM to summarize the text.',
+    summary: 'Create outline from text',
+    description: 'This endpoint receives a text and uses an LLM to create a structured outline.',
     tags: ['API']
   }),
-  handleSummarizeRequest as any
+  handleOutlineRequest as any
 )
 
 export default {
   handler: router,
-  mountPath: 'summarize'
+  mountPath: 'outline'
 }
+
 
 
