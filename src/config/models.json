@@ -3,62 +3,62 @@
     "ollama": {
       "enabled": true,
       "models": [
-        { "name": "llama3.2:latest", "capabilities": ["summarize", "rewrite", "compose", "planning", "keywords", "sentiment", "emailReply", "translate", "outline"], "notes": "Meta Llama 3.2 general-purpose model." },
-        { "name": "qwen2.5-coder:latest", "capabilities": ["summarize", "rewrite", "compose", "planning", "keywords", "emailReply", "outline"], "notes": "Qwen 2.5 coder-optimized variant for code tasks." },
-        { "name": "gemma2:2b", "capabilities": ["summarize", "rewrite", "compose", "planning", "keywords", "sentiment", "emailReply", "meetingNotes", "outline"], "notes": "Gemma 2 small variant for lightweight tasks." },
-        { "name": "gemma3:4b", "capabilities": ["summarize", "rewrite", "compose", "planning", "keywords", "sentiment", "emailReply", "askText", "translate", "meetingNotes", "outline"], "notes": "Gemma 3 small variant for lightweight tasks with Q&A support." },
-        { "name": "qwen2.5:0.5b", "capabilities": ["summarize", "rewrite", "compose", "planning", "keywords", "sentiment", "emailReply", "outline"], "notes": "Qwen 2.5 0.5B parameter model for ultra-light workloads." },
-        { "name": "qwen2.5:1.5b", "capabilities": ["summarize", "rewrite", "compose", "planning", "keywords", "sentiment", "emailReply", "outline"], "notes": "Qwen 2.5 1.5B parameter model; balanced speed/quality." },
-        { "name": "qwen2.5:3b", "capabilities": ["summarize", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "outline"], "notes": "Qwen 2.5 3B parameter model for stronger quality." },
-        { "name": "qwen2.5:7b", "capabilities": ["summarize", "rewrite", "compose", "planning", "keywords", "sentiment", "emailReply", "outline"], "notes": "Qwen 2.5 7B parameter model for higher quality." },        
-        { "name": "llama3.2:1b", "capabilities": ["summarize", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Llama 3.2 1B tiny variant for edge/light usage." },
-        { "name": "llama3.2:3b", "capabilities": ["summarize", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Llama 3.2 3B small variant." },
-        { "name": "gemma3:270m", "capabilities": ["summarize", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "outline"], "notes": "Gemma 3 270M instruct tuned; great for ultra-fast summarization on CPU." }
+        { "name": "llama3.2:latest", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "emailReply", "translate", "outline"], "notes": "Meta Llama 3.2 general-purpose model." },
+        { "name": "qwen2.5-coder:latest", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "emailReply", "outline"], "notes": "Qwen 2.5 coder-optimized variant for code tasks." },
+        { "name": "gemma2:2b", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "emailReply", "meetingNotes", "outline"], "notes": "Gemma 2 small variant for lightweight tasks." },
+        { "name": "gemma3:4b", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "emailReply", "askText", "translate", "meetingNotes", "outline"], "notes": "Gemma 3 small variant for lightweight tasks with Q&A support." },
+        { "name": "qwen2.5:0.5b", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "emailReply", "outline"], "notes": "Qwen 2.5 0.5B parameter model for ultra-light workloads." },
+        { "name": "qwen2.5:1.5b", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "emailReply", "outline"], "notes": "Qwen 2.5 1.5B parameter model; balanced speed/quality." },
+        { "name": "qwen2.5:3b", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "outline"], "notes": "Qwen 2.5 3B parameter model for stronger quality." },
+        { "name": "qwen2.5:7b", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "emailReply", "outline"], "notes": "Qwen 2.5 7B parameter model for higher quality." },        
+        { "name": "llama3.2:1b", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Llama 3.2 1B tiny variant for edge/light usage." },
+        { "name": "llama3.2:3b", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Llama 3.2 3B small variant." },
+        { "name": "gemma3:270m", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "outline"], "notes": "Gemma 3 270M instruct tuned; great for ultra-fast summarization on CPU." }
       ]
     },
     "lmstudio": {
       "enabled": true,
       "models": [
-        { "name": "gemma-3-270m-it", "capabilities": ["summarize", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "outline"], "notes": "Gemma 3 270M instruct tuned; great for ultra-fast summarization on CPU." },
-        { "name": "llama-3.2-3b-instruct", "capabilities": ["summarize", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Llama 3.2 3B instruct; strong small model for summarization." },
-        { "name": "nvidia_nvidia-nemotron-nano-9b-v2", "capabilities": ["summarize", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "NVIDIA Nemotron Nano 9B v2; compact high-performance model." }
+        { "name": "gemma-3-270m-it", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "outline"], "notes": "Gemma 3 270M instruct tuned; great for ultra-fast summarization on CPU." },
+        { "name": "llama-3.2-3b-instruct", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Llama 3.2 3B instruct; strong small model for summarization." },
+        { "name": "nvidia_nvidia-nemotron-nano-9b-v2", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "NVIDIA Nemotron Nano 9B v2; compact high-performance model." }
       ]
     },
     "openai": {
       "enabled": true,
       "models": [
-        { "name": "gpt-4o-mini", "capabilities": ["summarize", "rewrite", "compose", "planning", "keywords", "sentiment", "vision", "emailReply", "translate", "meetingNotes", "outline"], "notes": "OpenAI multimodal small model with vision support." },
-        { "name": "gpt-4.1-nano", "capabilities": ["summarize", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "OpenAI lightweight model for fast, low-cost text tasks." },
-        { "name": "gpt-5-mini", "capabilities": ["summarize", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "OpenAI next-gen mini model with Q&A capabilities." },
-        { "name": "gpt-5-nano", "capabilities": ["summarize", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "OpenAI next-gen nano model with Q&A capabilities." },
-        { "name": "gpt-5", "capabilities": ["summarize", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "OpenAI next-gen model with Q&A capabilities." },
-        { "name": "gpt-4o", "capabilities": ["summarize", "rewrite", "compose", "planning", "keywords", "sentiment", "vision", "emailReply", "translate", "meetingNotes", "outline"], "notes": "OpenAI next-gen vision model with Q&A capabilities." }
+        { "name": "gpt-4o-mini", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "vision", "emailReply", "translate", "meetingNotes", "outline"], "notes": "OpenAI multimodal small model with vision support." },
+        { "name": "gpt-4.1-nano", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "OpenAI lightweight model for fast, low-cost text tasks." },
+        { "name": "gpt-5-mini", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "OpenAI next-gen mini model with Q&A capabilities." },
+        { "name": "gpt-5-nano", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "OpenAI next-gen nano model with Q&A capabilities." },
+        { "name": "gpt-5", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "OpenAI next-gen model with Q&A capabilities." },
+        { "name": "gpt-4o", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "vision", "emailReply", "translate", "meetingNotes", "outline"], "notes": "OpenAI next-gen vision model with Q&A capabilities." }
       ]
     },
     "openrouter": {
       "enabled": true,
       "models": [
-        { "name": "anthropic/claude-3.5-sonnet", "capabilities": ["summarize", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Claude 3.5 Sonnet via OpenRouter; strong reasoning." },
-        { "name": "openai/gpt-4o-mini", "capabilities": ["summarize", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "OpenRouter proxy to GPT-4o mini." },
-        { "name": "google/gemini-2.0-flash-lite-001", "capabilities": ["summarize", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Google Gemini 2.0 Flash Lite via OpenRouter with Q&A capabilities." },
-        { "name": "google/gemini-2.5-flash-lite", "capabilities": ["summarize", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Google Gemini 2.5 Flash Lite via OpenRouter with 1M token context window for large document Q&A." },
-        { "name": "openai/gpt-oss-20b", "capabilities": ["summarize", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "OpenRouter proxy to GPT OSS 20B" },
-        { "name": "openai/gpt-oss-120b", "capabilities": ["summarize", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "OpenRouter proxy to GPT OSS 120B" },
-        { "name": "nvidia/nemotron-nano-9b-v2", "capabilities": ["summarize", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "NVIDIA Nemotron Nano 9B v2; compact high-performance model." }
+        { "name": "anthropic/claude-3.5-sonnet", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Claude 3.5 Sonnet via OpenRouter; strong reasoning." },
+        { "name": "openai/gpt-4o-mini", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "OpenRouter proxy to GPT-4o mini." },
+        { "name": "google/gemini-2.0-flash-lite-001", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Google Gemini 2.0 Flash Lite via OpenRouter with Q&A capabilities." },
+        { "name": "google/gemini-2.5-flash-lite", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Google Gemini 2.5 Flash Lite via OpenRouter with 1M token context window for large document Q&A." },
+        { "name": "openai/gpt-oss-20b", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "OpenRouter proxy to GPT OSS 20B" },
+        { "name": "openai/gpt-oss-120b", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "OpenRouter proxy to GPT OSS 120B" },
+        { "name": "nvidia/nemotron-nano-9b-v2", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "NVIDIA Nemotron Nano 9B v2; compact high-performance model." }
       ]
     },
     "anthropic": {
       "enabled": true,
       "models": [
-        { "name": "claude-3-haiku-20240307", "capabilities": ["summarize", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Anthropic Claude 3 Haiku; fast and cost-effective with Q&A support." }
+        { "name": "claude-3-haiku-20240307", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Anthropic Claude 3 Haiku; fast and cost-effective with Q&A support." }
       ]
     },
     "aigateway": {
       "enabled": true,
       "models": [
-        { "name": "openai/gpt-5-nano", "capabilities": ["summarize", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "GPT-5 nano is a high throughput model that excels at simple instruction or classification tasks." },
-        { "name": "gemini-2.0-flash-lite-preview-02-05", "capabilities": ["summarize", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Gemini 2.0 Flash Lite Preview 02-05" },
-        { "name": "mistral-small-2503", "capabilities": ["summarize", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Mistral Small" }
+        { "name": "openai/gpt-5-nano", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "GPT-5 nano is a high throughput model that excels at simple instruction or classification tasks." },
+        { "name": "gemini-2.0-flash-lite-preview-02-05", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Gemini 2.0 Flash Lite Preview 02-05" },
+        { "name": "mistral-small-2503", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Mistral Small" }
 
         
       ]
@@ -66,7 +66,7 @@
     "llamacpp": {
       "enabled": true,
       "models": [
-        { "name": "default", "capabilities": ["summarize", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "outline"], "notes": "Default model used is what you configued when running llama-server" }
+        { "name": "default", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "outline"], "notes": "Default model used is what you configued when running llama-server" }
       ]
     }
   }
