@@ -424,3 +424,18 @@ ${text}
 </text>
 :`;
 }
+
+/**
+ * System prompt template for PDF summarization
+ */
+export function pdfSummarizePrompt(text: string, maxLength?: number): string {
+  const lengthInstruction = maxLength ? ` in ${maxLength} words or less.` : '';
+  return `Summarize the following PDF document${lengthInstruction}
+Provide a clear, concise summary that captures the main points, key findings, and important conclusions.
+Just return the summary, no other text or explanation.
+
+<document>
+${text}
+</document>
+:`;
+}
