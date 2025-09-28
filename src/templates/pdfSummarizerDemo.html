@@ -84,6 +84,60 @@
     .md-table tbody tr:last-child td {
       border-bottom: none;
     }
+    
+    /* Fullscreen styles for maximize mode */
+    .fullscreen-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 9998;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s ease-in-out;
+    }
+    .fullscreen-backdrop.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .fullscreen-output {
+      position: fixed !important;
+      inset: 4% 4% auto 4% !important;
+      max-height: 92% !important;
+      width: auto !important;
+      z-index: 9999 !important;
+      background: white !important;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+    }
+    .fullscreen-output .fullscreen-inner {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    .fullscreen-output .fullscreen-body {
+      flex: 1 1 auto;
+      overflow: auto;
+      height: auto;
+      padding-right: 4px;
+    }
+    .close-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: white;
+      border: 1px solid #e5e7eb;
+      color: #374151;
+      padding: 6px 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      z-index: 10;
+    }
+    .close-button:hover {
+      background: #f9fafb;
+    }
+    /* Hide maximize button when in fullscreen; exit with X button */
+    .fullscreen-output #fullscreenButton {
+      display: none !important;
+    }
   </style>
   <script src="/api/shared/safedom.js"></script>
 </head>
@@ -196,8 +250,21 @@
       </section>
 
       <!-- Output -->
-      <section class="bg-white p-6 rounded-2xl border border-gray-100 shadow-lg hover:shadow-xl transition-shadow duration-300">
-        <h2 class="text-lg font-semibold mb-3">Output</h2>
+      <section id="outputPanel" class="bg-white p-6 rounded-2xl border border-gray-100 shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <div class="flex justify-between items-center mb-3">
+          <h2 class="text-lg font-semibold">Output</h2>
+          <div class="flex items-center gap-2">
+            <button id="copyButton" onclick="copyOutput()" class="hidden inline-flex items-center px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-200 transition-colors" title="Copy Output">
+              <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+              </svg>
+              Copy
+            </button>
+            <button id="fullscreenButton" onclick="toggleOutputFullscreen()" class="hidden inline-flex items-center px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-200 transition-colors" title="Maximize Output">
+              ⛶ Maximize
+            </button>
+          </div>
+        </div>
         <div id="usageInfo" class="hidden mb-3 text-sm"></div>
         <div id="pdfMetadata" class="hidden mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm"></div>
         
@@ -243,6 +310,9 @@
     const pdfMetadata = document.getElementById('pdfMetadata');
     const jsonPreview = document.getElementById('jsonPreview');
     const loadingState = document.getElementById('loadingState');
+    const outputPanel = document.getElementById('outputPanel');
+    const copyButton = document.getElementById('copyButton');
+    const fullscreenButton = document.getElementById('fullscreenButton');
 
     let abortController = null;
     let eventSource = null;
@@ -414,6 +484,11 @@
     }
 
     async function run() {
+      // Exit fullscreen if active
+      if (isFullscreen) {
+        exitFullscreen();
+      }
+      
       const req = buildRequest();
       updatePreview();
       const headers = { 'Content-Type': 'application/json' };
@@ -425,14 +500,22 @@
       runBtn.classList.add('hidden');
       cancelBtn.classList.remove('hidden');
 
-      // Show loading state and hide other elements
-      loadingState.classList.remove('hidden');
-      summaryText.classList.add('hidden');
+      // Clear previous content and show loading state
       summaryText.innerHTML = '';
+      summaryText.classList.add('hidden');
+      
+      // Clear and hide other elements
       usageInfo.classList.add('hidden');
       pdfMetadata.classList.add('hidden');
       setContent(usageInfo, '');
       setContent(pdfMetadata, '');
+      
+      // Hide copy and maximize buttons
+      copyButton.classList.add('hidden');
+      fullscreenButton.classList.add('hidden');
+      
+      // Show loading state after clearing everything
+      loadingState.classList.remove('hidden');
 
       const startTime = performance.now();
 
@@ -463,6 +546,12 @@
             summaryText.classList.remove('hidden');
             summaryText.innerHTML = summary ? renderMarkdownSimple(summary) : 'No summary returned.';
             
+            // Show copy and maximize buttons if there's content
+            if (summary) {
+              copyButton.classList.remove('hidden');
+              fullscreenButton.classList.remove('hidden');
+            }
+            
             // Display PDF metadata if available
             const metadata = data?.pdfMetadata || data?.data?.pdfMetadata;
             if (metadata) {
@@ -478,13 +567,11 @@
             return;
           }
 
-          // Hide loading state and show summary area for streaming
-          loadingState.classList.add('hidden');
-          summaryText.classList.remove('hidden');
-          summaryText.innerHTML = '';
+          // Keep loading state visible until first chunk arrives
           let accumulatedText = '';
           let usage = null;
           let metadata = null;
+          let firstChunkReceived = false;
 
           const reader = response.body.getReader();
           const decoder = new TextDecoder();
@@ -507,6 +594,17 @@
                 try {
                   const parsed = JSON.parse(data);
                   if (parsed.chunk) {
+                    // Hide loading state and show content on first chunk
+                    if (!firstChunkReceived) {
+                      firstChunkReceived = true;
+                      loadingState.classList.add('hidden');
+                      summaryText.classList.remove('hidden');
+                      
+                      // Show copy and maximize buttons
+                      copyButton.classList.remove('hidden');
+                      fullscreenButton.classList.remove('hidden');
+                    }
+                    
                     accumulatedText += parsed.chunk;
                     summaryText.innerHTML = renderMarkdownSimple(accumulatedText);
                   }
@@ -532,6 +630,13 @@
 
           const endTime = performance.now();
           const responseTime = (endTime - startTime).toFixed(2);
+
+          // If no chunks were received, hide loading state and show empty message
+          if (!firstChunkReceived) {
+            loadingState.classList.add('hidden');
+            summaryText.classList.remove('hidden');
+            summaryText.innerHTML = '<span class="text-gray-500">No summary was generated.</span>';
+          }
 
           // Display PDF metadata if available
           if (metadata) {
@@ -584,6 +689,12 @@
           loadingState.classList.add('hidden');
           summaryText.classList.remove('hidden');
           summaryText.innerHTML = summary ? renderMarkdownSimple(summary) : 'No summary returned.';
+          
+          // Show copy and maximize buttons if there's content
+          if (summary) {
+            copyButton.classList.remove('hidden');
+            fullscreenButton.classList.remove('hidden');
+          }
 
           // Display PDF metadata if available
           const metadata = data?.pdfMetadata || data?.data?.pdfMetadata;
@@ -610,6 +721,10 @@
         pdfMetadata.classList.add('hidden');
         setContent(usageInfo, '');
         setContent(pdfMetadata, '');
+        
+        // Hide copy and maximize buttons on error
+        copyButton.classList.add('hidden');
+        fullscreenButton.classList.add('hidden');
       } finally {
         runBtn.classList.remove('hidden');
         cancelBtn.classList.add('hidden');
@@ -716,6 +831,124 @@
       metricsDiv.innerHTML = metricsHtml;
       setContent(usageInfo, metricsDiv.firstChild);
     }
+
+    // Copy and Fullscreen functionality
+    let isFullscreen = false;
+    let originalOutputHTML = null;
+    let backdropEl = null;
+
+    function ensureBackdrop() {
+      if (!backdropEl) {
+        backdropEl = document.createElement('div');
+        backdropEl.className = 'fullscreen-backdrop';
+        backdropEl.addEventListener('click', exitFullscreen);
+        document.body.appendChild(backdropEl);
+      }
+    }
+
+    function enterFullscreen() {
+      if (isFullscreen) return;
+      ensureBackdrop();
+      originalOutputHTML = outputPanel.innerHTML;
+      outputPanel.classList.add('fullscreen-output');
+      backdropEl.classList.add('active');
+
+      const content = `
+        <button onclick="exitFullscreen()" class="close-button" title="Close (ESC)">✕</button>
+        <div class="fullscreen-inner">
+          <div class="fullscreen-body">${originalOutputHTML}</div>
+        </div>`;
+      outputPanel.innerHTML = content;
+      isFullscreen = true;
+      document.addEventListener('keydown', handleEsc);
+      
+      // Bind close button explicitly to ensure it works across browsers
+      const closeBtn = outputPanel.querySelector('.close-button');
+      if (closeBtn) closeBtn.addEventListener('click', exitFullscreen);
+    }
+
+    function exitFullscreen() {
+      if (!isFullscreen) return;
+      outputPanel.classList.remove('fullscreen-output');
+      if (backdropEl) backdropEl.classList.remove('active');
+      outputPanel.innerHTML = originalOutputHTML;
+      isFullscreen = false;
+      document.removeEventListener('keydown', handleEsc);
+      
+      // Rebind button after restore
+      const btn = document.getElementById('fullscreenButton');
+      if (btn) btn.onclick = toggleOutputFullscreen;
+    }
+
+    function handleEsc(e) {
+      if (e.key === 'Escape') exitFullscreen();
+    }
+
+    function toggleOutputFullscreen() {
+      isFullscreen ? exitFullscreen() : enterFullscreen();
+    }
+
+    function copyOutput() {
+      const el = document.querySelector('#outputPanel #summaryText') || document.getElementById('summaryText');
+      if (!el) return;
+      const text = el.innerText || '';
+      const btn = document.querySelector('#outputPanel #copyButton') || document.getElementById('copyButton');
+      
+      const setCopiedUI = () => {
+        if (!btn) return;
+        const original = btn.getAttribute('data-original') || btn.textContent;
+        btn.setAttribute('data-original', original);
+        btn.textContent = 'Copied!';
+        btn.classList.add('bg-green-100', 'text-green-700', 'border-green-200');
+        setTimeout(() => {
+          btn.textContent = btn.getAttribute('data-original') || 'Copy';
+          btn.classList.remove('bg-green-100', 'text-green-700', 'border-green-200');
+        }, 1200);
+      };
+
+      const doCopy = () => {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(setCopiedUI).catch(() => {
+            // Fallback to older method
+            try {
+              const textarea = document.createElement('textarea');
+              textarea.value = text;
+              textarea.style.position = 'fixed';
+              textarea.style.opacity = '0';
+              document.body.appendChild(textarea);
+              textarea.select();
+              document.execCommand('copy');
+              document.body.removeChild(textarea);
+              setCopiedUI();
+            } catch (e) {
+              console.error('Copy failed:', e);
+            }
+          });
+        } else {
+          // Fallback to older method
+          try {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            setCopiedUI();
+          } catch (e) {
+            console.error('Copy failed:', e);
+          }
+        }
+      };
+
+      doCopy();
+    }
+
+    // Expose for inline handlers
+    window.exitFullscreen = exitFullscreen;
+    window.toggleOutputFullscreen = toggleOutputFullscreen;
+    window.copyOutput = copyOutput;
 
     pdfUrlEl.addEventListener('input', updatePreview);
     maxLengthEl.addEventListener('input', updatePreview);
