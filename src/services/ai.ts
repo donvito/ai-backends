@@ -7,6 +7,7 @@ import {
   lmstudioConfig,
   aigatewayConfig,
   llamacppConfig,
+  googleConfig,
   isServiceEnabled 
 } from "../config/services";
 import { llmRequestSchema } from "../schemas/v1/llm";
@@ -21,6 +22,7 @@ enum Provider {
   lmstudio = 'lmstudio',
   aigateway = 'aigateway',
   llamacpp = 'llamacpp',
+  google = 'google',
 }
 
 // Service types
@@ -68,6 +70,8 @@ export async function checkServiceAvailability(service: AIService): Promise<bool
       return isServiceEnabled('AIGateway');
     case Provider.llamacpp:
       return isServiceEnabled('LlamaCpp');
+    case Provider.google:
+      return isServiceEnabled('Google');
     default:
       return false;
   }
@@ -178,6 +182,14 @@ export async function getServiceStatus() {
       available: await checkServiceAvailability(Provider.llamacpp),
       config: {
         baseURL: llamacppConfig.baseURL,
+      }
+    },
+    google: {
+      enabled: isServiceEnabled('Google'),
+      available: await checkServiceAvailability(Provider.google),
+      config: {
+        model: googleConfig.model,
+        hasApiKey: !!googleConfig.apiKey,
       }
     }
   };

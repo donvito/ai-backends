@@ -1,7 +1,7 @@
-import { z } from "zod";
-import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
-import { generateObject, generateText, streamText } from "ai";
-import type { AIProvider } from './interfaces';
+import {z} from "zod";
+import {createOpenAICompatible} from '@ai-sdk/openai-compatible';
+import {generateObject, generateText, streamText} from "ai";
+import type {AIProvider} from './interfaces';
 
 const GEMINI_MODEL = 'gemini-2.5-flash-lite';
 
@@ -18,7 +18,7 @@ export function getGoogleProvider() {
   });
 }
 
-class GeminiProvider implements AIProvider {
+class GoogleProvider implements AIProvider {
   name = 'google' as const;
 
   async generateChatStructuredResponse(
@@ -29,13 +29,12 @@ class GeminiProvider implements AIProvider {
   ): Promise<any> {
     try {
         const gemini = getGoogleProvider();
-      const result = await generateObject({
-        model: gemini(model || GEMINI_MODEL),
-        schema,
-        prompt,
-        temperature
+        return await generateObject({
+          model: gemini(model || GEMINI_MODEL),
+          schema,
+          prompt,
+          temperature
       });
-      return result;
     } catch (error) {
       console.error('Gemini structured response error: ', error);
       throw new Error(`Gemini structured response error: ${error}`);
@@ -49,12 +48,11 @@ class GeminiProvider implements AIProvider {
   ): Promise<any> {
     try {
         const gemini = getGoogleProvider();
-      const result = await generateText({
-        model: gemini(model || GEMINI_MODEL),
-        prompt,
-        temperature
+        return await generateText({
+          model: gemini(model || GEMINI_MODEL),
+          prompt,
+          temperature
       });
-      return result;
     } catch (error) {
       console.error('Gemini text response error: ', error);
       throw new Error(`Gemini text response error: ${error}`);
@@ -68,12 +66,11 @@ class GeminiProvider implements AIProvider {
   ): Promise<any> {
     try {
         const gemini = getGoogleProvider();
-      const result = streamText({
-        model: gemini(model || GEMINI_MODEL),
-        prompt,
-        temperature
+        return streamText({
+          model: gemini(model || GEMINI_MODEL),
+          prompt,
+          temperature
       });
-      return result;
     } catch (error) {
       console.error('Gemini streaming response error: ', error);
       throw new Error(`Gemini streaming response error: ${error}`);
@@ -85,15 +82,12 @@ class GeminiProvider implements AIProvider {
         'gemini-2.5-flash-lite',
         'gemini-2.5-flash',
         'gemini-2.5-pro',
-        'gemini-2.5-flash-lite',
-        'gemini-2.5-flash',
-        'gemini-2.5-pro',
     ];
   }
 
 }
 
-const provider = new GeminiProvider();
+const provider = new GoogleProvider();
 
 export default provider;
 export { GEMINI_MODEL };

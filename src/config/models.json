@@ -42,6 +42,8 @@
         { "name": "openai/gpt-4o-mini", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "OpenRouter proxy to GPT-4o mini." },
         { "name": "google/gemini-2.0-flash-lite-001", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Google Gemini 2.0 Flash Lite via OpenRouter with Q&A capabilities." },
         { "name": "google/gemini-2.5-flash-lite", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Google Gemini 2.5 Flash Lite via OpenRouter with 1M token context window for large document Q&A." },
+        { "name": "google/gemini-2.5-flash", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Google Gemini 2.5 Flash via OpenRouter with advanced capabilities." },
+        { "name": "google/gemini-2.5-pro", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Google Gemini 2.5 Pro via OpenRouter with enhanced reasoning." },
         { "name": "openai/gpt-oss-20b", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "OpenRouter proxy to GPT OSS 20B" },
         { "name": "openai/gpt-oss-120b", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "OpenRouter proxy to GPT OSS 120B" },
         { "name": "nvidia/nemotron-nano-9b-v2", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "NVIDIA Nemotron Nano 9B v2; compact high-performance model." }
@@ -61,6 +63,14 @@
         { "name": "mistral-small-2503", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Mistral Small" }
 
         
+      ]
+    },
+    "google": {
+      "enabled": true,
+      "models": [
+        { "name": "gemini-2.5-flash-lite", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "vision", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Google Gemini 2.5 Flash Lite with fast processing and vision capabilities." },
+        { "name": "gemini-2.5-flash", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "vision", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Google Gemini 2.5 Flash with advanced multimodal capabilities." },
+        { "name": "gemini-2.5-pro", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "vision", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Google Gemini 2.5 Pro with enhanced reasoning and vision support." }
       ]
     },
     "llamacpp": {

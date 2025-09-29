@@ -50,6 +50,14 @@ const serviceStatusSchema = z.object({
           model: z.string(),
           chatModel: z.string(),
         })
+      }),
+      google: z.object({
+        enabled: z.boolean(),
+        available: z.boolean(),
+        config: z.object({
+          model: z.string(),
+          hasApiKey: z.boolean(),
+        })
       })
   }),
   primary: z.string().nullable(),
@@ -62,7 +70,7 @@ const modelsSchema = z.object({
   available: z.boolean()
 })
 
-const capabilityEnum = z.enum(['summarize', 'rewrite', 'compose', 'keywords', 'sentiment', 'emailReply', 'vision', 'askText', 'translate', 'meetingNotes', 'planning', 'outline'])
+const capabilityEnum = z.enum(['summarize', 'pdf-summarizer', 'rewrite', 'compose', 'keywords', 'sentiment', 'emailReply', 'vision', 'askText', 'translate', 'meetingNotes', 'planning', 'outline'])
 const byProviderSchema = z.record(z.array(z.string()))
 const providerViewSchema = z.record(z.array(z.object({
   name: z.string(),
@@ -73,6 +81,7 @@ const providerViewSchema = z.record(z.array(z.object({
     source: z.literal('config'),
     byCapability: z.object({
       summarize: byProviderSchema,
+      'pdf-summarizer': byProviderSchema,
       rewrite: byProviderSchema,
       compose: byProviderSchema,
       keywords: byProviderSchema,
@@ -105,6 +114,7 @@ async function handleGetModels(c: Context) {
     if (source === 'config') {
       const byCapability = {
         summarize: getModelsByCapability('summarize'),
+        'pdf-summarizer': getModelsByCapability('pdf-summarizer'),
         rewrite: getModelsByCapability('rewrite'),
         compose: getModelsByCapability('compose'),
         keywords: getModelsByCapability('keywords'),
@@ -128,7 +138,8 @@ async function handleGetModels(c: Context) {
         getAvailableModels('ollama'),
         getAvailableModels('openrouter'),
         getAvailableModels('anthropic'),
-        getAvailableModels('lmstudio')
+        getAvailableModels('lmstudio'),
+        getAvailableModels('google')
       ])
       const response = {
         openai: {
@@ -155,6 +166,11 @@ async function handleGetModels(c: Context) {
           service: 'lmstudio',
           models: results[4].status === 'fulfilled' ? results[4].value : [],
           available: await checkServiceAvailability('lmstudio')
+        },
+        google: {
+          service: 'google',
+          models: results[5].status === 'fulfilled' ? results[5].value : [],
+          available: await checkServiceAvailability('google')
         }
       }
       return c.json(response, 200)
@@ -175,8 +191,8 @@ async function handleGetModels(c: Context) {
 async function handleServiceHealth(c: Context) {
   try {
     const service = c.req.param('service')
-    if (!service || !['openai', 'ollama', 'openrouter', 'anthropic', 'lmstudio'].includes(service)) {
-      return c.json({ error: 'Invalid service. Must be one of: openai, ollama, openrouter, anthropic, lmstudio' }, 400)
+    if (!service || !['openai', 'ollama', 'openrouter', 'anthropic', 'lmstudio', 'google'].includes(service)) {
+      return c.json({ error: 'Invalid service. Must be one of: openai, ollama, openrouter, anthropic, lmstudio, google' }, 400)
     }
     const available = await checkServiceAvailability(service as any)
     return c.json({
@@ -236,6 +252,7 @@ router.openapi(
                 openrouter: modelsSchema,
                 anthropic: modelsSchema,
                 lmstudio: modelsSchema,
+                google: modelsSchema,
               }),
               modelsGuidanceSchema.extend({ byProvider: providerViewSchema }).partial({ byCapability: true, byProvider: true })
             ])
