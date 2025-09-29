@@ -51,6 +51,11 @@ export interface LlamaCppConfig extends ServiceConfig {
   timeout?: number;
 }
 
+export interface GoogleConfig extends ServiceConfig {
+  apiKey: string;
+  model: string;
+}
+
 // OpenAI Configuration
 export const openaiConfig: OpenAIConfig = {
   name: 'OpenAI',
@@ -123,8 +128,17 @@ export const llamacppConfig: LlamaCppConfig = {
   timeout: parseInt(process.env.LLAMACPP_TIMEOUT || '30000'),
 };
 
+// Google Gemini Configuration
+export const googleConfig: GoogleConfig = {
+  name: 'Google',
+  enabled: !!process.env.GOOGLE_AI_API_KEY,
+  priority: 8,
+  apiKey: process.env.GOOGLE_AI_API_KEY || '',
+  model: process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite',
+};
+
 // Available services
-export const availableServices = [openaiConfig, anthropicConfig, ollamaConfig, openrouterConfig, lmstudioConfig, aigatewayConfig, llamacppConfig];
+export const availableServices = [openaiConfig, anthropicConfig, ollamaConfig, openrouterConfig, lmstudioConfig, aigatewayConfig, llamacppConfig, googleConfig];
 
 // Get the primary service (highest priority enabled service)
 export function getPrimaryService(): ServiceConfig | null {
