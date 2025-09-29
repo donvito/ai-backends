@@ -5,21 +5,21 @@ import type { AIProvider } from './interfaces';
 
 const GEMINI_MODEL = 'gemini-2.5-flash-lite';
 
-export function getGeminiProvider() {
+export function getGoogleProvider() {
   const apiKey = process.env.GOOGLE_AI_API_KEY;
   if (!apiKey) {
     throw new Error('Google AI API key is not configured. Set GOOGLE_AI_API_KEY or use another provider.');
   }
   
   return createOpenAICompatible({
-    name: 'gemini',
+    name: 'google',
     apiKey: apiKey,
     baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai/',
   });
 }
 
 class GeminiProvider implements AIProvider {
-  name = 'gemini' as const;
+  name = 'google' as const;
 
   async generateChatStructuredResponse(
     prompt: string,
@@ -28,11 +28,9 @@ class GeminiProvider implements AIProvider {
     temperature: number = 0
   ): Promise<any> {
     try {
-      const provider = getGeminiProvider();
-      const modelToUse = provider(model || GEMINI_MODEL);
-      
+        const gemini = getGoogleProvider();
       const result = await generateObject({
-        model: modelToUse,
+        model: gemini(model || GEMINI_MODEL),
         schema,
         prompt,
         temperature
@@ -50,11 +48,9 @@ class GeminiProvider implements AIProvider {
     temperature: number = 0
   ): Promise<any> {
     try {
-      const provider = getGeminiProvider();
-      const modelToUse = provider(model || GEMINI_MODEL);
-      
+        const gemini = getGoogleProvider();
       const result = await generateText({
-        model: modelToUse,
+        model: gemini(model || GEMINI_MODEL),
         prompt,
         temperature
       });
@@ -71,11 +67,9 @@ class GeminiProvider implements AIProvider {
     temperature: number = 0
   ): Promise<any> {
     try {
-      const provider = getGeminiProvider();
-      const modelToUse = provider(model || GEMINI_MODEL);
-      
-      const result = await streamText({
-        model: modelToUse,
+        const gemini = getGoogleProvider();
+      const result = streamText({
+        model: gemini(model || GEMINI_MODEL),
         prompt,
         temperature
       });
@@ -97,55 +91,6 @@ class GeminiProvider implements AIProvider {
     ];
   }
 
-  // Vision capability - Gemini supports image analysis
-  async describeImage(
-    images: string[],
-    model?: string,
-    stream: boolean = false,
-    temperature: number = 0
-  ): Promise<any> {
-    try {
-      const provider = getGeminiProvider();
-      const modelToUse = provider(model || 'gemini-pro-vision');
-
-      const prompt = "Describe what you see in this image.";
-      
-      if (stream) {
-        const result = await streamText({
-          model: modelToUse,
-          messages: [
-            {
-              role: 'user',
-              content: [
-                { type: 'text', text: prompt },
-                ...images.map(image => ({ type: 'image' as const, image }))
-              ]
-            }
-          ],
-          temperature
-        });
-        return result;
-      } else {
-        const result = await generateText({
-          model: modelToUse,
-          messages: [
-            {
-              role: 'user',
-              content: [
-                { type: 'text', text: prompt },
-                ...images.map(image => ({ type: 'image' as const, image }))
-              ]
-            }
-          ],
-          temperature
-        });
-        return result;
-      }
-    } catch (error) {
-      console.error('Gemini image description error: ', error);
-      throw new Error(`Gemini image description error: ${error}`);
-    }
-  }
 }
 
 const provider = new GeminiProvider();

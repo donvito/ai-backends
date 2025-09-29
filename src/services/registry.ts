@@ -7,7 +7,7 @@ import openrouterProvider from './openrouter';
 import lmstudioProvider from './lmstudio';
 import aigatewayProvider from './aigateway';
 import llamacppProvider from './llamacpp';
-import geminiProvider from './gemini';
+import geminiProvider from './google';
 
 export class ServiceRegistry {
   private providers = new Map<ProviderName, AIProvider>();

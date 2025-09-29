@@ -130,7 +130,7 @@ export const llamacppConfig: LlamaCppConfig = {
 
 // Google Gemini Configuration
 export const geminiConfig: GeminiConfig = {
-  name: 'Gemini',
+  name: 'Google',
   enabled: !!process.env.GOOGLE_AI_API_KEY,
   priority: 8,
   apiKey: process.env.GOOGLE_AI_API_KEY || '',

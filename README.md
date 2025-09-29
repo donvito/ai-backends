@@ -177,12 +177,12 @@ To use Google Gemini models:
 
 1. Get your API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
 2. Set `GOOGLE_AI_API_KEY` in your `.env` file
-3. Optionally configure `GEMINI_MODEL` (defaults to `gemini-1.5-pro-latest`)
+3. Optionally configure `GEMINI_MODEL` (defaults to `gemini-2.5-flash-lite`)
 
 Available Gemini models:
-- `gemini-1.5-pro-latest` (default)
-- `gemini-1.5-flash-latest`
-- `gemini-pro`
+- `gemini-2.5-flash-lite` (default)
+- `gemini-2.5-flash`
+- `gemini-2.5-pro`
 - `gemini-pro-vision`
 
 **Note**: The Gemini provider uses Google's OpenAI-compatible interface to maintain compatibility with AI SDK v4.
@@ -232,8 +232,8 @@ curl --location 'http://localhost:3000/api/v1/summarize' \
         "maxLength": 100
     },
     "config": {
-        "provider": "gemini",
-        "model": "gemini-1.5-pro-latest",
+        "provider": "google",
+        "model": "gemini-2.5-flash-lite",
         "temperature": 0
     }
 }'

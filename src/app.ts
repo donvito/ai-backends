@@ -136,7 +136,7 @@ export async function configureAuth(app: OpenAPIHono): Promise<void> {
 
 export async function checkLLMProvidersAvailability() {
     
-    // Check if OpenAI, Anthropic, OpenRouter, or Gemini are available via API keys
+    // Check if OpenAI, Anthropic, OpenRouter, or Google are available via API keys
     const openaiApiKey = process.env.OPENAI_API_KEY;
     const anthropicApiKey = process.env.ANTHROPIC_API_KEY;
     const openrouterApiKey = process.env.OPENROUTER_API_KEY;
@@ -152,7 +152,7 @@ export async function checkLLMProvidersAvailability() {
     if (anthropicApiKey) availableProviders.push('Anthropic');
     if (openrouterApiKey) availableProviders.push('OpenRouter');
     if (aigatewayApiKey) availableProviders.push('AIGateway');
-    if (geminiApiKey) availableProviders.push('Gemini');
+    if (geminiApiKey) availableProviders.push('Google');
     
     return availableProviders;
 }
