@@ -49,7 +49,7 @@ More to come...check swagger docs for updated endpoints.
 | [OpenRouter](https://openrouter.ai/) | Open source and private models |  Available |
 | [Vercel AI Gateway](https://vercel.com/ai-gateway) | Open source and private models | Available |
 | [LlamaCpp](https://github.com/ggml-org/llama.cpp) | Local models via llama.cpp server (self-hosted) | Available |
-| [Google](https://ai.google.dev/) | Gemini models | In Progress |
+| [Google Gemini](https://ai.google.dev/) | Gemini models via OpenAI-compatible interface | Available |
 
 
 ## Run the project
@@ -93,6 +93,7 @@ DEFAULT_ACCESS_TOKEN=your-secret-api-key
 OPENAI_API_KEY=your-openai-api-key
 ANTHROPIC_API_KEY=your-anthropic-api-key
 OPENROUTER_API_KEY=your-openrouter-api-key
+GOOGLE_AI_API_KEY=your-google-ai-api-key
 ```
 You need to configure at least one provider api key. Otherwise, the app will not start.
 
@@ -144,6 +145,10 @@ OPENAI_API_KEY=your-openai-api-key
 # Anthropic Configuration
 ANTHROPIC_API_KEY=your-anthropic-api-key
 
+# Google Gemini Configuration
+GOOGLE_AI_API_KEY=your-google-ai-api-key
+GEMINI_MODEL=gemini-2.5-flash-lite
+
 # Ollama Configuration
 OLLAMA_ENABLED=true
 OLLAMA_BASE_URL=http://localhost:11434
@@ -161,7 +166,26 @@ LMSTUDIO_ENABLED=true
 LMSTUDIO_BASE_URL=http://localhost:1234
 
 # You can change LMSTUDIO_BASE_URL to use a remote LM Studio instance
+
+# OpenRouter Configuration 
+OPENROUTER_API_KEY=your-openrouter-api-key
 ```
+
+### Google Gemini Setup
+
+To use Google Gemini models:
+
+1. Get your API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
+2. Set `GOOGLE_AI_API_KEY` in your `.env` file
+3. Optionally configure `GEMINI_MODEL` (defaults to `gemini-1.5-pro-latest`)
+
+Available Gemini models:
+- `gemini-1.5-pro-latest` (default)
+- `gemini-1.5-flash-latest`
+- `gemini-pro`
+- `gemini-pro-vision`
+
+**Note**: The Gemini provider uses Google's OpenAI-compatible interface to maintain compatibility with AI SDK v4.
 
 **Important:** Make sure to add `.env` to your `.gitignore` file to avoid committing sensitive information to version control.
 
@@ -196,7 +220,26 @@ You can access demos at http://localhost:3000/api/demos
 ## Provider and Model Selection
 You need to send the service and model name in the request body. See examples in the swagger docs.
 
-For example, to summarize text using qwen2.5-coder model with Ollama as provider, you can use the following curl command:
+For example, to summarize text using Gemini model with Google as provider, you can use the following curl command:
+
+```curl
+curl --location 'http://localhost:3000/api/v1/summarize' \
+--header 'Content-Type: application/json' \
+--header 'Accept: application/json' \
+--data '{
+    "payload": {
+        "text": "Text to summarize",
+        "maxLength": 100
+    },
+    "config": {
+        "provider": "gemini",
+        "model": "gemini-1.5-pro-latest",
+        "temperature": 0
+    }
+}'
+```
+
+Or with Ollama:
 
 ```curl
 curl --location 'http://localhost:3000/api/v1/summarize' \

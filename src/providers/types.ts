@@ -1,6 +1,6 @@
 
 export interface ProviderConfig {
-    type: 'ollama' | 'llmstudio';
+    type: 'ollama' | 'llmstudio' | 'gemini';
     baseUrl: string;
     model: string;
 }
