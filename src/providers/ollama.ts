@@ -4,7 +4,10 @@ import type { ProviderConfig, OllamaResponse } from './types';
 export async function checkOllamaAvailability(baseUrl: string): Promise<ProviderConfig> {
     try {
         // Check health first
-        await fetch(`${baseUrl}/api/health`);
+        const healthResponse = await fetch(`${baseUrl}/api/version`);
+        if (!healthResponse.ok) {
+            throw new Error(`Health check failed with status ${healthResponse.status}`);
+        }
 
         // Check for available models
         const modelsResponse = await fetch(`${baseUrl}/api/tags`);
