@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI Backends - PDF Summarization Demo</title>
+  <title>AI Backends - PDF Translation Demo</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -134,8 +134,9 @@
     .close-button:hover {
       background: #f9fafb;
     }
-    /* Hide maximize button when in fullscreen; exit with X button */
-    .fullscreen-output #fullscreenButton {
+    /* Hide maximize buttons when in fullscreen; exit with X button */
+    .fullscreen-output #fullscreenButton,
+    .fullscreen-output #fullscreenButtonBottom {
       display: none !important;
     }
   </style>
@@ -182,15 +183,15 @@
         <li><span>/</span></li>
         <li><a href="/api/demos" class="hover:text-gray-700">Demos</a></li>
         <li><span>/</span></li>
-        <li class="text-gray-900 font-medium">PDF Summarization</li>
+        <li class="text-gray-900 font-medium">PDF Translation</li>
       </ol>
     </nav>
 
     <!-- Demo Title and Description -->
     <div class="text-center mb-8">
-      <h1 class="text-3xl font-bold text-gray-900 mb-3">PDF Summarization Demo</h1>
+      <h1 class="text-3xl font-bold text-gray-900 mb-3">PDF Translation Demo</h1>
       <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-        Extract and summarize content from PDF documents using AI models
+        Extract and translate content from PDF documents to any language using AI models
       </p>
     </div>
 
@@ -201,15 +202,21 @@
         <label class="block text-sm font-medium text-gray-700 mb-1">PDF URL</label>
         <input id="pdfUrl" type="url" class="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple bg-white" placeholder="https://example.com/document.pdf" />
 
+        <div class="mt-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Target Language</label>
+          <select id="targetLanguage" class="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple bg-white">
+            <option value="spanish">Spanish</option>
+            <option value="french">French</option>
+            <option value="german">German</option>
+            <option value="japanese">Japanese</option>
+            <option value="chinese">Chinese</option>
+            <option value="korean">Korean</option>
+            <option value="tagalog">Tagalog</option>
+            <option value="english">English</option>
+          </select>
+        </div>
+
         <div class="grid grid-cols-2 gap-3 mt-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Max Words</label>
-            <input id="maxLength" type="number" min="0" class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple" value="200" />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Temperature</label>
-            <input id="temperature" type="number" step="0.1" min="0" max="1" class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple" value="0.2" />
-          </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Provider</label>
             <select id="provider" class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple">
@@ -222,6 +229,10 @@
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Model</label>
             <select id="model" class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple"></select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Temperature</label>
+            <input id="temperature" type="number" step="0.1" min="0" max="1" class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple" value="0.2" />
           </div>
         </div>
 
@@ -238,7 +249,7 @@
         </div>
 
         <div class="mt-4 flex items-center gap-2">
-          <button id="runBtn" class="px-4 py-2 rounded-lg bg-brand-purple text-white hover:bg-[#9935D9]">Summarize PDF</button>
+          <button id="runBtn" class="px-4 py-2 rounded-lg bg-brand-purple text-white hover:bg-[#9935D9]">Translate PDF</button>
           <button id="cancelBtn" class="hidden px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700">Cancel</button>
           <button id="loadSample" class="px-4 py-2 rounded-lg bg-gray-100 text-gray-800 hover:bg-gray-200">Load Sample</button>
         </div>
@@ -265,6 +276,7 @@
             </button>
           </div>
         </div>
+        <button id="openInGoogle" class="mb-3 px-4 py-2 rounded-lg bg-gray-100 text-gray-800 hover:bg-gray-200 disabled:opacity-50" disabled>Open in Google Translate</button>
         <div id="usageInfo" class="hidden mb-3 text-sm"></div>
         <div id="pdfMetadata" class="hidden mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm"></div>
         
@@ -273,11 +285,16 @@
           <div class="flex items-center justify-center py-12">
             <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-purple"></div>
           </div>
-          <p class="text-center text-gray-500 mt-4">Processing PDF and generating summary...</p>
+          <p class="text-center text-gray-500 mt-4">Processing PDF and translating content...</p>
         </div>
         
-        <div id="summaryText" class="p-4 rounded-lg bg-gray-50 border border-gray-200 leading-7 text-gray-900"></div>
-        <button id="openInGoogle" class="mt-3 px-4 py-2 rounded-lg bg-gray-100 text-gray-800 hover:bg-gray-200 disabled:opacity-50" disabled>Open in Google Translate</button>
+        <div id="translationText" class="p-4 rounded-lg bg-gray-50 border border-gray-200 leading-7 text-gray-900"></div>
+        <div class="mt-3 flex items-center gap-2">
+          <button id="openInGoogleBottom" class="px-4 py-2 rounded-lg bg-gray-100 text-gray-800 hover:bg-gray-200 disabled:opacity-50" disabled>Open in Google Translate</button>
+          <button id="fullscreenButtonBottom" onclick="toggleOutputFullscreen()" class="hidden inline-flex items-center px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-200 transition-colors" title="Maximize Output">
+            ⛶ Maximize
+          </button>
+        </div>
       </section>
     </div>
   </main>
@@ -286,7 +303,7 @@
     const samplePayload = {
       payload: {
         url: "https://arxiv.org/pdf/2506.02153",
-        maxLength: 150
+        targetLanguage: "japanese"
       },
       config: {
         provider: "ollama",
@@ -297,7 +314,7 @@
     };
 
     const pdfUrlEl = document.getElementById('pdfUrl');
-    const maxLengthEl = document.getElementById('maxLength');
+    const targetLanguageEl = document.getElementById('targetLanguage');
     const temperatureEl = document.getElementById('temperature');
     const providerEl = document.getElementById('provider');
     const modelEl = document.getElementById('model');
@@ -306,7 +323,7 @@
     const runBtn = document.getElementById('runBtn');
     const cancelBtn = document.getElementById('cancelBtn');
     const loadSampleBtn = document.getElementById('loadSample');
-    const summaryText = document.getElementById('summaryText');
+    const translationText = document.getElementById('translationText');
     const usageInfo = document.getElementById('usageInfo');
     const pdfMetadata = document.getElementById('pdfMetadata');
     const jsonPreview = document.getElementById('jsonPreview');
@@ -314,12 +331,14 @@
     const outputPanel = document.getElementById('outputPanel');
     const copyButton = document.getElementById('copyButton');
     const fullscreenButton = document.getElementById('fullscreenButton');
+    const fullscreenButtonBottom = document.getElementById('fullscreenButtonBottom');
     const openInGoogleBtn = document.getElementById('openInGoogle');
+    const openInGoogleBottomBtn = document.getElementById('openInGoogleBottom');
 
     let abortController = null;
     let eventSource = null;
 
-    // Dynamic model options fetched from backend (pdf-summarizer capability)
+    // Dynamic model options fetched from backend (pdf-translate capability)
     let modelOptions = null;
 
     // Basic Markdown renderer (safe: escapes HTML first)
@@ -422,18 +441,18 @@
       updatePreview();
     }
 
-    async function fetchPdfSummarizerModels() {
+    async function fetchPdfTranslateModels() {
       const headers = {};
       const token = tokenEl.value.trim();
       if (token) headers['Authorization'] = 'Bearer ' + token;
       const res = await fetch('/api/v1/services/models?source=config&view=capability', { headers });
       if (!res.ok) throw new Error('Failed to load models: ' + res.status);
       const data = await res.json();
-      const pdfSummarizer = data && data.byCapability && data.byCapability['pdf-summarizer'];
-      if (!pdfSummarizer || typeof pdfSummarizer !== 'object') throw new Error('Invalid models response');
+      const pdfTranslate = data && data.byCapability && data.byCapability['pdf-translate'];
+      if (!pdfTranslate || typeof pdfTranslate !== 'object') throw new Error('Invalid models response');
       const mapped = {};
-      for (const provider in pdfSummarizer) {
-        const list = Array.isArray(pdfSummarizer[provider]) ? pdfSummarizer[provider] : [];
+      for (const provider in pdfTranslate) {
+        const list = Array.isArray(pdfTranslate[provider]) ? pdfTranslate[provider] : [];
         mapped[provider] = list.map(name => ({ value: name, label: name }));
       }
       return mapped;
@@ -441,7 +460,7 @@
 
     async function initModels() {
       try {
-        modelOptions = await fetchPdfSummarizerModels();
+        modelOptions = await fetchPdfTranslateModels();
         console.log('[Models] Successfully fetched from backend:', Object.keys(modelOptions));
       } catch (e) {
         console.error('[Models] Failed to fetch from backend, using fallback:', e);
@@ -461,7 +480,7 @@
       return {
         payload: {
           url: pdfUrlEl.value.trim(),
-          maxLength: Math.max(0, Number(maxLengthEl.value) || 0)
+          targetLanguage: targetLanguageEl.value
         },
         config: {
           provider: providerEl.value,
@@ -479,7 +498,7 @@
 
     function setFromSample() {
       pdfUrlEl.value = samplePayload.payload.url;
-      maxLengthEl.value = samplePayload.payload.maxLength || 200;
+      targetLanguageEl.value = samplePayload.payload.targetLanguage || 'spanish';
       streamingEl.checked = samplePayload.config.stream !== false;
       providerEl.value = 'ollama';
       updateModelOptions();
@@ -505,30 +524,48 @@
       runBtn.classList.add('hidden');
       cancelBtn.classList.remove('hidden');
 
-      // Clear previous content and show loading state
-      summaryText.innerHTML = '';
-      summaryText.classList.add('hidden');
+      // Clear previous content and show loading state (get fresh references)
+      const translationEl = document.getElementById('translationText');
+      const usageEl = document.getElementById('usageInfo');
+      const metadataEl = document.getElementById('pdfMetadata');
+      const loadingEl = document.getElementById('loadingState');
+      const copyBtn = document.getElementById('copyButton');
+      const fullscreenBtn = document.getElementById('fullscreenButton');
+      const fullscreenBtnBottom = document.getElementById('fullscreenButtonBottom');
+      const googleBtn = document.getElementById('openInGoogle');
+      const googleBottomBtn = document.getElementById('openInGoogleBottom');
+      
+      if (translationEl) {
+        translationEl.innerHTML = '';
+        translationEl.classList.add('hidden');
+      }
       
       // Clear and hide other elements
-      usageInfo.classList.add('hidden');
-      pdfMetadata.classList.add('hidden');
-      setContent(usageInfo, '');
-      setContent(pdfMetadata, '');
+      if (usageEl) {
+        usageEl.classList.add('hidden');
+        setContent(usageEl, '');
+      }
+      if (metadataEl) {
+        metadataEl.classList.add('hidden');
+        setContent(metadataEl, '');
+      }
       
-      // Hide copy and maximize buttons, disable Google Translate button
-      copyButton.classList.add('hidden');
-      fullscreenButton.classList.add('hidden');
-      openInGoogleBtn.disabled = true;
+      // Hide copy and maximize buttons, disable Google Translate buttons
+      if (copyBtn) copyBtn.classList.add('hidden');
+      if (fullscreenBtn) fullscreenBtn.classList.add('hidden');
+      if (fullscreenBtnBottom) fullscreenBtnBottom.classList.add('hidden');
+      if (googleBtn) googleBtn.disabled = true;
+      if (googleBottomBtn) googleBottomBtn.disabled = true;
       
       // Show loading state after clearing everything
-      loadingState.classList.remove('hidden');
+      if (loadingEl) loadingEl.classList.remove('hidden');
 
       const startTime = performance.now();
 
       try {
         if (req.config.stream) {
           // Streaming mode using Server-Sent Events
-          const response = await fetch('/api/v1/pdf-summarizer', {
+          const response = await fetch('/api/v1/pdf-translate', {
             method: 'POST',
             headers,
             body: JSON.stringify(req),
@@ -545,18 +582,29 @@
           if (!contentType || !contentType.includes('text/event-stream')) {
             // Fallback to non-streaming if server didn't return SSE
             const data = await response.json();
-            const summary = data?.summary || data?.data?.summary || '';
+            const translation = data?.translation || data?.data?.translation || '';
             
-            // Hide loading state and show summary
-            loadingState.classList.add('hidden');
-            summaryText.classList.remove('hidden');
-            summaryText.innerHTML = summary ? renderMarkdownSimple(summary) : 'No summary returned.';
+            // Hide loading state and show translation
+            const loadingEl = document.getElementById('loadingState');
+            const translationEl = document.getElementById('translationText');
+            if (loadingEl) loadingEl.classList.add('hidden');
+            if (translationEl) {
+              translationEl.classList.remove('hidden');
+              translationEl.innerHTML = translation ? renderMarkdownSimple(translation) : 'No translation returned.';
+            }
             
             // Show copy and maximize buttons if there's content
-            if (summary) {
-              copyButton.classList.remove('hidden');
-              fullscreenButton.classList.remove('hidden');
-              openInGoogleBtn.disabled = false;
+            if (translation) {
+              const copyBtn = document.getElementById('copyButton');
+              const fullscreenBtn = document.getElementById('fullscreenButton');
+              const fullscreenBtnBottom = document.getElementById('fullscreenButtonBottom');
+              const googleBtn = document.getElementById('openInGoogle');
+              const googleBottomBtn = document.getElementById('openInGoogleBottom');
+              if (copyBtn) copyBtn.classList.remove('hidden');
+              if (fullscreenBtn) fullscreenBtn.classList.remove('hidden');
+              if (fullscreenBtnBottom) fullscreenBtnBottom.classList.remove('hidden');
+              if (googleBtn) googleBtn.disabled = false;
+              if (googleBottomBtn) googleBottomBtn.disabled = false;
             }
             
             // Display PDF metadata if available
@@ -604,17 +652,54 @@
                     // Hide loading state and show content on first chunk
                     if (!firstChunkReceived) {
                       firstChunkReceived = true;
-                      loadingState.classList.add('hidden');
-                      summaryText.classList.remove('hidden');
+                      const loadingEl = document.getElementById('loadingState');
+                      const translationEl = document.getElementById('translationText');
+                      if (loadingEl) loadingEl.classList.add('hidden');
+                      if (translationEl) translationEl.classList.remove('hidden');
                       
                       // Show copy and maximize buttons
-                      copyButton.classList.remove('hidden');
-                      fullscreenButton.classList.remove('hidden');
-                      openInGoogleBtn.disabled = false;
+                      const copyBtn = document.getElementById('copyButton');
+                      const fullscreenBtn = document.getElementById('fullscreenButton');
+                      const fullscreenBtnBottom = document.getElementById('fullscreenButtonBottom');
+                      const googleBtn = document.getElementById('openInGoogle');
+                      const googleBottomBtn = document.getElementById('openInGoogleBottom');
+                      if (copyBtn) copyBtn.classList.remove('hidden');
+                      if (fullscreenBtn) fullscreenBtn.classList.remove('hidden');
+                      if (fullscreenBtnBottom) fullscreenBtnBottom.classList.remove('hidden');
+                      if (googleBtn) googleBtn.disabled = false;
+                      if (googleBottomBtn) googleBottomBtn.disabled = false;
                     }
                     
                     accumulatedText += parsed.chunk;
-                    summaryText.innerHTML = renderMarkdownSimple(accumulatedText);
+                    // Get fresh reference each time in case DOM was replaced by fullscreen
+                    const currentTranslationEl = document.getElementById('translationText');
+                    if (currentTranslationEl) {
+                      currentTranslationEl.innerHTML = renderMarkdownSimple(accumulatedText);
+                      
+                      // Auto-scroll to bottom to show new content
+                      // Use setTimeout with 0 delay to ensure rendering is complete
+                      setTimeout(() => {
+                        // If in fullscreen, scroll the fullscreen-body container
+                        const fullscreenBody = document.querySelector('.fullscreen-body');
+                        const outputPanelEl = document.getElementById('outputPanel');
+                        const isFullscreenMode = outputPanelEl && outputPanelEl.classList.contains('fullscreen-output');
+                        
+                        console.log('[Scroll Debug] isFullscreen:', isFullscreenMode, 'fullscreenBody found:', !!fullscreenBody);
+                        
+                        if (fullscreenBody) {
+                          const beforeScroll = fullscreenBody.scrollTop;
+                          fullscreenBody.scrollTop = fullscreenBody.scrollHeight;
+                          const afterScroll = fullscreenBody.scrollTop;
+                          console.log('[Scroll] Fullscreen - before:', beforeScroll, 'set to:', fullscreenBody.scrollHeight, 'actual after:', afterScroll);
+                        } else if (isFullscreenMode) {
+                          console.error('[Scroll] ERROR: In fullscreen mode but .fullscreen-body not found!');
+                          console.log('[Scroll] outputPanel classes:', outputPanelEl?.className);
+                          console.log('[Scroll] outputPanel children:', outputPanelEl?.children.length);
+                        } else {
+                          console.log('[Scroll] Normal mode - no auto-scroll (prevents flickering)');
+                        }
+                      }, 0);
+                    }
                   }
                   if (parsed.done && parsed.usage) {
                     usage = parsed.usage;
@@ -641,9 +726,13 @@
 
           // If no chunks were received, hide loading state and show empty message
           if (!firstChunkReceived) {
-            loadingState.classList.add('hidden');
-            summaryText.classList.remove('hidden');
-            summaryText.innerHTML = '<span class="text-gray-500">No summary was generated.</span>';
+            const loadingEl = document.getElementById('loadingState');
+            const translationEl = document.getElementById('translationText');
+            if (loadingEl) loadingEl.classList.add('hidden');
+            if (translationEl) {
+              translationEl.classList.remove('hidden');
+              translationEl.innerHTML = '<span class="text-gray-500">No translation was generated.</span>';
+            }
           }
 
           // Display PDF metadata if available
@@ -656,28 +745,31 @@
             displayUsageMetrics(usage, responseTime);
           } else {
             // If no usage data in stream, just show response time
-            usageInfo.classList.remove('hidden');
-            let metricsHtml = '<div class="metrics-container">';
-            metricsHtml += '<div class="grid grid-cols-1 gap-3">';
-            metricsHtml += '<div class="metric-item">' +
-              '<div class="metric-icon">' +
-                '<svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
-                  '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>' +
-                '</svg>' +
-              '</div>' +
-              '<div>' +
-                '<div class="metric-label">Response</div>' +
-                '<div class="metric-value text-orange-600">' + responseTime + ' ms</div>' +
-              '</div>' +
-            '</div>';
-            metricsHtml += '</div></div>';
-            const metricsDiv = createElement('div');
-            metricsDiv.innerHTML = metricsHtml;
-            setContent(usageInfo, metricsDiv.firstChild);
+            const usageEl = document.getElementById('usageInfo');
+            if (usageEl) {
+              usageEl.classList.remove('hidden');
+              let metricsHtml = '<div class="metrics-container">';
+              metricsHtml += '<div class="grid grid-cols-1 gap-3">';
+              metricsHtml += '<div class="metric-item">' +
+                '<div class="metric-icon">' +
+                  '<svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+                    '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>' +
+                  '</svg>' +
+                '</div>' +
+                '<div>' +
+                  '<div class="metric-label">Response</div>' +
+                  '<div class="metric-value text-orange-600">' + responseTime + ' ms</div>' +
+                '</div>' +
+              '</div>';
+              metricsHtml += '</div></div>';
+              const metricsDiv = createElement('div');
+              metricsDiv.innerHTML = metricsHtml;
+              setContent(usageEl, metricsDiv.firstChild);
+            }
           }
         } else {
           // Non-streaming mode (original implementation)
-          const res = await fetch('/api/v1/pdf-summarizer', {
+          const res = await fetch('/api/v1/pdf-translate', {
             method: 'POST',
             headers,
             body: JSON.stringify(req),
@@ -691,18 +783,29 @@
             throw new Error('Request failed: ' + res.status + ' ' + txt);
           }
           const data = await res.json();
-          const summary = data?.summary || data?.data?.summary || '';
+          const translation = data?.translation || data?.data?.translation || '';
           
-          // Hide loading state and show summary
-          loadingState.classList.add('hidden');
-          summaryText.classList.remove('hidden');
-          summaryText.innerHTML = summary ? renderMarkdownSimple(summary) : 'No summary returned.';
+          // Hide loading state and show translation
+          const loadingEl = document.getElementById('loadingState');
+          const translationEl = document.getElementById('translationText');
+          if (loadingEl) loadingEl.classList.add('hidden');
+          if (translationEl) {
+            translationEl.classList.remove('hidden');
+            translationEl.innerHTML = translation ? renderMarkdownSimple(translation) : 'No translation returned.';
+          }
           
           // Show copy and maximize buttons if there's content
-          if (summary) {
-            copyButton.classList.remove('hidden');
-            fullscreenButton.classList.remove('hidden');
-            openInGoogleBtn.disabled = false;
+          if (translation) {
+            const copyBtn = document.getElementById('copyButton');
+            const fullscreenBtn = document.getElementById('fullscreenButton');
+            const fullscreenBtnBottom = document.getElementById('fullscreenButtonBottom');
+            const googleBtn = document.getElementById('openInGoogle');
+            const googleBottomBtn = document.getElementById('openInGoogleBottom');
+            if (copyBtn) copyBtn.classList.remove('hidden');
+            if (fullscreenBtn) fullscreenBtn.classList.remove('hidden');
+            if (fullscreenBtnBottom) fullscreenBtnBottom.classList.remove('hidden');
+            if (googleBtn) googleBtn.disabled = false;
+            if (googleBottomBtn) googleBottomBtn.disabled = false;
           }
 
           // Display PDF metadata if available
@@ -718,23 +821,41 @@
         }
       } catch (err) {
         // Hide loading state and show error
-        loadingState.classList.add('hidden');
-        summaryText.classList.remove('hidden');
+        const loadingEl = document.getElementById('loadingState');
+        const translationEl = document.getElementById('translationText');
+        const usageEl = document.getElementById('usageInfo');
+        const metadataEl = document.getElementById('pdfMetadata');
         
-        if (err.name === 'AbortError') {
-          summaryText.innerHTML = '<div class="text-amber-600">Request cancelled by user</div>';
-        } else {
-          summaryText.innerHTML = `<div class="text-red-600">Error: ${escapeHtml(err.message || 'Unknown error')}</div>`;
+        if (loadingEl) loadingEl.classList.add('hidden');
+        if (translationEl) {
+          translationEl.classList.remove('hidden');
+          if (err.name === 'AbortError') {
+            translationEl.innerHTML = '<div class="text-amber-600">Request cancelled by user</div>';
+          } else {
+            translationEl.innerHTML = `<div class="text-red-600">Error: ${escapeHtml(err.message || 'Unknown error')}</div>`;
+          }
         }
-        usageInfo.classList.add('hidden');
-        pdfMetadata.classList.add('hidden');
-        setContent(usageInfo, '');
-        setContent(pdfMetadata, '');
         
-        // Hide copy and maximize buttons on error, disable Google Translate
-        copyButton.classList.add('hidden');
-        fullscreenButton.classList.add('hidden');
-        openInGoogleBtn.disabled = true;
+        if (usageEl) {
+          usageEl.classList.add('hidden');
+          setContent(usageEl, '');
+        }
+        if (metadataEl) {
+          metadataEl.classList.add('hidden');
+          setContent(metadataEl, '');
+        }
+        
+        // Hide copy and maximize buttons on error, disable Google Translate buttons
+        const copyBtn = document.getElementById('copyButton');
+        const fullscreenBtn = document.getElementById('fullscreenButton');
+        const fullscreenBtnBottom = document.getElementById('fullscreenButtonBottom');
+        const googleBtn = document.getElementById('openInGoogle');
+        const googleBottomBtn = document.getElementById('openInGoogleBottom');
+        if (copyBtn) copyBtn.classList.add('hidden');
+        if (fullscreenBtn) fullscreenBtn.classList.add('hidden');
+        if (fullscreenBtnBottom) fullscreenBtnBottom.classList.add('hidden');
+        if (googleBtn) googleBtn.disabled = true;
+        if (googleBottomBtn) googleBottomBtn.disabled = true;
       } finally {
         runBtn.classList.remove('hidden');
         cancelBtn.classList.add('hidden');
@@ -745,7 +866,11 @@
     function displayPdfMetadata(metadata) {
       if (!metadata) return;
       
-      pdfMetadata.classList.remove('hidden');
+      // Get fresh reference in case DOM was replaced
+      const pdfMetadataEl = document.getElementById('pdfMetadata');
+      if (!pdfMetadataEl) return;
+      
+      pdfMetadataEl.classList.remove('hidden');
       
       let metadataHtml = '<div class="flex items-center gap-2 mb-2">';
       metadataHtml += '<svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">';
@@ -769,11 +894,15 @@
       }
       metadataHtml += '</div>';
       
-      pdfMetadata.innerHTML = metadataHtml;
+      pdfMetadataEl.innerHTML = metadataHtml;
     }
 
     function displayUsageMetrics(usage, responseTime) {
-      usageInfo.classList.remove('hidden');
+      // Get fresh reference in case DOM was replaced
+      const usageEl = document.getElementById('usageInfo');
+      if (!usageEl) return;
+      
+      usageEl.classList.remove('hidden');
       
       let metricsHtml = '<div class="metrics-container">';
       metricsHtml += '<div class="grid grid-cols-2 sm:grid-cols-4 gap-3">';
@@ -839,7 +968,7 @@
       metricsHtml += '</div></div>';
       const metricsDiv = createElement('div');
       metricsDiv.innerHTML = metricsHtml;
-      setContent(usageInfo, metricsDiv.firstChild);
+      setContent(usageEl, metricsDiv.firstChild);
     }
 
     // Copy and Fullscreen functionality
@@ -885,9 +1014,21 @@
       isFullscreen = false;
       document.removeEventListener('keydown', handleEsc);
       
-      // Rebind button after restore
+      // Rebind buttons after restore
       const btn = document.getElementById('fullscreenButton');
       if (btn) btn.onclick = toggleOutputFullscreen;
+      
+      const btnBottom = document.getElementById('fullscreenButtonBottom');
+      if (btnBottom) btnBottom.onclick = toggleOutputFullscreen;
+      
+      const googleBtn = document.getElementById('openInGoogle');
+      if (googleBtn) googleBtn.addEventListener('click', openInGoogleTranslate);
+      
+      const googleBottomBtn = document.getElementById('openInGoogleBottom');
+      if (googleBottomBtn) googleBottomBtn.addEventListener('click', openInGoogleTranslate);
+      
+      const copyBtn = document.getElementById('copyButton');
+      if (copyBtn) copyBtn.onclick = copyOutput;
     }
 
     function handleEsc(e) {
@@ -899,10 +1040,11 @@
     }
 
     function copyOutput() {
-      const el = document.querySelector('#outputPanel #summaryText') || document.getElementById('summaryText');
+      // Always get fresh reference in case DOM was replaced by fullscreen
+      const el = document.getElementById('translationText');
       if (!el) return;
       const text = el.innerText || '';
-      const btn = document.querySelector('#outputPanel #copyButton') || document.getElementById('copyButton');
+      const btn = document.getElementById('copyButton');
       
       const setCopiedUI = () => {
         if (!btn) return;
@@ -956,9 +1098,12 @@
     }
 
     function openInGoogleTranslate() {
-      const summary = (summaryText.innerText || summaryText.textContent || '').trim();
-      if (!summary) return;
-      const url = 'https://translate.google.com/?sl=auto&tl=en&text=' + encodeURIComponent(summary) + '&op=translate';
+      // Get fresh reference in case DOM was replaced
+      const el = document.getElementById('translationText');
+      if (!el) return;
+      const translation = (el.innerText || el.textContent || '').trim();
+      if (!translation) return;
+      const url = 'https://translate.google.com/?sl=auto&tl=en&text=' + encodeURIComponent(translation) + '&op=translate';
       window.open(url, '_blank', 'noopener');
     }
 
@@ -968,7 +1113,7 @@
     window.copyOutput = copyOutput;
 
     pdfUrlEl.addEventListener('input', updatePreview);
-    maxLengthEl.addEventListener('input', updatePreview);
+    targetLanguageEl.addEventListener('change', updatePreview);
     temperatureEl.addEventListener('input', updatePreview);
     streamingEl.addEventListener('change', updatePreview);
     providerEl.addEventListener('change', () => {
@@ -990,6 +1135,7 @@
     });
     loadSampleBtn.addEventListener('click', () => setFromSample());
     openInGoogleBtn.addEventListener('click', openInGoogleTranslate);
+    openInGoogleBottomBtn.addEventListener('click', openInGoogleTranslate);
 
     // Initialize models from backend, then load sample
     initModels().then(() => setFromSample());

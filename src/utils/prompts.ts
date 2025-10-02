@@ -439,3 +439,19 @@ ${text}
 </document>
 :`;
 }
+
+/**
+ * System prompt template for PDF translation
+ */
+export function pdfTranslatePrompt(text: string, targetLanguage: string): string {
+  return `Translate the following PDF document content to ${targetLanguage}.
+Preserve the structure and formatting of the text as much as possible.
+Just return the translated text, no other text or explanation. 
+
+Format the output in markdown.
+
+<document>
+${text}
+</document>
+:`;
+}
