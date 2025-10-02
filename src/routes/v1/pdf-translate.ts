@@ -53,6 +53,16 @@ async function handlePdfTranslateRequest(c: Context) {
               provider, 
               model, 
               version: apiVersion
+            },
+            {
+              extraDone: {
+                pdfMetadata: {
+                  title: pdfData.title,
+                  author: pdfData.author,
+                  pages: pdfData.pages,
+                  extractedTextLength: pdfData.text.length,
+                }
+              }
             }
           )
         } catch (error) {
