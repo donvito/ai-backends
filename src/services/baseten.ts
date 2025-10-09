@@ -21,7 +21,7 @@ class BasetenProvider implements AIProvider {
   async generateChatStructuredResponse(
     prompt: string,
     schema: z.ZodType,
-    model: string = basetenConfig.model,
+    model: string = basetenConfig.chatModel,
     temperature: number = 0
   ): Promise<any> {
     try {
@@ -92,22 +92,7 @@ class BasetenProvider implements AIProvider {
   }
 
   async getAvailableModels(): Promise<string[]> {
-    try {
-      const response = await fetch(`${BASETEN_BASE_URL}/openai/v1/models`, {
-        headers: {
-          'Authorization': `Api-Key ${process.env.BASETEN_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      if (!response.ok) return [];
-      const data = await response.json();
-      if (Array.isArray(data?.data)) {
-        return data.data.map((m: any) => m.id).filter((id: any) => typeof id === 'string');
-      }
-      return [];
-    } catch (_error) {
-      return [];
-    }
+    return ['openai/gpt-oss-120b'];
   }
 }
 
