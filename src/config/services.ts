@@ -153,7 +153,7 @@ export const basetenConfig: BasetenConfig = {
   apiKey: process.env.BASETEN_API_KEY || '',
   baseURL: process.env.BASETEN_BASE_URL || 'https://inference.baseten.co/v1',
   model: process.env.BASETEN_MODEL || 'default',
-  chatModel: process.env.BASETEN_CHAT_MODEL || process.env.BASETEN_MODEL || 'default',
+  chatModel: process.env.BASETEN_CHAT_MODEL || process.env.BASETEN_MODEL || 'openai/gpt-oss-120b',
   timeout: parseInt(process.env.BASETEN_TIMEOUT || '30000'),
 };
 
