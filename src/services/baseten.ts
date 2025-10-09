@@ -11,7 +11,7 @@ const baseten = createOpenAICompatible({
   name: 'baseten',
   baseURL: `${BASETEN_BASE_URL}`,
   headers: {
-    'Authorization': `Api-Key ${process.env.BASETEN_API_KEY}`,
+    'Authorization': `Api-Key ${basetenConfig.apiKey}`,
   },
 });
 
