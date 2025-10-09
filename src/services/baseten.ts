@@ -55,7 +55,7 @@ class BasetenProvider implements AIProvider {
     temperature: number = 0
   ): Promise<any> {
     try {
-    const modelToUse = baseten(model || 'default');
+    const modelToUse = baseten(model || basetenConfig.model);
 
     const result = await generateText({
       model: modelToUse,
@@ -76,7 +76,7 @@ class BasetenProvider implements AIProvider {
     temperature: number = 0
   ): Promise<any> {
     try {
-    const modelToUse = baseten(model || 'default');
+    const modelToUse = baseten(model || basetenConfig.model);
 
     const result = await streamText({
       model: modelToUse,
@@ -95,7 +95,7 @@ class BasetenProvider implements AIProvider {
     try {
       const response = await fetch(`${BASETEN_BASE_URL}/openai/v1/models`, {
         headers: {
-          'Authorization': `Bearer ${process.env.BASETEN_API_KEY}`,
+          'Authorization': `Api-Key ${process.env.BASETEN_API_KEY}`,
           'Content-Type': 'application/json',
         },
       });
