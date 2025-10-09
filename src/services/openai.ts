@@ -3,6 +3,7 @@ import { z } from "zod";
 import { openai } from '@ai-sdk/openai';
 import { generateObject, generateText, streamText } from "ai";
 import type { AIProvider } from './interfaces';
+import type { LanguageModelV1 } from 'ai';
 
 const OPENAI_MODEL = 'gpt-4.1-nano';
 
@@ -79,6 +80,10 @@ class OpenAIProvider implements AIProvider {
     return [
       'gpt-4.1-nano',
     ];
+  }
+
+  getModelInstance(model?: string, temperature: number = 0.3): LanguageModelV1 {
+    return openai(model || OPENAI_MODEL) as LanguageModelV1;
   }
 }
 

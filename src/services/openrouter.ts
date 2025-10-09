@@ -3,6 +3,7 @@ import { generateObject, generateText, streamText } from 'ai';
 import { z } from 'zod';
 import { openrouterConfig } from '../config/services';
 import type { AIProvider } from './interfaces';
+import type { LanguageModelV1 } from 'ai';
 
 class OpenRouterProvider implements AIProvider {
   name = 'openrouter' as const;
@@ -74,6 +75,10 @@ class OpenRouterProvider implements AIProvider {
       'openai/gpt-4.1-nano',
     ];
   }
+
+    getModelInstance(model?: string, temperature: number = 0.3) {
+      return openrouter(model || openrouterConfig.model) as any;
+    }
 }
 
 const provider = new OpenRouterProvider();

@@ -85,6 +85,11 @@ class GoogleProvider implements AIProvider {
     ];
   }
 
+    getModelInstance(model?: string, temperature: number = 0.3) {
+      const gemini = getGoogleProvider();
+      return gemini(model || GEMINI_MODEL) as any;
+    }
+
 }
 
 const provider = new GoogleProvider();

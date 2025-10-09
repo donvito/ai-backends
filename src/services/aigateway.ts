@@ -104,6 +104,10 @@ class AIGatewayProvider implements AIProvider {
       return [];
     }
   }
+
+  getModelInstance(model?: string, temperature: number = 0.3) {
+    return aigateway(model || aigatewayConfig.chatModel, { temperature }) as any;
+  }
 }
 
 const provider = new AIGatewayProvider();

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { generateObject, generateText, streamText } from "ai";
 import { anthropic } from '@ai-sdk/anthropic';
 import type { AIProvider } from './interfaces';
+import type { LanguageModelV1 } from 'ai';
 
 //fallback to cheapest model
 const ANTHROPIC_MODEL = process.env.ANTHROPIC_MODEL || 'claude-3-haiku-20240307';
@@ -81,6 +82,10 @@ class AnthropicProvider implements AIProvider {
     return [
       'claude-3-haiku-20240307',
     ];
+  }
+
+  getModelInstance(model?: string, temperature: number = 0.3): LanguageModelV1 {
+    return anthropic(model || ANTHROPIC_MODEL) as LanguageModelV1;
   }
 }
 

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { LanguageModelV1 } from 'ai';
 
 export type ProviderName = 'openai' | 'anthropic' | 'ollama' | 'openrouter' | 'lmstudio' | 'aigateway' | 'llamacpp' | 'google';
 
@@ -26,6 +27,12 @@ export interface AIProvider {
 
   getAvailableModels(): Promise<string[]>;
 
+  // For Mastra agent support - returns AI SDK model instance
+  getModelInstance(
+    model?: string,
+    temperature?: number
+  ): LanguageModelV1;
+
   // Optional vision capability
   describeImage?(
     images: string[],
@@ -33,4 +40,5 @@ export interface AIProvider {
     stream?: boolean,
     temperature?: number
   ): Promise<any>;
+
 }

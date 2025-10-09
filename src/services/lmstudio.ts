@@ -146,6 +146,14 @@ class LmStudioProvider implements AIProvider {
       return [];
     }
   }
+
+    getModelInstance(model?: string, temperature: number = 0.3) {
+      return lmstudio(model || lmstudioConfig.chatModel, { temperature }) as any;
+    }
+
+  getModelInstance(model?: string, temperature: number = 0.3): any {
+    return lmstudio(model || lmstudioConfig.chatModel, { temperature });
+  }
 }
 
 const provider = new LmStudioProvider();

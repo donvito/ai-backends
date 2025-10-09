@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { describeImagePrompt } from "../utils/prompts";
 import type { AIProvider } from './interfaces';
-
 // Configuration
 const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'qwen3:4b';
@@ -211,6 +210,10 @@ class OllamaProvider implements AIProvider {
       return [];
     }
   }
+
+    getModelInstance(model?: string, temperature: number = 0.3) {
+      return ollama(model || OLLAMA_CHAT_MODEL) as any;
+    }
 }
 
 const provider = new OllamaProvider();

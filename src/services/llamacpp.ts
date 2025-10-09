@@ -144,6 +144,10 @@ class LlamaCppProvider implements AIProvider {
       return [];
     }
   }
+
+  getModelInstance(model?: string, temperature: number = 0.3) {
+    return llamacpp(model || 'default') as any;
+  }
 }
 
 const provider = new LlamaCppProvider();
