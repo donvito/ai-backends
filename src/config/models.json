@@ -79,6 +79,12 @@
       "models": [
         { "name": "default", "capabilities": ["summarize", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "outline"], "notes": "Default model used is what you configued when running llama-server" }
       ]
+    },
+    "baseten": {
+      "enabled": true,
+      "models": [
+        { "name": "openai/gpt-oss-120b", "capabilities": ["summarize", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Baseten hosted OpenAI GPT OSS 120B model with comprehensive capabilities." }
+      ]
     }
   }
 }

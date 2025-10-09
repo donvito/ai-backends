@@ -56,6 +56,14 @@ export interface GoogleConfig extends ServiceConfig {
   model: string;
 }
 
+export interface BasetenConfig extends ServiceConfig {
+  apiKey: string;
+  baseURL: string;
+  model: string;
+  chatModel: string;
+  timeout?: number;
+}
+
 // OpenAI Configuration
 export const openaiConfig: OpenAIConfig = {
   name: 'OpenAI',
@@ -137,8 +145,20 @@ export const googleConfig: GoogleConfig = {
   model: process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite',
 };
 
+// Baseten Configuration
+export const basetenConfig: BasetenConfig = {
+  name: 'Baseten',
+  enabled: !!process.env.BASETEN_API_KEY,
+  priority: 9,
+  apiKey: process.env.BASETEN_API_KEY || '',
+  baseURL: process.env.BASETEN_BASE_URL || 'https://inference.baseten.co/v1',
+  model: process.env.BASETEN_MODEL || 'default',
+  chatModel: process.env.BASETEN_CHAT_MODEL || process.env.BASETEN_MODEL || 'openai/gpt-oss-120b',
+  timeout: parseInt(process.env.BASETEN_TIMEOUT || '30000'),
+};
+
 // Available services
-export const availableServices = [openaiConfig, anthropicConfig, ollamaConfig, openrouterConfig, lmstudioConfig, aigatewayConfig, llamacppConfig, googleConfig];
+export const availableServices = [openaiConfig, anthropicConfig, ollamaConfig, openrouterConfig, lmstudioConfig, aigatewayConfig, llamacppConfig, googleConfig, basetenConfig];
 
 // Get the primary service (highest priority enabled service)
 export function getPrimaryService(): ServiceConfig | null {

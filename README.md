@@ -50,6 +50,7 @@ More to come...check swagger docs for updated endpoints.
 | [Vercel AI Gateway](https://vercel.com/ai-gateway) | Open source and private models | Available |
 | [LlamaCpp](https://github.com/ggml-org/llama.cpp) | Local models via llama.cpp server (self-hosted) | Available |
 | [Google Gemini](https://ai.google.dev/) | Gemini models via OpenAI-compatible interface | Available |
+| [Baseten](https://baseten.co/) | Cloud-hosted ML models with OpenAI-compatible API | Available |
 
 
 ## Run the project
@@ -169,6 +170,10 @@ LMSTUDIO_BASE_URL=http://localhost:1234
 
 # OpenRouter Configuration 
 OPENROUTER_API_KEY=your-openrouter-api-key
+
+# Baseten Configuration
+BASETEN_API_KEY=your-baseten-api-key
+BASETEN_BASE_URL=https://inference.baseten.co/v1
 ```
 
 ### Google Gemini Setup
