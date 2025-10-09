@@ -19,7 +19,15 @@ const MAX_PDF_TEXT_LENGTH = 50000
 
 async function handlePdfKeywordsRequest(c: Context) {
   try {
-    const { payload, config } = await c.req.json()
+    const body = await c.req.json()
+    
+    // Validate the request body against the schema
+    const validationResult = pdfKeywordsRequestSchema.safeParse(body)
+    if (!validationResult.success) {
+      return c.json({ error: 'Invalid request format', details: validationResult.error.errors }, 400)
+    }
+    
+    const { payload, config } = validationResult.data
     const provider = config.provider
     const model = config.model
     
