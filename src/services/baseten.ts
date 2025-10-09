@@ -25,9 +25,10 @@ class BasetenProvider implements AIProvider {
     temperature: number = 0
   ): Promise<any> {
     try {
+      const modelToUse = model || basetenConfig.chatModel;
       
       const result = await generateObject({
-        model: baseten(model || basetenConfig.chatModel),
+        model: baseten(modelToUse),
         schema,
         prompt,
         temperature,
