@@ -462,16 +462,16 @@ ${text}
 export function webSearchResultsPrompt(searchResults: Array<{
   url: string;
   title: string;
-  description: string;
-  position: number;
+  markdown: string;
 }>): string {
   const resultsText = searchResults.map(result =>
-    `Title: ${result.title}\nURL: ${result.url}\nDescription: ${result.description}\nPosition: ${result.position}`
+    `Title: ${result.title}\nURL: ${result.url}\n\nSummary: ${result.markdown}`
   ).join('\n\n---\n\n');
 
   return `Please provide a comprehensive summary of the following web search results in markdown format. 
   The summary should be well-organized, informative, and easy to read. 
   Focus on the most relevant information and present it in a way that answers the user's original query effectively.
+  Use only the data provided in the search results when doing the summary
 
 Search Results:
 ${resultsText}

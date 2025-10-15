@@ -52,8 +52,8 @@ async function callFirecrawlAPI(query: string, options: {
     scrapeOptions: {
       onlyMainContent: false,
       maxAge: 172800000,
-      parsers: ['pdf'],
-      formats: []
+      parsers: [],
+      formats: ["markdown", "summary", "links"]
     }
   }
 
