@@ -3,6 +3,7 @@ import * as path from 'path'
 
 export type ModelCapability =
   | 'summarize'
+  | 'web-search'
   | 'pdf-summarizer'
   | 'pdf-translate'
   | 'rewrite'

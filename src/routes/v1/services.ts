@@ -70,7 +70,7 @@ const modelsSchema = z.object({
   available: z.boolean()
 })
 
-const capabilityEnum = z.enum(['summarize', 'pdf-summarizer', 'pdf-translate', 'rewrite', 'compose', 'keywords', 'sentiment', 'emailReply', 'vision', 'askText', 'translate', 'meetingNotes', 'planning', 'outline'])
+const capabilityEnum = z.enum(['summarize', 'web-search', 'pdf-summarizer', 'pdf-translate', 'rewrite', 'compose', 'keywords', 'sentiment', 'emailReply', 'vision', 'askText', 'translate', 'meetingNotes', 'planning', 'outline'])
 const byProviderSchema = z.record(z.array(z.string()))
 const providerViewSchema = z.record(z.array(z.object({
   name: z.string(),
@@ -81,6 +81,7 @@ const providerViewSchema = z.record(z.array(z.object({
     source: z.literal('config'),
     byCapability: z.object({
       summarize: byProviderSchema,
+      'web-search': byProviderSchema,
       'pdf-summarizer': byProviderSchema,
       'pdf-translate': byProviderSchema,
       rewrite: byProviderSchema,
@@ -115,6 +116,7 @@ async function handleGetModels(c: Context) {
     if (source === 'config') {
       const byCapability = {
         summarize: getModelsByCapability('summarize'),
+        'web-search': getModelsByCapability('web-search'),
         'pdf-summarizer': getModelsByCapability('pdf-summarizer'),
         'pdf-translate': getModelsByCapability('pdf-translate'),
         rewrite: getModelsByCapability('rewrite'),
