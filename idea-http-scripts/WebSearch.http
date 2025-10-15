@@ -1,0 +1,45 @@
+### Web Search Request
+POST http://localhost:3000/api/v1/web-search
+Content-Type: application/json
+
+{
+  "payload": {
+    "query": "Latest AI trends 2025",
+    "limit": 5,
+    "sources": ["web"]
+  },
+  "config": {
+    "provider": "lmstudio",
+    "model": "gemma-3-4b-it",
+    "stream": false
+  }
+}
+
+
+
+### Expected Response Structure:
+# The response will contain:
+# - searchResult: Natural language summary of search results with links included
+# - provider: AI provider used
+# - model: Model used
+# - usage: Token usage information
+# - apiVersion: API version
+
+###
+
+POST http://localhost:3000/api/v1/web-search
+Content-Type: application/json
+
+{
+  "payload": {
+    "query": "Latest AI trends 2025",
+    "limit": 5,
+    "sources": ["web"]
+  },
+  "config": {
+    "provider": "openai",
+    "model": "gpt-4.1-nano",
+    "stream": false
+  }
+}
+

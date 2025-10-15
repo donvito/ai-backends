@@ -29,6 +29,7 @@ Since APIs are ready to use, you don't need to understand prompt engineering. Ju
 | **/api/rewrite** | Rewrite text with instructions (improve, shorten, fix grammar, tone) |
 | **/api/compose** | Compose short-form text given a topic |
 | **/api/pdf-summarizer** | Extract and summarize content from PDF documents with AI |
+| **/api/web-search** | Perform web searches and get AI-powered summaries of results |
 
 ### Image Processing
 

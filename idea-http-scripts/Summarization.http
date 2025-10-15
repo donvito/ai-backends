@@ -1,0 +1,16 @@
+### Summarization Request
+POST http://localhost:3000/api/v1/summarize
+Content-Type: application/json
+
+{
+  "payload": {
+    "text": "Customer John Doe: Hello, I need help with my recent order. I received the wrong item. Agent Jane Smith: Hi! I'm sorry to hear that. Could you please provide your order number so I can look into this for you? Customer John Doe: Sure, the order number is 123456789. I ordered a wireless mouse, but I received a wired one instead. Agent Jane Smith: Thank you for the information. Let me check your order details. Please hold on a moment. Customer John Doe: Okay, take your time. Agent Jane Smith: Thanks for waiting. I see that the order was for a wired mouse. It appears there was an inventory mistake. I apologize for the inconvenience. Customer John Doe: That's frustrating. Can you send me the correct item? Agent Jane Smith: Absolutely. I will initiate the process to send the wireless mouse to you immediately. You will receive it within 3-5 business days. Would you like a return label for the wired mouse? Customer John Doe: Yes, that would be great. Thank you. Agent Jane Smith: You're welcome! I will email you the return shipping label shortly. Is there anything else I can assist you with today? Customer John Doe: No, that's all. Thanks for your help. Agent Jane Smith: My pleasure! Have a great day!",
+    "maxLength": 150
+  },
+  "config": {
+    "provider": "lmstudio",
+    "model": "gemma-3-4b-it",
+    "temperature": 0,
+    "stream": false
+  }
+}

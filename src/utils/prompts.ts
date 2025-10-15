@@ -446,7 +446,7 @@ ${text}
 export function pdfTranslatePrompt(text: string, targetLanguage: string): string {
   return `Translate the following PDF document content to ${targetLanguage}.
 Preserve the structure and formatting of the text as much as possible.
-Just return the translated text, no other text or explanation. 
+Just return the translated text, no other text or explanation.
 
 Format the output in markdown.
 
@@ -454,4 +454,37 @@ Format the output in markdown.
 ${text}
 </document>
 :`;
+}
+
+/**
+ * Create a prompt for converting search results to natural language
+ */
+export function webSearchResultsPrompt(searchResults: Array<{
+  url: string;
+  title: string;
+  markdown: string;
+}>): string {
+  const resultsText = searchResults.map(result =>
+    `Title: ${result.title}\nURL: ${result.url}\n\nSummary: ${result.markdown}`
+  ).join('\n\n---\n\n');
+
+  return `Please provide a comprehensive summary of the following web search results in markdown format. 
+  The summary should be well-organized, informative, and easy to read. 
+  Focus on the most relevant information and present it in a way that answers the user's original query effectively.
+  Use only the data provided in the search results when doing the summary
+
+Search Results:
+${resultsText}
+
+Please provide a detailed summary that:
+1. Synthesizes the key information from multiple sources
+2. Highlights the most relevant findings
+3. Organizes the information logically
+4. Is written in natural, conversational language
+5. Helps the user understand what they were searching for
+6. List links and urls to relevant sources when mentioned
+7. Also list all links to sources at the end of the summary
+8. Do not converse with the user
+
+Summary:`;
 }
