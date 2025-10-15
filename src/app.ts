@@ -25,6 +25,7 @@ function configureApiSecurity(app: OpenAPIHono, tokenConfig: string) {
                 path === '/api/doc' ||
                 path === '/api/ui' ||
                 path === '/api/redoc' ||
+                path === '/api/llms.txt' ||
                 path === '/api/hello' ||
                 // Public demo and tools pages
                 path === '/api/demos' ||

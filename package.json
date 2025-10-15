@@ -16,6 +16,7 @@
     "@hono/swagger-ui": "^0.5.1",
     "@hono/zod-openapi": "^0.19.6",
     "@openrouter/ai-sdk-provider": "^0.7.3",
+    "@scalar/openapi-to-markdown": "^0.2.45",
     "@types/pdf-parse": "^1.1.5",
     "ai": "4.3.19",
     "bun": "^1.2.20",
