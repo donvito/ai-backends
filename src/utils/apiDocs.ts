@@ -49,6 +49,14 @@ async function configureApiDocs(app: OpenAPIHono) {
             const response = await fetch(`${baseUrl}/api/doc`)
             const content = await response.json()
 
+            // Filter out specific routes that shouldn't be included in llms.txt
+            const excludedPaths = ['/api/jsoneditor', '/api/shared/safedom.js', '/api/v1/hello', '/api/v2/hello']
+            if (content.paths) {
+                excludedPaths.forEach(path => {
+                    delete content.paths[path]
+                })
+            }
+
             // Generate Markdown from the OpenAPI document
             const markdown = await createMarkdownFromOpenApi(content)
 
