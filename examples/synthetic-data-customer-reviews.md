@@ -23,7 +23,6 @@ curl -X POST http://localhost:3000/api/v1/synthetic-data \
     "payload": {
       "prompt": "Generate realistic customer product reviews for various electronic devices and products. Reviews should include pros, cons, ratings, verified purchase status, and helpful votes. Include a mix of positive, negative, and neutral reviews. Make them authentic with specific details about product usage and personal experience.",
       "count": 10,
-      "format": "array",
       "schema": {
         "type": "array",
         "items": {
@@ -215,8 +214,6 @@ curl -X POST http://localhost:3000/api/v1/synthetic-data \
   },
   "metadata": {
     "count": 10,
-    "format": "array",
-    "schema_provided": true,
     "validation_passed": true
   }
 }
@@ -288,7 +285,6 @@ def generate_product_reviews(product_name, product_category="electronics", count
         "payload": {
             "prompt": prompt,
             "count": count,
-            "format": "array",
             "schema": schema
         },
         "config": {
@@ -371,7 +367,6 @@ async function generateProductReviews(productName, count = 10) {
     payload: {
       prompt: `Generate ${count} realistic customer reviews for: ${productName}. Include mixed ratings, specific details, pros and cons.`,
       count,
-      format: "array",
       schema
     },
     config: {

@@ -117,8 +117,6 @@ async function writeSyntheticDataStreamSSE(
         },
         metadata: {
           count: payload.count || 1,
-          format: payload.format || 'json',
-          schema_provided: !!payload.schema,
           validation_passed: valid
         },
         provider: meta.provider,
@@ -143,7 +141,6 @@ async function handleSyntheticDataRequest(c: Context) {
     const prompt = syntheticDataPrompt(
       payload.prompt, 
       payload.count || 1, 
-      payload.format || 'json',
       payload.schema
     )
     
@@ -195,8 +192,6 @@ async function handleSyntheticDataRequest(c: Context) {
       },
       {
         count: payload.count || 1,
-        format: payload.format || 'json',
-        schema_provided: !!payload.schema,
         validation_passed: valid
       }
     )
@@ -266,7 +261,7 @@ router.openapi(
       }
     },
     summary: 'Generate synthetic data based on user prompt',
-    description: 'This endpoint generates synthetic data based on a user-provided prompt. Users can optionally provide a JSON schema to validate the structure of the generated data and configure the output format.',
+    description: 'This endpoint generates synthetic data based on a user-provided prompt. Users must provide a JSON schema that defines the structure of the generated data.',
     tags: ['API']
   }),
   handleSyntheticDataRequest as any

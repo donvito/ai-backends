@@ -495,25 +495,25 @@ Summary:`;
 export function syntheticDataPrompt(
   prompt: string,
   count: number,
-  format: 'json' | 'array',
-  schema?: any
+  schema: any
 ): string {
-  const schemaInstruction = schema 
-    ? `\n\nThe generated data MUST conform to this JSON schema:\n${JSON.stringify(schema, null, 2)}`
-    : '';
+  const schemaInstruction = `\n\nThe generated data MUST conform to this JSON schema:\n${JSON.stringify(schema, null, 2)}`;
     
-  const formatInstruction = format === 'array' 
-    ? `Generate an array of ${count} objects.`
-    : count === 1 
+  // Determine if schema expects an array based on schema type
+  const isArraySchema = schema.type === 'array';
+  
+  const countInstruction = isArraySchema
+    ? `Generate an array with exactly ${count} ${count === 1 ? 'item' : 'items'}.`
+    : count === 1
       ? 'Generate a single JSON object.'
-      : `Generate ${count} separate JSON objects, each on its own line.`;
+      : `Generate ${count} objects according to the schema structure.`;
 
   return `Generate synthetic data based on the following prompt. Return ONLY valid JSON with no additional text, explanations, or formatting.
 
 Prompt: ${prompt}
 
 Requirements:
-- ${formatInstruction}
+- ${countInstruction}
 - Ensure all data is realistic and follows logical patterns
 - Use varied but plausible values
 - Include appropriate data types (strings, numbers, booleans, arrays, objects as needed)

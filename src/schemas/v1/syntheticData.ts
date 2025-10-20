@@ -11,9 +11,8 @@ export const jsonSchemaSchema = z.record(z.any()).describe('JSON Schema definiti
  */
 export const syntheticDataPayloadSchema = z.object({
   prompt: z.string().min(1, 'Prompt must not be empty').describe('Description of the synthetic data to generate'),
-  schema: jsonSchemaSchema.optional().describe('Optional JSON schema to validate the generated data structure'),
-  count: z.number().min(1).max(100).default(1).describe('Number of synthetic data records to generate (1-100)'),
-  format: z.enum(['json', 'array']).default('json').describe('Output format: single JSON object or array of objects')
+  schema: jsonSchemaSchema.describe('JSON schema that defines the structure of the generated data'),
+  count: z.number().min(1).max(100).default(1).describe('Number of synthetic data records to generate (1-100)')
 })
 
 /**
@@ -28,7 +27,7 @@ export const syntheticDataRequestSchema = z.object({
  * Successful response returned to the client.
  */
 export const syntheticDataResponseSchema = z.object({
-  data: z.any().describe('The generated synthetic data in the requested format'),
+  data: z.any().describe('The generated synthetic data following the provided JSON schema'),
   provider: z.string().optional().describe('The AI service that was actually used'),
   model: z.string().optional().describe('The model that was actually used'),
   usage: z.object({
@@ -38,8 +37,6 @@ export const syntheticDataResponseSchema = z.object({
   }).describe('Token usage information'),
   metadata: z.object({
     count: z.number().describe('Number of records generated'),
-    format: z.string().describe('Output format used'),
-    schema_provided: z.boolean().describe('Whether a JSON schema was provided'),
     validation_passed: z.boolean().describe('Whether the generated data passed schema validation')
   }).describe('Generation metadata')
 })
@@ -54,8 +51,6 @@ export function createSyntheticDataResponse(
   usage = { input_tokens: 0, output_tokens: 0, total_tokens: 0 },
   metadata = { 
     count: 1, 
-    format: 'json', 
-    schema_provided: false, 
     validation_passed: true 
   }
 ): z.infer<typeof syntheticDataResponseSchema> {

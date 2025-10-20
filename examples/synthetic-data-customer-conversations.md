@@ -22,7 +22,6 @@ curl -X POST http://localhost:3000/api/v1/synthetic-data \
     "payload": {
       "prompt": "Generate realistic customer support conversations between a customer and support agent. Include customer issues like product defects, billing problems, shipping delays, and account access issues. Each conversation should have multiple exchanges showing the resolution process. Include timestamps and sentiment indicators.",
       "count": 5,
-      "format": "array",
       "schema": {
         "type": "array",
         "items": {
@@ -166,8 +165,6 @@ curl -X POST http://localhost:3000/api/v1/synthetic-data \
   },
   "metadata": {
     "count": 5,
-    "format": "array",
-    "schema_provided": true,
     "validation_passed": true
   }
 }
