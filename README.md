@@ -31,6 +31,11 @@ Since APIs are ready to use, you don't need to understand prompt engineering. Ju
 | **/api/pdf-summarizer** | Extract and summarize content from PDF documents with AI |
 | **/api/web-search** | Perform web searches and get AI-powered summaries of results |
 
+### Data Generation
+| Endpoint | Description |
+|----------|-------------|
+| **/api/synthetic-data** | Generate realistic synthetic data based on prompts with optional JSON schema validation |
+
 ### Image Processing
 
 | Endpoint | Description |
