@@ -488,3 +488,36 @@ Please provide a detailed summary that:
 
 Summary:`;
 }
+
+/**
+ * System prompt for synthetic data generation
+ */
+export function syntheticDataPrompt(
+  prompt: string,
+  count: number,
+  format: 'json' | 'array',
+  schema?: any
+): string {
+  const schemaInstruction = schema 
+    ? `\n\nThe generated data MUST conform to this JSON schema:\n${JSON.stringify(schema, null, 2)}`
+    : '';
+    
+  const formatInstruction = format === 'array' 
+    ? `Generate an array of ${count} objects.`
+    : count === 1 
+      ? 'Generate a single JSON object.'
+      : `Generate ${count} separate JSON objects, each on its own line.`;
+
+  return `Generate synthetic data based on the following prompt. Return ONLY valid JSON with no additional text, explanations, or formatting.
+
+Prompt: ${prompt}
+
+Requirements:
+- ${formatInstruction}
+- Ensure all data is realistic and follows logical patterns
+- Use varied but plausible values
+- Include appropriate data types (strings, numbers, booleans, arrays, objects as needed)
+- Make the data internally consistent${schemaInstruction}
+
+CRITICAL: Return ONLY the JSON data. No markdown code blocks, no explanations, no additional text.`;
+}
