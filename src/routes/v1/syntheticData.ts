@@ -70,6 +70,66 @@ function parseAndValidateJSON(text: string, schema?: any): { data: any; valid: b
 }
 
 /**
+ * Specialized streaming function for synthetic data that includes JSON parsing and validation
+ */
+async function writeSyntheticDataStreamSSE(
+  stream: any,
+  result: any,
+  meta: { provider: string; model: string; version: string },
+  payload: any
+) {
+  const textStream = result.textStream
+  if (!textStream) {
+    throw new Error('Streaming not supported for this provider/model')
+  }
+
+  let accumulatedText = ''
+
+  // Stream chunks while accumulating text
+  for await (const chunk of textStream) {
+    accumulatedText += chunk
+    await stream.writeSSE({
+      data: JSON.stringify({
+        chunk,
+        provider: meta.provider,
+        model: meta.model,
+        version: meta.version,
+      }),
+    })
+  }
+
+  // Parse and validate the complete response
+  const { data, valid } = parseAndValidateJSON(accumulatedText, payload.schema)
+
+  // Get usage information
+  const usage = await result.usage
+
+  // Send final event with validation metadata (matching non-streaming format)
+  if (usage) {
+    await stream.writeSSE({
+      data: JSON.stringify({
+        done: true,
+        data,
+        usage: {
+          input_tokens: usage.promptTokens,
+          output_tokens: usage.completionTokens,
+          total_tokens: usage.totalTokens,
+        },
+        metadata: {
+          count: payload.count || 1,
+          format: payload.format || 'json',
+          schema_provided: !!payload.schema,
+          validation_passed: valid
+        },
+        provider: meta.provider,
+        model: meta.model,
+        version: meta.version,
+      }),
+    })
+  }
+}
+
+/**
  * Handler for synthetic data generation requests
  */
 async function handleSyntheticDataRequest(c: Context) {
@@ -98,10 +158,11 @@ async function handleSyntheticDataRequest(c: Context) {
       
       return streamSSE(c, async (stream) => {
         try {
-          await writeTextStreamSSE(
+          await writeSyntheticDataStreamSSE(
             stream,
             result,
-            { provider, model, version: apiVersion }
+            { provider, model, version: apiVersion },
+            payload
           )
         } catch (error) {
           await stream.writeSSE({
