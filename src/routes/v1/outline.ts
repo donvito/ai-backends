@@ -1,6 +1,5 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
 import { Context } from 'hono'
-import { streamSSE } from 'hono/streaming'
 import { outlinePrompt } from '../../utils/prompts'
 import { handleError } from '../../utils/errorHandler'
 import { outlineRequestSchema, outlineResponseSchema } from '../../schemas/v1/outline'
@@ -8,6 +7,7 @@ import { createOutlineResponse } from '../../schemas/v1/outline'
 import { processTextOutputRequest } from '../../services/ai'
 import { apiVersion } from './versionConfig'
 import { createFinalResponse } from './finalResponse'
+import {handleStreaming} from "../../utils/streamingHandler";
 
 const router = new OpenAPIHono()
 
@@ -28,70 +28,7 @@ async function handleOutlineRequest(c: Context) {
     // Handle streaming response
     if (isStreaming) {
       const result = await processTextOutputRequest(prompt, config)
-      
-      // Set SSE headers
-      c.header('Content-Type', 'text/event-stream')
-      c.header('Cache-Control', 'no-cache')
-      c.header('Connection', 'keep-alive')
-      
-      return streamSSE(c, async (stream) => {
-        try {
-          // Get the text stream from the result
-          const textStream = result.textStream
-          
-          if (!textStream) {
-            throw new Error('Streaming not supported for this provider/model')
-          }
-          
-          // Stream chunks to the client
-          for await (const chunk of textStream) {
-            await stream.writeSSE({
-              data: JSON.stringify({
-                chunk: chunk,
-                provider: provider,
-                model: model,
-                version: apiVersion
-              })
-            })
-          }
-          
-          // Send final message with usage stats if available
-          const usage = await result.usage
-          if (usage) {
-            await stream.writeSSE({
-              data: JSON.stringify({
-                done: true,
-                usage: {
-                  input_tokens: usage.promptTokens,
-                  output_tokens: usage.completionTokens,
-                  total_tokens: usage.totalTokens
-                },
-                provider: provider,
-                model: model,
-                version: apiVersion
-              })
-            })
-          }
-        } catch (error) {
-          console.error('Streaming error:', error)
-          try {
-            await stream.writeSSE({
-              data: JSON.stringify({
-                error: error instanceof Error ? error.message : 'Streaming error',
-                done: true
-              })
-            })
-          } catch (writeError) {
-            console.error('Error writing error message to stream:', writeError)
-          }
-        } finally {
-          try {
-            await stream.close()
-          } catch (closeError) {
-            console.error('Error closing stream:', closeError)
-          }
-        }
-      })
+      return handleStreaming(c, result, provider, model, apiVersion)
     }
     
     // Handle non-streaming response

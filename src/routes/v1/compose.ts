@@ -1,13 +1,12 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
 import { Context } from 'hono'
-import { streamSSE } from 'hono/streaming'
 import { composePrompt } from '../../utils/prompts'
 import { handleError } from '../../utils/errorHandler'
 import { composeRequestSchema, composeResponseSchema, createComposeResponse } from '../../schemas/v1/compose'
 import { processTextOutputRequest } from '../../services/ai'
 import { apiVersion } from './versionConfig'
 import { createFinalResponse } from './finalResponse'
-import { writeTextStreamSSE } from './streamUtils'
+import {handleStreaming} from "../../utils/streamingHandler";
 
 const router = new OpenAPIHono()
 
@@ -22,31 +21,7 @@ async function handleComposeRequest(c: Context) {
 
     if (isStreaming) {
       const result = await processTextOutputRequest(prompt, config)
-
-      c.header('Content-Type', 'text/event-stream')
-      c.header('Cache-Control', 'no-cache')
-      c.header('Connection', 'keep-alive')
-
-      return streamSSE(c, async (stream) => {
-        try {
-          await writeTextStreamSSE(
-            stream,
-            result,
-            { provider, model, version: apiVersion }
-          )
-        } catch (error) {
-          try {
-            await stream.writeSSE({
-              data: JSON.stringify({
-                error: error instanceof Error ? error.message : 'Streaming error',
-                done: true
-              })
-            })
-          } catch {}
-        } finally {
-          try { await stream.close() } catch {}
-        }
-      })
+      return handleStreaming(c, result, provider, model, apiVersion)
     }
 
     const result = await processTextOutputRequest(prompt, config)

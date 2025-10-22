@@ -1,6 +1,5 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
 import { Context } from 'hono'
-import { streamSSE } from 'hono/streaming'
 import { summarizePrompt } from '../../utils/prompts'
 import { handleError } from '../../utils/errorHandler'
 import { summarizeRequestSchema, summarizeResponseSchema } from '../../schemas/v1/summarize'
@@ -8,7 +7,7 @@ import { createSummarizeResponse } from '../../schemas/v1/summarize'
 import { processTextOutputRequest } from '../../services/ai'
 import { apiVersion } from './versionConfig'
 import { createFinalResponse } from './finalResponse'
-import { writeTextStreamSSE } from './streamUtils'
+import { handleStreaming } from "../../utils/streamingHandler";
 
 const router = new OpenAPIHono()
 
@@ -23,39 +22,7 @@ async function handleSummarizeRequest(c: Context) {
     // Handle streaming response
     if (isStreaming) {
       const result = await processTextOutputRequest(prompt, config)
-      
-      // Set SSE headers
-      c.header('Content-Type', 'text/event-stream')
-      c.header('Cache-Control', 'no-cache')
-      c.header('Connection', 'keep-alive')
-      
-      return streamSSE(c, async (stream) => {
-        try {
-          await writeTextStreamSSE(
-            stream,
-            result,
-            { provider, model, version: apiVersion }
-          )
-        } catch (error) {
-          console.error('Streaming error:', error)
-          try {
-            await stream.writeSSE({
-              data: JSON.stringify({
-                error: error instanceof Error ? error.message : 'Streaming error',
-                done: true
-              })
-            })
-          } catch (writeError) {
-            console.error('Error writing error message to stream:', writeError)
-          }
-        } finally {
-          try {
-            await stream.close()
-          } catch (closeError) {
-            console.error('Error closing stream:', closeError)
-          }
-        }
-      })
+        return handleStreaming(c, result, provider, model, apiVersion)
     }
     
     // Handle non-streaming response (existing logic)

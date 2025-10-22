@@ -1,4 +1,5 @@
 import { RewriteTone } from '../schemas/v1/rewrite'
+import { FirecrawlResult } from "../routes/v1/webSearch";
 
 /**
  * System prompt template for summarization
@@ -459,11 +460,7 @@ ${text}
 /**
  * Create a prompt for converting search results to natural language
  */
-export function webSearchResultsPrompt(searchResults: Array<{
-  url: string;
-  title: string;
-  markdown: string;
-}>): string {
+export function webSearchResultsPrompt(searchResults: FirecrawlResult[]): string {
   const resultsText = searchResults.map(result =>
     `Title: ${result.title}\nURL: ${result.url}\n\nSummary: ${result.markdown}`
   ).join('\n\n---\n\n');
