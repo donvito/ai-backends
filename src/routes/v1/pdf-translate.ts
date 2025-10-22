@@ -7,7 +7,7 @@ import { processTextOutputRequest } from '../../services/ai'
 import { apiVersion } from './versionConfig'
 import { createFinalResponse } from './finalResponse'
 import { extractPDF, truncateText } from '../../utils/pdfExtractor'
-import {handleStreaming} from "../../utils/streamingHandler";
+import { handleStreamingWithPdfMetadata } from "../../utils/streamingHandler";
 
 const router = new OpenAPIHono()
 
@@ -20,31 +20,31 @@ async function handlePdfTranslateRequest(c: Context) {
     const provider = config.provider
     const model = config.model
     const isStreaming = config.stream || false
-    
+
     // Extract PDF content
     const pdfData = await extractPDF(payload.url)
-    
+
     if (!pdfData.text || pdfData.text.length === 0) {
       throw new Error('No text content found in the PDF')
     }
-    
+
     // Truncate text if it's too long
     const textToTranslate = truncateText(pdfData.text, MAX_PDF_TEXT_LENGTH)
-    
+
     // Create the prompt
     const prompt = pdfTranslatePrompt(textToTranslate, payload.targetLanguage)
-    
+
     // Handle streaming response
     if (isStreaming) {
         const result = await processTextOutputRequest(prompt, config)
-        return handleStreaming(c, result, provider, model, apiVersion)
+        return handleStreamingWithPdfMetadata(c, result, provider, model, apiVersion, pdfData)
     }
-    
+
     // Handle non-streaming response
     const result = await processTextOutputRequest(prompt, config)
     const finalResponse = createPdfTranslateResponse(
-      result.text, 
-      provider, 
+      result.text,
+      provider,
       model,
       {
         title: pdfData.title,

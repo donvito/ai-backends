@@ -7,7 +7,7 @@ import { processTextOutputRequest } from '../../services/ai'
 import { apiVersion } from './versionConfig'
 import { createFinalResponse } from './finalResponse'
 import { extractPDF, truncateText } from '../../utils/pdfExtractor'
-import {handleStreaming} from "../../utils/streamingHandler";
+import { handleStreamingWithPdfMetadata} from "../../utils/streamingHandler";
 
 const router = new OpenAPIHono()
 
@@ -37,7 +37,7 @@ async function handlePdfSummarizerRequest(c: Context) {
     // Handle streaming response
     if (isStreaming) {
       const result = await processTextOutputRequest(prompt, config)
-      return handleStreaming(c, result, provider, model, apiVersion)
+        return handleStreamingWithPdfMetadata(c, result, provider, model, apiVersion, pdfData)
     }
     
     // Handle non-streaming response
