@@ -11,7 +11,6 @@ import {
 import { processTextOutputRequest } from '../../services/ai'
 import { apiVersion } from './versionConfig'
 import { createFinalResponse } from './finalResponse'
-import { writeTextStreamSSE } from './streamUtils'
 
 const router = new OpenAPIHono()
 

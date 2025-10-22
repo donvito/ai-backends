@@ -9,9 +9,9 @@ Content-Type: application/json
     "sources": ["web"]
   },
   "config": {
-    "provider": "lmstudio",
-    "model": "gemma-3-4b-it",
-    "stream": false
+    "provider": "ollama",
+    "model": "gemma3:4b",
+    "stream": true
   }
 }
 

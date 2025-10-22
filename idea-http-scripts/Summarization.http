@@ -8,9 +8,9 @@ Content-Type: application/json
     "maxLength": 150
   },
   "config": {
-    "provider": "lmstudio",
-    "model": "gemma-3-4b-it",
+    "provider": "ollama",
+    "model": "gemma3:4b",
     "temperature": 0,
-    "stream": false
+    "stream": true
   }
 }
