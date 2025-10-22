@@ -1,4 +1,4 @@
-import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import { OpenAPIHono, createRoute } from '@hono/zod-openapi'
 import { Context } from 'hono'
 import { emailReplyPrompt } from '../../utils/prompts'
 import { handleError } from '../../utils/errorHandler'
