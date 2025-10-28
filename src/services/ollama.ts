@@ -220,3 +220,4 @@ class OllamaProvider implements AIProvider {
 const provider = new OllamaProvider();
 
 export default provider;
+export { OllamaProvider };
