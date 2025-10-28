@@ -2,19 +2,9 @@ import { z } from 'zod/v3';
 import { describeImagePrompt } from "../utils/prompts";
 import type { AIProvider } from './interfaces';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
-
-// Configuration
-const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'qwen3:4b';
-const OLLAMA_CHAT_MODEL = process.env.OLLAMA_CHAT_MODEL || 'qwen3:4b';
-const OLLAMA_VISION_MODEL = process.env.OLLAMA_VISION_MODEL || 'llama3.2-vision:11b';
+import { ollamaConfig } from '../config/services';
 
 import { generateObject, generateText, streamText } from "ai";
-
-const ollama = createOpenAICompatible({
-  name: 'ollama',
-  baseURL: `${OLLAMA_BASE_URL}/v1`,
-});
 
 interface OllamaChatResponse {
   model: string;
@@ -32,11 +22,19 @@ interface OllamaChatResponse {
   eval_duration?: number;
 }
 
+export function getOllamaClient() {
+  return createOpenAICompatible({
+    name: 'ollama',
+    baseURL: `${ollamaConfig.baseURL}/v1`,
+  });
+}
+
+
 /**
  * Make a request to Ollama API
  */
 async function ollamaRequest(endpoint: string, payload: any): Promise<any> {
-  const url = `${OLLAMA_BASE_URL}${endpoint}`;
+  const url = `${ ollamaConfig.baseURL}${endpoint}`;
   const startTime = Date.now();
 
   console.log('[OLLAMA REQUEST]');
@@ -104,7 +102,7 @@ class OllamaProvider implements AIProvider {
     eval_count?: number;
     eval_duration?: number;
   }> {
-    const modelToUse = model || OLLAMA_VISION_MODEL;
+    const modelToUse = model ||  "llama3.2:latest";
 
     const messages = [
       {
@@ -147,7 +145,9 @@ class OllamaProvider implements AIProvider {
     temperature: number = 0
   ): Promise<any> {
     try {
-      const modelToUse = ollama(model || OLLAMA_CHAT_MODEL);
+
+      const ollamaClient = getOllamaClient();
+      const modelToUse = ollamaClient(model || "gemma3:4b");
 
       const result = await generateObject({
         model: modelToUse,
@@ -168,8 +168,9 @@ class OllamaProvider implements AIProvider {
     model?: string,
   ): Promise<any> {
     try {
-    const modelToUse = ollama(model || OLLAMA_CHAT_MODEL);
-    console.log('OLLAMA_BASE_URL', OLLAMA_BASE_URL);
+    const ollamaClient = getOllamaClient();
+    const modelToUse = ollamaClient(model || "gemma3:4b");
+    console.log('OLLAMA_BASE_URL', ollamaConfig.baseURL);
     const result = await generateText({
       model: modelToUse,
       prompt: prompt
@@ -186,8 +187,10 @@ class OllamaProvider implements AIProvider {
     model?: string,
   ): Promise<any> {
     try {
-    const modelToUse = ollama(model || OLLAMA_CHAT_MODEL);
-    console.log('OLLAMA STREAMING - BASE_URL', OLLAMA_BASE_URL);
+
+    const ollamaClient = getOllamaClient();
+    const modelToUse = ollamaClient(model || ollamaConfig.chatModel);
+    console.log('OLLAMA STREAMING - BASE_URL', ollamaConfig.baseURL);
     const result = streamText({
       model: modelToUse,
       prompt: prompt
@@ -201,7 +204,7 @@ class OllamaProvider implements AIProvider {
 
   async getAvailableModels(): Promise<string[]> {
     try {
-      const response = await fetch(`${OLLAMA_BASE_URL}/api/tags`);
+      const response = await fetch(`${ollamaConfig.baseURL}/api/tags`);
       if (!response.ok) {
         throw new Error(`Failed to fetch models: ${response.status}`);
       }
@@ -217,5 +220,3 @@ class OllamaProvider implements AIProvider {
 const provider = new OllamaProvider();
 
 export default provider;
-
-export { OLLAMA_BASE_URL, OLLAMA_MODEL, OLLAMA_CHAT_MODEL, OLLAMA_VISION_MODEL };
