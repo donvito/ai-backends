@@ -1,6 +1,7 @@
 import { z } from 'zod/v3';
 import { describeImagePrompt } from "../utils/prompts";
 import type { AIProvider } from './interfaces';
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 
 // Configuration
 const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
@@ -8,11 +9,11 @@ const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'qwen3:4b';
 const OLLAMA_CHAT_MODEL = process.env.OLLAMA_CHAT_MODEL || 'qwen3:4b';
 const OLLAMA_VISION_MODEL = process.env.OLLAMA_VISION_MODEL || 'llama3.2-vision:11b';
 
-import { createOllama } from 'ollama-ai-provider';
 import { generateObject, generateText, streamText } from "ai";
 
-const ollama = createOllama({
-  baseURL: OLLAMA_BASE_URL + '/api',
+const ollama = createOpenAICompatible({
+  name: 'ollama',
+  baseURL: `${OLLAMA_BASE_URL}/v1`,
 });
 
 interface OllamaChatResponse {

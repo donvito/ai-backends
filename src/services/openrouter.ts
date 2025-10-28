@@ -1,11 +1,27 @@
-import { openrouter } from '@openrouter/ai-sdk-provider';
 import { generateObject, generateText, streamText } from 'ai';
 import { z } from 'zod/v3';
 import { openrouterConfig } from '../config/services';
 import type { AIProvider } from './interfaces';
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
+
+export function getOpenRouterClient() {
+  const apiKey = openrouterConfig.apiKey;
+  if (!apiKey) {
+    throw new Error('OpenAI API key is not configured. Set OPENAI_API_KEY or use another provider.');
+  }
+  return createOpenAICompatible({
+    name: 'openrouter',
+    apiKey,
+    baseURL: openrouterConfig.baseURL || 'https://openrouter.ai/api/v1',
+  });
+}
+
 
 class OpenRouterProvider implements AIProvider {
   name = 'openrouter' as const;
+
+  _openrouter = getOpenRouterClient();
+  
 
   /**
    * Generate a structured response for chat using OpenRouter
@@ -18,7 +34,7 @@ class OpenRouterProvider implements AIProvider {
   ): Promise<any> {
     try {
       const result = await generateObject({
-        model: openrouter(model),
+        model: this._openrouter(model),
         schema,
         prompt,
         temperature,
@@ -38,7 +54,7 @@ class OpenRouterProvider implements AIProvider {
   ): Promise<any> {
     try {
       const result = await generateText({
-        model: openrouter(model),
+        model: this._openrouter(model),
         prompt,
       });
       return result;
@@ -56,7 +72,7 @@ class OpenRouterProvider implements AIProvider {
   ): Promise<any> {
     try {
       const result = streamText({
-        model: openrouter(model),
+        model: this._openrouter(model),
         prompt,
       });
       return result;
