@@ -24,7 +24,7 @@ function isAlphaNumeric(char: string | undefined): boolean {
 	// Use a more comprehensive regex that includes common Unicode ranges for letters and numbers
 	// This includes Latin, common European extensions, and digit characters
 	// For full Unicode support, consider using a library like XRegExp
-	return /[A-Za-z0-9\u00C0-\u024F\u1E00-\u1EFF]/.test(char)
+	return /[A-Za-z0-9\u00C0-\u024F\u1E00-\u1EFF]/.test(char);
 }
 
 function snapToWordBoundaries(text: string, start: number, end: number) {
@@ -101,8 +101,8 @@ async function handleHighlighterRequest(c: Context) {
 			config.provider,
 			config.model,
 			{
-				input_tokens: result.usage.promptTokens,
-				output_tokens: result.usage.completionTokens,
+				input_tokens: result.usage.inputTokens,
+				output_tokens: result.usage.outputTokens,
 				total_tokens: result.usage.totalTokens
 			}
 		)

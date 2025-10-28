@@ -1,6 +1,6 @@
 import { openrouter } from '@openrouter/ai-sdk-provider';
 import { generateObject, generateText, streamText } from 'ai';
-import { z } from 'zod';
+import { z } from 'zod/v3';
 import { openrouterConfig } from '../config/services';
 import type { AIProvider } from './interfaces';
 
@@ -55,7 +55,7 @@ class OpenRouterProvider implements AIProvider {
     model: string = openrouterConfig.model
   ): Promise<any> {
     try {
-      const result = await streamText({
+      const result = streamText({
         model: openrouter(model),
         prompt,
       });

@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod/v3';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { generateText, streamText } from 'ai';
 import type { AIProvider } from './interfaces';
@@ -48,8 +48,8 @@ function parseLlamaCppStructuredResponse<T>(
     object: validation.data,
     finishReason: (choice as any)?.finish_reason ?? (choice as any)?.finishReason ?? null,
     usage: {
-      promptTokens: (completion as any)?.usage?.prompt_tokens ?? 0,
-      completionTokens: (completion as any)?.usage?.completion_tokens ?? 0,
+      inputTokens: (completion as any)?.usage?.prompt_tokens ?? 0,
+      outputTokens: (completion as any)?.usage?.completion_tokens ?? 0,
       totalTokens: (completion as any)?.usage?.total_tokens ?? 0,
     },
     id: completion?.id,
@@ -118,7 +118,7 @@ class LlamaCppProvider implements AIProvider {
     try {
     const modelToUse = llamacpp(model || 'default');
 
-    const result = await streamText({
+    const result = streamText({
       model: modelToUse,
       prompt,
       temperature,

@@ -55,8 +55,8 @@ async function handleTranslateRequest(c: Context) {
               data: JSON.stringify({
                 done: true,
                 usage: {
-                  input_tokens: usage.promptTokens,
-                  output_tokens: usage.completionTokens,
+                  input_tokens: usage.inputTokens,
+                  output_tokens: usage.outputTokens,
                   total_tokens: usage.totalTokens
                 },
                 provider: provider,
@@ -75,14 +75,14 @@ async function handleTranslateRequest(c: Context) {
         } finally {
           await stream.close()
         }
-      })
+      });
     }
     
     // Handle non-streaming response (existing logic)
     const result = await processTextOutputRequest(prompt, config)
     const finalResponse = createTranslateResponse(result.text, provider, model, {
-      input_tokens: result.usage.promptTokens,
-      output_tokens: result.usage.completionTokens,
+      input_tokens: result.usage.inputTokens,
+      output_tokens: result.usage.outputTokens,
       total_tokens: result.usage.totalTokens,
     })
     const finalResponseWithVersion = createFinalResponse(finalResponse, apiVersion)

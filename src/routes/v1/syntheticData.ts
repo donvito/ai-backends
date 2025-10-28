@@ -110,8 +110,8 @@ async function writeSyntheticDataStreamSSE(
         done: true,
         data,
         usage: {
-          input_tokens: usage.promptTokens,
-          output_tokens: usage.completionTokens,
+          input_tokens: usage.inputTokens,
+          output_tokens: usage.outputTokens,
           total_tokens: usage.totalTokens,
         },
         metadata: {
@@ -185,8 +185,8 @@ async function handleSyntheticDataRequest(c: Context) {
       provider,
       model,
       {
-        input_tokens: result.usage.promptTokens,
-        output_tokens: result.usage.completionTokens,
+        input_tokens: result.usage.inputTokens,
+        output_tokens: result.usage.outputTokens,
         total_tokens: result.usage.totalTokens,
       },
       {

@@ -70,8 +70,8 @@ async function handlePlannerRequest(c: Context) {
       provider, 
       model, 
       {
-        input_tokens: result.usage?.promptTokens || 0,
-        output_tokens: result.usage?.completionTokens || 0,
+        input_tokens: result.usage?.inputTokens || 0,
+        output_tokens: result.usage?.outputTokens || 0,
         total_tokens: result.usage?.totalTokens || 0,
       },
       processingTime

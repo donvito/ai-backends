@@ -40,8 +40,8 @@ async function handleMeetingNotesRequest(c: Context) {
       { decisions: data.decisions, tasks: normalizedTasks, attendees: data.attendees || [], meeting_date: normalizedMeetingDate, updates: data.updates || [], summary: data.summary || '' },
       config.provider,
       {
-        input_tokens: result.usage.promptTokens,
-        output_tokens: result.usage.completionTokens,
+        input_tokens: result.usage.inputTokens,
+        output_tokens: result.usage.outputTokens,
         total_tokens: result.usage.totalTokens
       }
     )

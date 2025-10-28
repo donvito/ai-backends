@@ -1,4 +1,4 @@
-import {z} from "zod";
+import { z } from 'zod/v3';
 import {createOpenAICompatible} from '@ai-sdk/openai-compatible';
 import {generateObject, generateText, streamText} from "ai";
 import type {AIProvider} from './interfaces';

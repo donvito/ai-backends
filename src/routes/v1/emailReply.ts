@@ -32,8 +32,8 @@ async function handleEmailReplyRequest(c: Context) {
     // Handle non-streaming response (existing logic)
     const result = await processTextOutputRequest(prompt, config)
     const finalResponse = createEmailReplyResponse(result.text, provider, model, {
-      input_tokens: result.usage.promptTokens,
-      output_tokens: result.usage.completionTokens,
+      input_tokens: result.usage.inputTokens,
+      output_tokens: result.usage.outputTokens,
       total_tokens: result.usage.totalTokens,
     })
     const finalResponseWithVersion = createFinalResponse(finalResponse, apiVersion)

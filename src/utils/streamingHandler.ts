@@ -61,8 +61,8 @@ export async function writeTextStreamSSE(
             data: JSON.stringify({
                 done: true,
                 usage: {
-                    input_tokens: usage.promptTokens,
-                    output_tokens: usage.completionTokens,
+                    input_tokens: usage.inputTokens,
+                    output_tokens: usage.outputTokens,
                     total_tokens: usage.totalTokens,
                 },
                 provider: meta.provider,

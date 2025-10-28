@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod/v3';
 import { describeImagePrompt } from "../utils/prompts";
 import type { AIProvider } from './interfaces';
 
@@ -187,7 +187,7 @@ class OllamaProvider implements AIProvider {
     try {
     const modelToUse = ollama(model || OLLAMA_CHAT_MODEL);
     console.log('OLLAMA STREAMING - BASE_URL', OLLAMA_BASE_URL);
-    const result = await streamText({
+    const result = streamText({
       model: modelToUse,
       prompt: prompt
     });

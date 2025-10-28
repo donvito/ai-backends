@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod/v3';
 import { 
   openaiConfig, 
   ollamaConfig, 
@@ -111,7 +111,7 @@ export async function generateImageResponse(
  * Get available models for a specific service
  */
 export async function getAvailableModels(service: AIService): Promise<string[]> {
-  if (!await checkServiceAvailability(service)) {
+  if (!(await checkServiceAvailability(service))) {
     return [];
   }
   

@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { z } from "zod";
+import { z } from 'zod/v3';
 import { openai } from '@ai-sdk/openai';
 import { generateObject, generateText, streamText } from "ai";
 import type { AIProvider } from './interfaces';
@@ -64,7 +64,7 @@ class OpenAIProvider implements AIProvider {
   ): Promise<any> {
     try {
       const modelToUse = openai.responses(model || OPENAI_MODEL);
-      const result = await streamText({
+      const result = streamText({
         model: modelToUse,
         prompt
       });

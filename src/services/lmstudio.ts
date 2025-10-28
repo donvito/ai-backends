@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod/v3';
 import { lmstudioConfig } from '../config/services';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { generateText, streamText, generateObject } from 'ai';
@@ -49,8 +49,8 @@ function parseLmStudioStructuredResponse<T>(
     object: validation.data,
     finishReason: (choice as any)?.finish_reason ?? (choice as any)?.finishReason ?? null,
     usage: {
-      promptTokens: (completion as any)?.usage?.prompt_tokens ?? 0,
-      completionTokens: (completion as any)?.usage?.completion_tokens ?? 0,
+      inputTokens: (completion as any)?.usage?.prompt_tokens ?? 0,
+      outputTokens: (completion as any)?.usage?.completion_tokens ?? 0,
       totalTokens: (completion as any)?.usage?.total_tokens ?? 0,
     },
     id: completion?.id,
@@ -119,7 +119,7 @@ class LmStudioProvider implements AIProvider {
     try {
     const modelToUse = lmstudio(model || lmstudioConfig.chatModel);
 
-    const result = await streamText({
+    const result = streamText({
       model: modelToUse,
       prompt,
       temperature,

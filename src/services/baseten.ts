@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod/v3';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { generateText, streamText, generateObject } from 'ai';
 import type { AIProvider } from './interfaces';
@@ -38,8 +38,8 @@ class BasetenProvider implements AIProvider {
         object: result.object,
         finishReason: result.finishReason,
         usage: {
-          promptTokens: result.usage?.promptTokens || 0,
-          completionTokens: result.usage?.completionTokens || 0,
+          inputTokens: result.usage?.inputTokens || 0,
+          outputTokens: result.usage?.outputTokens || 0,
           totalTokens: result.usage?.totalTokens || 0,
         },
         warnings: result.warnings,
@@ -79,7 +79,7 @@ class BasetenProvider implements AIProvider {
     try {
     const modelToUse = baseten(model || basetenConfig.model);
 
-    const result = await streamText({
+    const result = streamText({
       model: modelToUse,
       prompt,
       temperature,

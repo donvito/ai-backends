@@ -53,8 +53,8 @@ async function handlePdfTranslateRequest(c: Context) {
         extractedTextLength: pdfData.text.length,
       },
       {
-        input_tokens: result.usage.promptTokens,
-        output_tokens: result.usage.completionTokens,
+        input_tokens: result.usage.inputTokens,
+        output_tokens: result.usage.outputTokens,
         total_tokens: result.usage.totalTokens,
       }
     )

@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { z } from "zod";
+import { z } from 'zod/v3';
 import { generateObject, generateText, streamText } from "ai";
 import { anthropic } from '@ai-sdk/anthropic';
 import type { AIProvider } from './interfaces';
@@ -66,7 +66,7 @@ class AnthropicProvider implements AIProvider {
   ): Promise<any> {
     try {
       const modelToUse = anthropic(model || ANTHROPIC_MODEL);
-      const result = await streamText({
+      const result = streamText({
         model: modelToUse,
         prompt
       });
