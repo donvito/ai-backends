@@ -85,7 +85,8 @@ class OllamaProvider implements AIProvider {
     images: string[],
     model?: string,
     stream: boolean = false,
-    temperature: number = 0.3
+    temperature: number = 0.3,
+    prompt?: string
   ): Promise<{
     model: string;
     created_at: string;
@@ -103,11 +104,12 @@ class OllamaProvider implements AIProvider {
     eval_duration?: number;
   }> {
     const modelToUse = model ||  "llama3.2:latest";
+    const promptToUse = prompt || describeImagePrompt();
 
     const messages = [
       {
         role: 'user',
-        content: describeImagePrompt(),
+        content: promptToUse,
         images: images
       }
     ];

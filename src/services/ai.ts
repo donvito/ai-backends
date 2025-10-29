@@ -11,6 +11,7 @@ import {
   isServiceEnabled 
 } from "../config/services";
 import { llmRequestSchema } from "../schemas/v1/llm";
+import { ocrPrompt } from "../utils/prompts";
 import { serviceRegistry } from "./registry";
 import type { ProviderName } from "./interfaces";
 
@@ -96,6 +97,36 @@ export async function generateImageResponse(
   }
 
   const result = await provider.describeImage(images, model, stream, temperature);
+  return {
+    ...result,
+    usage: {
+      input_tokens: result.prompt_eval_count || 0,
+      output_tokens: result.eval_count || 0,
+      total_tokens: (result.prompt_eval_count || 0) + (result.eval_count || 0),
+    },
+    service: service
+  };
+}
+
+/**
+ * Extract text from images using OCR (Optical Character Recognition)
+ */
+export async function extractOCRText(
+  images: string[],
+  service: AIService = Provider.ollama,
+  model?: string,    
+  stream: boolean = false,
+  temperature: number = 0
+): Promise<ImageDescriptionResponse> {
+  const provider = serviceRegistry.get(service);
+  if (!provider) {
+    throw new Error(`Provider not registered: ${service}`);
+  }
+  if (typeof provider.describeImage !== 'function') {
+    throw new Error(`Vision capabilities not supported for service: ${service}`);
+  }
+
+  const result = await provider.describeImage(images, model, stream, temperature, ocrPrompt());
   return {
     ...result,
     usage: {

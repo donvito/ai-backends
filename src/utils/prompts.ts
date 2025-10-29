@@ -458,6 +458,22 @@ ${text}
 }
 
 /**
+ * System prompt for OCR (Optical Character Recognition)
+ */
+export function ocrPrompt(): string {
+  return `Extract all text from the image(s) provided. 
+
+Instructions:
+- Extract ALL visible text from the image(s) exactly as it appears
+- Preserve the structure, formatting, and layout when possible
+- Include all text elements: headings, paragraphs, lists, captions, labels, etc.
+- Maintain line breaks and spacing where appropriate
+- If multiple images are provided, extract text from each image separately
+- Return only the extracted text, no explanations or additional commentary
+- If an image contains no text, return an empty string`
+}
+
+/**
  * Create a prompt for converting search results to natural language
  */
 export function webSearchResultsPrompt(searchResults: FirecrawlResult[]): string {
