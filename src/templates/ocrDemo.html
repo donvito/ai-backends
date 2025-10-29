@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Backends - OCR Demo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'brand-purple': '#B341F9',
+            'brand-pink': '#E453C0',
+            'terminal-bg': '#1C2128',
+            'terminal-text': '#A7B5C4'
+          },
+          backgroundImage: {
+            'gradient-brand': 'linear-gradient(135deg, #B341F9, #E453C0)',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .metrics-container {
+      background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+      border-radius: 12px;
+      padding: 12px;
+      border: 1px solid #e5e7eb;
+    }
+    .metric-item {
+      background: white;
+      padding: 8px 12px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    .metric-icon {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .metric-label {
+      font-size: 12px;
+      color: #6b7280;
+      font-weight: 500;
+    }
+    .metric-value {
+      font-size: 14px;
+      color: #111827;
+      font-weight: 600;
+    }
+    .terminal {
+      background: #1C2128;
+      color: #A7B5C4;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 14px;
+      line-height: 1.5;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+    }
+    .fade-in {
+      animation: fadeIn 0.3s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .spinner {
+      border: 2px solid #f3f4f6;
+      border-top: 2px solid #B341F9;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <div class="max-w-4xl mx-auto p-6">
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center gap-3 mb-4">
+        <div class="w-12 h-12 bg-gradient-brand rounded-xl flex items-center justify-center">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+        </div>
+        <h1 class="text-3xl font-bold bg-gradient-brand bg-clip-text text-transparent">
+          OCR Demo
+        </h1>
+      </div>
+      <p class="text-gray-600 max-w-2xl mx-auto">
+        Extract text from images using AI-powered Optical Character Recognition (OCR).
+        Upload an image and watch as the AI reads and extracts the text content.
+      </p>
+    </div>
+
+    <!-- Main Content -->
+    <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+      <!-- Input Section -->
+      <div class="mb-8">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Upload Image</h2>
+        <div class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-brand-purple transition-colors">
+          <input type="file" id="imageInput" accept="image/*" class="hidden" />
+          <div id="uploadArea" class="cursor-pointer">
+            <svg class="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+            </svg>
+            <p class="text-gray-600 mb-2">Click to upload an image or drag and drop</p>
+            <p class="text-sm text-gray-500">PNG, JPG, JPEG, GIF up to 10MB</p>
+          </div>
+          <div id="imagePreview" class="hidden mt-4">
+            <img id="previewImg" class="max-w-full max-h-64 mx-auto rounded-lg shadow-md" />
+            <button id="removeImage" class="mt-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
+              Remove Image
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Configuration -->
+      <div class="grid md:grid-cols-2 gap-6 mb-8">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">AI Service</label>
+          <select id="service" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-purple focus:border-transparent">
+            <option value="ollama">Ollama (Local)</option>
+            <option value="openai">OpenAI</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Model</label>
+          <select id="model" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-purple focus:border-transparent">
+            <option value="llama3.2:latest">Llama 3.2 Vision (Ollama)</option>
+            <option value="gpt-4o">GPT-4o (OpenAI)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Action Button -->
+      <div class="text-center mb-8">
+        <button id="processBtn" class="px-8 py-3 bg-gradient-brand text-white font-semibold rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+          <span id="btnText">Extract Text</span>
+          <div id="btnSpinner" class="hidden spinner ml-2 inline-block"></div>
+        </button>
+      </div>
+
+      <!-- Results Section -->
+      <div id="results" class="hidden fade-in">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Extracted Text</h2>
+        <div class="bg-gray-50 rounded-xl p-6 mb-6">
+          <pre id="extractedText" class="whitespace-pre-wrap text-gray-800 font-mono text-sm leading-relaxed"></pre>
+        </div>
+
+        <!-- Metrics -->
+        <div id="metrics" class="metrics-container hidden">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div class="metric-item">
+              <div class="metric-icon">
+                <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                </svg>
+              </div>
+              <div>
+                <div class="metric-label">Provider</div>
+                <div id="providerMetric" class="metric-value">-</div>
+              </div>
+            </div>
+            <div class="metric-item">
+              <div class="metric-icon">
+                <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+              </div>
+              <div>
+                <div class="metric-label">Model</div>
+                <div id="modelMetric" class="metric-value">-</div>
+              </div>
+            </div>
+            <div class="metric-item">
+              <div class="metric-icon">
+                <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+              </div>
+              <div>
+                <div class="metric-label">Duration</div>
+                <div id="durationMetric" class="metric-value">-</div>
+              </div>
+            </div>
+            <div class="metric-item">
+              <div class="metric-icon">
+                <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+              </div>
+              <div>
+                <div class="metric-label">Tokens</div>
+                <div id="tokensMetric" class="metric-value">-</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error Display -->
+      <div id="error" class="hidden bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
+        <div class="flex items-center">
+          <svg class="w-5 h-5 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <p id="errorText" class="text-red-800"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- API Info -->
+    <div class="bg-gray-900 text-gray-300 rounded-xl p-6 terminal">
+      <div class="flex items-center gap-2 mb-3">
+        <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+        <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
+        <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+        <span class="ml-2 text-sm">API Request</span>
+      </div>
+      <pre id="apiRequest">curl -X POST "https://your-api-endpoint/api/v1/ocr" \\
+  -H "Authorization: Bearer YOUR_TOKEN" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "service": "ollama",
+    "model": "llama3.2:latest",
+    "images": ["data:image/jpeg;base64,..."]
+  }'</pre>
+    </div>
+  </div>
+
+  <script src="/api/shared/safedom.js"></script>
+  <script>
+    let selectedImage = null;
+
+    // File upload handling
+    const imageInput = document.getElementById('imageInput');
+    const uploadArea = document.getElementById('uploadArea');
+    const imagePreview = document.getElementById('imagePreview');
+    const previewImg = document.getElementById('previewImg');
+    const removeImage = document.getElementById('removeImage');
+
+    uploadArea.addEventListener('click', () => imageInput.click());
+
+    imageInput.addEventListener('change', handleFileSelect);
+    uploadArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadArea.classList.add('border-brand-purple', 'bg-purple-50');
+    });
+    uploadArea.addEventListener('dragleave', () => {
+      uploadArea.classList.remove('border-brand-purple', 'bg-purple-50');
+    });
+    uploadArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('border-brand-purple', 'bg-purple-50');
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        handleFile(files[0]);
+      }
+    });
+
+    function handleFileSelect(e) {
+      const file = e.target.files[0];
+      if (file) {
+        handleFile(file);
+      }
+    }
+
+    function handleFile(file) {
+      if (!file.type.startsWith('image/')) {
+        showError('Please select a valid image file.');
+        return;
+      }
+
+      if (file.size > 10 * 1024 * 1024) { // 10MB limit
+        showError('Image file size must be less than 10MB.');
+        return;
+      }
+
+      selectedImage = file;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        previewImg.src = e.target.result;
+        uploadArea.classList.add('hidden');
+        imagePreview.classList.remove('hidden');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    removeImage.addEventListener('click', () => {
+      selectedImage = null;
+      imageInput.value = '';
+      imagePreview.classList.add('hidden');
+      uploadArea.classList.remove('hidden');
+      hideResults();
+    });
+
+    // Service and model handling
+    const serviceSelect = document.getElementById('service');
+    const modelSelect = document.getElementById('model');
+
+    serviceSelect.addEventListener('change', updateModelOptions);
+
+    function updateModelOptions() {
+      const service = serviceSelect.value;
+      modelSelect.innerHTML = '';
+
+      if (service === 'ollama') {
+        modelSelect.innerHTML = '<option value="llama3.2:latest">Llama 3.2 Vision</option>';
+      } else if (service === 'openai') {
+        modelSelect.innerHTML = '<option value="gpt-4o">GPT-4o</option>';
+      }
+    }
+
+    // Process button
+    const processBtn = document.getElementById('processBtn');
+    const btnText = document.getElementById('btnText');
+    const btnSpinner = document.getElementById('btnSpinner');
+
+    processBtn.addEventListener('click', async () => {
+      if (!selectedImage) {
+        showError('Please select an image first.');
+        return;
+      }
+
+      setLoading(true);
+      hideError();
+
+      try {
+        const base64Image = await fileToBase64(selectedImage);
+        const response = await fetch('/api/v1/ocr', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            service: serviceSelect.value,
+            model: modelSelect.value,
+            images: [base64Image]
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to process image');
+        }
+
+        showResults(data);
+      } catch (error) {
+        showError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function setLoading(loading) {
+      processBtn.disabled = loading;
+      btnSpinner.classList.toggle('hidden', !loading);
+      btnText.textContent = loading ? 'Processing...' : 'Extract Text';
+    }
+
+    function showResults(data) {
+      const results = document.getElementById('results');
+      const extractedText = document.getElementById('extractedText');
+      const metrics = document.getElementById('metrics');
+
+      extractedText.textContent = data.message?.content || 'No text extracted';
+
+      if (data.usage) {
+        document.getElementById('providerMetric').textContent = data.service || data.provider || '-';
+        document.getElementById('modelMetric').textContent = data.model || '-';
+        document.getElementById('durationMetric').textContent = data.total_duration ? `${(data.total_duration / 1e9).toFixed(2)}s` : '-';
+        document.getElementById('tokensMetric').textContent = data.usage?.total_tokens || '-';
+        metrics.classList.remove('hidden');
+      }
+
+      results.classList.remove('hidden');
+      results.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function hideResults() {
+      document.getElementById('results').classList.add('hidden');
+      document.getElementById('metrics').classList.add('hidden');
+    }
+
+    function showError(message) {
+      const errorDiv = document.getElementById('error');
+      const errorText = document.getElementById('errorText');
+      errorText.textContent = message;
+      errorDiv.classList.remove('hidden');
+      errorDiv.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function hideError() {
+      document.getElementById('error').classList.add('hidden');
+    }
+
+    // Initialize
+    updateModelOptions();
+  </script>
+</body>
+</html>

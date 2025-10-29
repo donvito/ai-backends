@@ -487,6 +487,24 @@ Summary:`;
 }
 
 /**
+ * System prompt for OCR (Optical Character Recognition)
+ */
+export function ocrPrompt(): string {
+  return `Extract all visible text from the image(s) provided.
+
+Instructions:
+- Extract text exactly as it appears in the image
+- Preserve the original formatting, layout, and structure when possible
+- Include line breaks, paragraphs, and spacing as they appear in the image
+- If there are multiple images, extract text from each one and separate them clearly
+- If no text is found, return an empty string
+- Do not add any explanations, comments, or additional text
+- Just return the extracted text
+
+Return only the extracted text from the image(s).`;
+}
+
+/**
  * System prompt for synthetic data generation
  */
 export function syntheticDataPrompt(
@@ -495,10 +513,10 @@ export function syntheticDataPrompt(
   schema: any
 ): string {
   const schemaInstruction = `\n\nThe generated data MUST conform to this JSON schema:\n${JSON.stringify(schema, null, 2)}`;
-    
+
   // Determine if schema expects an array based on schema type
   const isArraySchema = schema.type === 'array';
-  
+
   const countInstruction = isArraySchema
     ? `Generate an array with exactly ${count} ${count === 1 ? 'item' : 'items'}.`
     : count === 1

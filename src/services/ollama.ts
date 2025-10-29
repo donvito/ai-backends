@@ -1,5 +1,5 @@
 import { z } from 'zod/v3';
-import { describeImagePrompt } from "../utils/prompts";
+import { describeImagePrompt, ocrPrompt } from "../utils/prompts";
 import type { AIProvider } from './interfaces';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { ollamaConfig } from '../config/services';
@@ -108,6 +108,63 @@ class OllamaProvider implements AIProvider {
       {
         role: 'user',
         content: describeImagePrompt(),
+        images: images
+      }
+    ];
+
+    const payload = {
+      model: modelToUse,
+      messages: messages,
+      stream: stream,
+      options: {
+        temperature: temperature,
+      }
+    };
+
+    const response: OllamaChatResponse = await ollamaRequest('/api/chat', payload);
+
+    return {
+      model: response.model,
+      created_at: response.created_at,
+      message: response.message,
+      done_reason: response.done ? 'stop' : 'length',
+      done: response.done,
+      total_duration: response.total_duration,
+      load_duration: response.load_duration,
+      prompt_eval_count: response.prompt_eval_count,
+      prompt_eval_duration: response.prompt_eval_duration,
+      eval_count: response.eval_count,
+      eval_duration: response.eval_duration
+    };
+  }
+
+  async ocr(
+    images: string[],
+    model?: string,
+    stream: boolean = false,
+    temperature: number = 0
+  ): Promise<{
+    model: string;
+    created_at: string;
+    message: {
+      role: string;
+      content: string;
+    };
+    done_reason: string;
+    done: boolean;
+    total_duration?: number;
+    load_duration?: number;
+    prompt_eval_count?: number;
+    prompt_eval_duration?: number;
+    eval_count?: number;
+    eval_duration?: number;
+  }> {
+    const modelToUse = model || "llama3.2:latest";
+
+    const messages = [
+      {
+        role: 'user',
+        content: ocrPrompt(),
         images: images
       }
     ];

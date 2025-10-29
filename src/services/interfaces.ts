@@ -33,4 +33,12 @@ export interface AIProvider {
     stream?: boolean,
     temperature?: number
   ): Promise<any>;
+
+  // Optional OCR capability
+  ocr?(
+    images: string[],
+    model?: string,
+    stream?: boolean,
+    temperature?: number
+  ): Promise<any>;
 }

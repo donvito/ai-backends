@@ -83,7 +83,7 @@ export async function checkServiceAvailability(service: AIService): Promise<bool
 export async function generateImageResponse(
   images: string[],
   service: AIService = Provider.ollama,
-  model?: string,    
+  model?: string,
   stream: boolean = false,
   temperature: number = 0.3
 ): Promise<ImageDescriptionResponse> {
@@ -96,6 +96,59 @@ export async function generateImageResponse(
   }
 
   const result = await provider.describeImage(images, model, stream, temperature);
+  return {
+    ...result,
+    usage: {
+      input_tokens: result.prompt_eval_count || 0,
+      output_tokens: result.eval_count || 0,
+      total_tokens: (result.prompt_eval_count || 0) + (result.eval_count || 0),
+    },
+    service: service
+  };
+}
+
+export interface OCRResponse {
+  model: string;
+  created_at: string;
+  message: {
+    role: string;
+    content: string;
+  };
+  done_reason: string;
+  done: boolean;
+  total_duration?: number;
+  load_duration?: number;
+  prompt_eval_count?: number;
+  prompt_eval_duration?: number;
+  eval_count?: number;
+  eval_duration?: number;
+  usage?: {
+    input_tokens: number;
+    output_tokens: number;
+    total_tokens: number;
+  };
+  service?: string; // Which service was actually used
+}
+
+/**
+ * Extract text from images using AI services with OCR capabilities
+ */
+export async function generateOCRResponse(
+  images: string[],
+  service: AIService = Provider.ollama,
+  model?: string,
+  stream: boolean = false,
+  temperature: number = 0.3
+): Promise<OCRResponse> {
+  const provider = serviceRegistry.get(service);
+  if (!provider) {
+    throw new Error(`Provider not registered: ${service}`);
+  }
+  if (typeof provider.ocr !== 'function') {
+    throw new Error(`OCR capabilities not supported for service: ${service}`);
+  }
+
+  const result = await provider.ocr(images, model, stream, temperature);
   return {
     ...result,
     usage: {
