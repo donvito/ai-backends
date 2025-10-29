@@ -31,6 +31,7 @@ export interface AIProvider {
     images: string[],
     model?: string,
     stream?: boolean,
-    temperature?: number
+    temperature?: number,
+    customPrompt?: string
   ): Promise<any>;
 }

@@ -68,6 +68,35 @@ export function describeImagePrompt(): string {
   return `Describe the following image`
 }
 
+/**
+ * System prompt for OCR (Optical Character Recognition)
+ */
+export function ocrPrompt(
+  language?: string,
+  preserveFormatting: boolean = true
+): string {
+  const languageInstruction = language 
+    ? `The text is expected to be in ${language}.` 
+    : '';
+  
+  const formattingInstruction = preserveFormatting
+    ? 'Preserve the original text formatting, including line breaks, paragraph spacing, and text structure as much as possible.'
+    : 'Extract the text in a clean, continuous format.';
+
+  return `Extract all text from the following image(s) using Optical Character Recognition (OCR).
+
+Instructions:
+- Extract ALL visible text accurately and completely
+- ${formattingInstruction}
+- ${languageInstruction}
+- If there are multiple columns, read left to right, top to bottom
+- If no text is found, respond with "No text detected"
+- Do not add any commentary, explanations, or additional text
+- Only return the extracted text itself
+
+Extracted text:`;
+}
+
 
 /**
  * System prompt for sentiment analysis

@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Backends - OCR Demo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'brand-purple': '#B341F9',
+            'brand-pink': '#E453C0',
+            'terminal-bg': '#1C2128',
+            'terminal-text': '#A7B5C4'
+          },
+          backgroundImage: {
+            'gradient-brand': 'linear-gradient(135deg, #B341F9, #E453C0)',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .metrics-container {
+      background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+      border-radius: 12px;
+      padding: 12px;
+      border: 1px solid #e5e7eb;
+    }
+    .metric-item {
+      background: white;
+      padding: 8px 12px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    .metric-icon {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .metric-label {
+      font-size: 12px;
+      color: #6b7280;
+      font-weight: 500;
+    }
+    .metric-value {
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .image-preview {
+      max-width: 100%;
+      max-height: 300px;
+      object-fit: contain;
+    }
+    .drop-zone {
+      border: 2px dashed #d1d5db;
+      border-radius: 8px;
+      transition: all 0.3s;
+    }
+    .drop-zone.dragover {
+      border-color: #B341F9;
+      background-color: #f9f5ff;
+    }
+  </style>
+  <script src="/api/shared/safedom.js"></script>
+</head>
+<body class="bg-white min-h-screen">
+  <!-- Navigation -->
+  <nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100">
+    <div class="container mx-auto px-6 py-4">
+      <div class="flex justify-between items-center">
+        <a href="/" class="flex items-center space-x-2">
+          <div class="w-10 h-10 rounded-xl bg-[#B341F9] flex items-center justify-center">
+            <span class="text-white font-bold text-xl">AI</span>
+          </div>
+          <span class="text-2xl font-bold text-gray-900">Backends</span>
+          <span class="ml-2 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-50 text-green-700">
+            <svg class="w-4 h-4 mr-1" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0020 10.017C20 4.484 15.522 0 10 0z"/>
+            </svg>
+            Open Source
+          </span>
+        </a>
+        <div class="flex items-center space-x-6">
+          <a href="/api/ui" target="_blank" class="text-gray-700 hover:text-brand-purple transition-colors duration-300">API Docs</a>
+          <a href="/api/demos" class="text-gray-700 hover:text-brand-purple transition-colors duration-300">Demos</a>
+          <a href="/api/jsoneditor" target="_blank" class="text-gray-700 hover:text-brand-purple transition-colors duration-300">JSON Editor</a>
+          <a href="/api/models" class="text-gray-700 hover:text-brand-purple transition-colors duration-300">Models Guide</a>
+          <a href="https://github.com/donvito/ai-backend" class="inline-flex items-center px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors duration-300">
+            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 0C4.477 0 0 4.484 0 10.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0020 10.017C20 4.484 15.522 0 10 0z" clip-rule="evenodd"/>
+            </svg>
+            GitHub
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container mx-auto px-6 py-12">
+    <!-- Breadcrumb -->
+    <nav class="mb-6 text-sm">
+      <ol class="flex items-center space-x-2 text-gray-500">
+        <li><a href="/" class="hover:text-gray-700">Home</a></li>
+        <li><span>/</span></li>
+        <li><a href="/api/demos" class="hover:text-gray-700">Demos</a></li>
+        <li><span>/</span></li>
+        <li class="text-gray-900 font-medium">OCR (Optical Character Recognition)</li>
+      </ol>
+    </nav>
+
+    <!-- Demo Title and Description -->
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-bold text-gray-900 mb-3">OCR Demo</h1>
+      <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+        Extract text from images using vision-capable AI models
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
+      <!-- Controls -->
+      <section class="bg-white p-6 rounded-2xl border border-gray-100 shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <h2 class="text-lg font-semibold mb-3">Input</h2>
+        
+        <!-- Image Upload -->
+        <div id="dropZone" class="drop-zone p-6 text-center cursor-pointer">
+          <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <p class="mt-2 text-sm text-gray-600">Click to upload or drag and drop</p>
+          <p class="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+          <input type="file" id="imageInput" accept="image/*" class="hidden" multiple />
+        </div>
+
+        <div id="imagePreviewContainer" class="mt-4 space-y-2"></div>
+
+        <div class="grid grid-cols-2 gap-3 mt-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Service</label>
+            <select id="service" class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple">
+              <option value="ollama">ollama</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Model</label>
+            <select id="model" class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple">
+              <option value="llama3.2-vision:latest">llama3.2-vision:latest</option>
+              <option value="llava:latest">llava:latest</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Temperature</label>
+            <input id="temperature" type="number" step="0.1" min="0" max="1" class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple" value="0" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Language (optional)</label>
+            <input id="language" type="text" placeholder="e.g., English" class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple" />
+          </div>
+        </div>
+
+        <div class="mt-3 flex items-center gap-4">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input id="preserveFormatting" type="checkbox" class="w-4 h-4 text-brand-purple rounded focus:ring-2 focus:ring-brand-purple" checked />
+            <span class="text-sm font-medium text-gray-700">Preserve Formatting</span>
+          </label>
+        </div>
+
+        <div class="mt-3">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Bearer Token (optional)</label>
+          <input id="token" type="password" placeholder="Only needed in production deployments" class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple" />
+        </div>
+
+        <div class="mt-4 flex items-center gap-2">
+          <button id="runBtn" class="px-4 py-2 rounded-lg bg-brand-purple text-white hover:bg-[#9935D9]">Extract Text</button>
+          <button id="clearBtn" class="px-4 py-2 rounded-lg bg-gray-100 text-gray-800 hover:bg-gray-200">Clear</button>
+        </div>
+
+        <details class="mt-4">
+          <summary class="text-sm text-gray-600 cursor-pointer">View JSON request</summary>
+          <pre id="jsonPreview" class="mt-2 bg-gray-900 text-green-400 p-3 rounded-lg text-xs mono overflow-auto"></pre>
+        </details>
+      </section>
+
+      <!-- Output -->
+      <section class="bg-white p-6 rounded-2xl border border-gray-100 shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <h2 class="text-lg font-semibold mb-3">Extracted Text</h2>
+        <div id="usageInfo" class="hidden mb-3 text-sm"></div>
+        <div id="extractedText" class="p-4 rounded-lg bg-gray-50 border border-gray-200 leading-7 text-gray-900 whitespace-pre-wrap min-h-[300px]">
+          Upload an image to extract text...
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const imageInput = document.getElementById('imageInput');
+    const dropZone = document.getElementById('dropZone');
+    const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+    const serviceEl = document.getElementById('service');
+    const modelEl = document.getElementById('model');
+    const temperatureEl = document.getElementById('temperature');
+    const languageEl = document.getElementById('language');
+    const preserveFormattingEl = document.getElementById('preserveFormatting');
+    const tokenEl = document.getElementById('token');
+    const runBtn = document.getElementById('runBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const extractedText = document.getElementById('extractedText');
+    const usageInfo = document.getElementById('usageInfo');
+    const jsonPreview = document.getElementById('jsonPreview');
+
+    let uploadedImages = [];
+
+    // Drag and drop handlers
+    dropZone.addEventListener('click', () => imageInput.click());
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+    });
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('dragover');
+    });
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      handleFiles(e.dataTransfer.files);
+    });
+
+    imageInput.addEventListener('change', (e) => {
+      handleFiles(e.target.files);
+    });
+
+    function handleFiles(files) {
+      Array.from(files).forEach(file => {
+        if (!file.type.startsWith('image/')) return;
+        if (file.size > 10 * 1024 * 1024) {
+          alert('File too large: ' + file.name);
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const base64 = e.target.result.split(',')[1];
+          uploadedImages.push(base64);
+          displayImagePreviews();
+          updatePreview();
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function displayImagePreviews() {
+      imagePreviewContainer.innerHTML = '';
+      uploadedImages.forEach((img, idx) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'relative inline-block mr-2';
+        
+        const imgEl = document.createElement('img');
+        imgEl.src = 'data:image/png;base64,' + img;
+        imgEl.className = 'image-preview border rounded';
+        
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600';
+        removeBtn.textContent = '×';
+        removeBtn.onclick = () => {
+          uploadedImages.splice(idx, 1);
+          displayImagePreviews();
+          updatePreview();
+        };
+        
+        wrapper.appendChild(imgEl);
+        wrapper.appendChild(removeBtn);
+        imagePreviewContainer.appendChild(wrapper);
+      });
+    }
+
+    function buildRequest() {
+      const req = {
+        service: serviceEl.value,
+        model: modelEl.value,
+        temperature: Number(temperatureEl.value) || 0,
+        stream: false,
+        images: uploadedImages,
+        preserveFormatting: preserveFormattingEl.checked
+      };
+      if (languageEl.value.trim()) {
+        req.language = languageEl.value.trim();
+      }
+      return req;
+    }
+
+    function updatePreview() {
+      const req = buildRequest();
+      jsonPreview.textContent = JSON.stringify(req, null, 2);
+    }
+
+    async function run() {
+      if (uploadedImages.length === 0) {
+        alert('Please upload at least one image');
+        return;
+      }
+
+      const req = buildRequest();
+      updatePreview();
+
+      const headers = { 'Content-Type': 'application/json' };
+      const token = tokenEl.value.trim();
+      if (token) headers['Authorization'] = 'Bearer ' + token;
+
+      runBtn.disabled = true;
+      runBtn.textContent = 'Extracting...';
+
+      extractedText.textContent = 'Processing image...';
+      usageInfo.classList.add('hidden');
+
+      const startTime = performance.now();
+
+      try {
+        const res = await fetch('/api/v1/ocr', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(req)
+        });
+
+        const endTime = performance.now();
+        const responseTime = (endTime - startTime).toFixed(2);
+
+        if (!res.ok) {
+          const txt = await res.text();
+          throw new Error('Request failed: ' + res.status + ' ' + txt);
+        }
+
+        const data = await res.json();
+        const text = data?.message?.content || '';
+        extractedText.textContent = text || 'No text detected.';
+
+        const usage = data?.usage;
+        if (usage) {
+          displayUsageMetrics(usage, responseTime);
+        }
+      } catch (err) {
+        extractedText.textContent = 'Error: ' + (err.message || 'Unknown error');
+        extractedText.classList.add('text-red-600');
+      } finally {
+        runBtn.disabled = false;
+        runBtn.textContent = 'Extract Text';
+      }
+    }
+
+    function displayUsageMetrics(usage, responseTime) {
+      usageInfo.classList.remove('hidden');
+      
+      let metricsHtml = '<div class="metrics-container">';
+      metricsHtml += '<div class="grid grid-cols-2 sm:grid-cols-4 gap-3">';
+      
+      metricsHtml += '<div class="metric-item">' +
+        '<div class="metric-icon">' +
+          '<svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>' +
+          '</svg>' +
+        '</div>' +
+        '<div>' +
+          '<div class="metric-label">Response</div>' +
+          '<div class="metric-value text-orange-600">' + responseTime + ' ms</div>' +
+        '</div>' +
+      '</div>';
+      
+      if (usage) {
+        const inputTokens = usage.input_tokens || 0;
+        const outputTokens = usage.output_tokens || 0;
+        const totalTokens = usage.total_tokens || (inputTokens + outputTokens);
+        
+        metricsHtml += '<div class="metric-item">' +
+          '<div class="metric-icon">' +
+            '<svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+              '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>' +
+            '</svg>' +
+          '</div>' +
+          '<div>' +
+            '<div class="metric-label">Input</div>' +
+            '<div class="metric-value text-blue-600">' + inputTokens.toLocaleString() + '</div>' +
+          '</div>' +
+        '</div>';
+        
+        metricsHtml += '<div class="metric-item">' +
+          '<div class="metric-icon">' +
+            '<svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+              '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path>' +
+            '</svg>' +
+          '</div>' +
+          '<div>' +
+            '<div class="metric-label">Output</div>' +
+            '<div class="metric-value text-green-600">' + outputTokens.toLocaleString() + '</div>' +
+          '</div>' +
+        '</div>';
+        
+        metricsHtml += '<div class="metric-item">' +
+          '<div class="metric-icon">' +
+            '<svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+              '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>' +
+            '</svg>' +
+          '</div>' +
+          '<div>' +
+            '<div class="metric-label">Total</div>' +
+            '<div class="metric-value text-purple-600">' + totalTokens.toLocaleString() + '</div>' +
+          '</div>' +
+        '</div>';
+      }
+      
+      metricsHtml += '</div></div>';
+      usageInfo.innerHTML = metricsHtml;
+    }
+
+    clearBtn.addEventListener('click', () => {
+      uploadedImages = [];
+      imagePreviewContainer.innerHTML = '';
+      extractedText.textContent = 'Upload an image to extract text...';
+      extractedText.classList.remove('text-red-600');
+      usageInfo.classList.add('hidden');
+      imageInput.value = '';
+      updatePreview();
+    });
+
+    serviceEl.addEventListener('change', updatePreview);
+    modelEl.addEventListener('change', updatePreview);
+    temperatureEl.addEventListener('input', updatePreview);
+    languageEl.addEventListener('input', updatePreview);
+    preserveFormattingEl.addEventListener('change', updatePreview);
+    runBtn.addEventListener('click', run);
+
+    updatePreview();
+  </script>
+
+  <!-- Footer -->
+  <footer class="bg-gray-900 text-white py-12 mt-20">
+    <div class="container mx-auto px-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div>
+          <h3 class="text-xl font-semibold mb-4">Documentation</h3>
+          <ul class="space-y-2">
+            <li><a href="/api/ui" target="_blank" class="text-gray-300 hover:text-white transition-colors">Swagger UI</a></li>
+            <li><a href="/api/doc" target="_blank" class="text-gray-300 hover:text-white transition-colors">API Reference</a></li>
+            <li><a href="/api/demos" class="text-gray-300 hover:text-white transition-colors">Live Demos</a></li>
+            <li><a href="/api/models" class="text-gray-300 hover:text-white transition-colors">Models Guide</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-xl font-semibold mb-4">Resources</h3>
+          <ul class="space-y-2">
+            <li><a href="https://github.com/donvito/ai-backend" class="text-gray-300 hover:text-white transition-colors">GitHub Repository</a></li>
+            <li><a href="https://github.com/donvito/ai-backend/issues" class="text-gray-300 hover:text-white transition-colors">Issues & Support</a></li>
+            <li><a href="https://github.com/donvito/ai-backend/blob/main/README.md" class="text-gray-300 hover:text-white transition-colors">Setup Guide</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-xl font-semibold mb-4">About</h3>
+          <p class="text-gray-300 text-sm leading-relaxed">
+            Open source AI backend making common AI use cases easily accessible and customizable. 
+            100% self-hosted with complete control over your data.
+          </p>
+        </div>
+      </div>
+      <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+        <p>&copy; 2025 AI Backends. Open source under MIT License.</p>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
