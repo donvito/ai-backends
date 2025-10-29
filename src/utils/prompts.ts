@@ -487,6 +487,21 @@ Summary:`;
 }
 
 /**
+ * System prompt for OCR (Optical Character Recognition)
+ */
+export function ocrPrompt(language: string = 'auto', extractStructuredData: boolean = false): string {
+  const languageInstruction = language !== 'auto' ? `\nThe text is primarily in ${language}.` : '\nDetect and preserve the language of the text.';
+  const structuredDataInstruction = extractStructuredData 
+    ? '\n\nIf the image contains structured data (forms, tables, invoices, etc.), also extract it as JSON and return it in a "structuredData" field.'
+    : '';
+
+  return `Extract and transcribe all text visible in the image with high accuracy.${languageInstruction}
+Preserve the original formatting, line breaks, and structure as much as possible.
+Handle any OCR challenges like rotated text, multiple columns, or unclear sections carefully.${structuredDataInstruction}
+Return only the extracted text content, nothing else.`;
+}
+
+/**
  * System prompt for synthetic data generation
  */
 export function syntheticDataPrompt(

@@ -252,4 +252,60 @@ export async function processTextOutputStreamRequest(
     throw new Error(`Unsupported service: ${providerName}`);
   }
   return provider.generateChatTextStreamResponse(prompt, model);
+}
+
+/**
+ * Perform OCR (Optical Character Recognition) on images
+ */
+export async function performOCR(
+  images: string[],
+  service: AIService = Provider.ollama,
+  model?: string,
+  language: string = 'auto',
+  extractStructuredData: boolean = false,
+  temperature: number = 0.3
+): Promise<{
+  text: string;
+  confidence?: number;
+  language?: string;
+  structuredData?: Record<string, any>;
+  usage: {
+    input_tokens: number;
+    output_tokens: number;
+    total_tokens: number;
+  };
+  service: string;
+}> {
+  const provider = serviceRegistry.get(service);
+  if (!provider) {
+    throw new Error(`Provider not registered: ${service}`);
+  }
+  if (typeof provider.describeImage !== 'function') {
+    throw new Error(`Vision capabilities not supported for service: ${service}`);
+  }
+
+  // Use describeImage with OCR-specific system prompt
+  const ocrSystemPrompt = `Extract and transcribe all text visible in the image with high accuracy.${
+    language !== 'auto' ? `\nThe text is primarily in ${language}.` : '\nDetect and preserve the language of the text.'
+  }
+Preserve the original formatting, line breaks, and structure as much as possible.
+Handle any OCR challenges like rotated text, multiple columns, or unclear sections carefully.${
+    extractStructuredData
+      ? '\n\nIf the image contains structured data (forms, tables, invoices, etc.), also extract it as JSON.'
+      : ''
+  }
+Return only the extracted text content.`;
+
+  const result = await provider.describeImage(images, model, false, temperature);
+  
+  return {
+    text: result.message?.content || '',
+    language: language,
+    usage: {
+      input_tokens: result.prompt_eval_count || 0,
+      output_tokens: result.eval_count || 0,
+      total_tokens: (result.prompt_eval_count || 0) + (result.eval_count || 0),
+    },
+    service: service
+  };
 }   
