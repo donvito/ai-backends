@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import ollamaProvider, { OllamaProvider } from '../ollama';
-import { ollamaConfig } from '../../config/services';
+
+const mockOcrPrompt = vi.hoisted(() => vi.fn(() => 'Extract all text from the image.'));
 
 // Mock the AI SDK functions
 vi.mock('ai', () => ({
@@ -17,9 +17,10 @@ vi.mock('../../config/services', () => ({
   },
 }));
 
-// Mock the describeImagePrompt
-vi.mock('../utils/prompts', () => ({
+// Mock the prompts utilities
+vi.mock('../../utils/prompts', () => ({
   describeImagePrompt: () => 'Describe this image in detail.',
+  ocrPrompt: (options: any) => mockOcrPrompt(options),
 }));
 
 // Mock the OpenAI compatible client
@@ -27,6 +28,8 @@ vi.mock('@ai-sdk/openai-compatible', () => ({
   createOpenAICompatible: vi.fn(() => vi.fn((model: string) => ({ model }))),
 }));
 
+import ollamaProvider, { OllamaProvider } from '../ollama';
+import { ollamaConfig } from '../../config/services';
 import { generateObject, generateText, streamText } from 'ai';
 
 describe('OllamaProvider', () => {
@@ -36,6 +39,7 @@ describe('OllamaProvider', () => {
     vi.stubGlobal('fetch', vi.fn());
     provider = new OllamaProvider();
     vi.clearAllMocks();
+    mockOcrPrompt.mockClear();
   });
 
   afterEach(() => {
@@ -465,6 +469,87 @@ describe('OllamaProvider', () => {
         eval_count: undefined,
         eval_duration: undefined
       });
+    });
+  });
+
+  describe('performOCR', () => {
+    it('should perform OCR using default configuration', async () => {
+      const mockImages = ['data:image/png;base64,iVBORw0KGgoAAAANS...'];
+      const mockResponse = {
+        model: 'llama3.2:latest',
+        created_at: '2024-01-01T00:00:00Z',
+        message: {
+          role: 'assistant',
+          content: 'Detected text'
+        },
+        done: true,
+        prompt_eval_count: 12,
+        eval_count: 18
+      };
+
+      (fetch as any).mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockResponse)
+      });
+
+      const result = await provider.performOCR(mockImages);
+
+      expect(fetch).toHaveBeenCalledWith(`${ollamaConfig.baseURL}/api/chat`, expect.objectContaining({
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      }));
+
+      const callBody = JSON.parse((fetch as any).mock.calls[0][1].body);
+      expect(callBody.model).toBe('llama3.2:latest');
+      expect(callBody.stream).toBe(false);
+      expect(callBody.options.temperature).toBe(0);
+      expect(mockOcrPrompt).toHaveBeenCalledWith({ language: undefined, format: 'plain' });
+
+      expect(result.text).toBe('Detected text');
+      expect(result.model).toBe('llama3.2:latest');
+      expect(result.usage).toEqual({
+        input_tokens: 12,
+        output_tokens: 18,
+        total_tokens: 30
+      });
+    });
+
+    it('should honor custom options and model overrides', async () => {
+      const mockImages = ['data:image/png;base64,iVBORw0KGgoAAAANS...'];
+      const mockResponse = {
+        model: 'custom-model',
+        created_at: '2024-01-01T00:00:00Z',
+        message: {
+          role: 'assistant',
+          content: 'Texto detectado'
+        },
+        done: true
+      };
+
+      (fetch as any).mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockResponse)
+      });
+
+      const result = await provider.performOCR(mockImages, 'custom-model', {
+        temperature: 0.6,
+        language: 'Spanish',
+        format: 'markdown'
+      });
+
+      const callBody = JSON.parse((fetch as any).mock.calls[0][1].body);
+      expect(callBody.model).toBe('custom-model');
+      expect(callBody.options.temperature).toBe(0.6);
+      expect(mockOcrPrompt).toHaveBeenCalledWith({ language: 'Spanish', format: 'markdown' });
+
+      expect(result.model).toBe('custom-model');
+      expect(result.text).toBe('Texto detectado');
+    });
+
+    it('should throw when images array is empty', async () => {
+      await expect(provider.performOCR([])).rejects.toThrow('At least one image is required for OCR.');
     });
   });
 

@@ -3,7 +3,7 @@
     "ollama": {
       "enabled": true,
       "models": [
-        { "name": "llama3.2:latest", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "emailReply", "translate", "outline"], "notes": "Meta Llama 3.2 general-purpose model." },
+        { "name": "llama3.2:latest", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "vision", "ocr", "emailReply", "translate", "outline"], "notes": "Meta Llama 3.2 general-purpose model." },
         { "name": "qwen2.5-coder:latest", "capabilities": ["summarize", "web-search", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "emailReply", "outline"], "notes": "Qwen 2.5 coder-optimized variant for code tasks." },
         { "name": "gemma2:2b", "capabilities": ["summarize", "web-search", "pdf-summarizer", "rewrite", "compose", "planning", "keywords", "sentiment", "emailReply", "meetingNotes", "outline"], "notes": "Gemma 2 small variant for lightweight tasks." },
         { "name": "gemma3:4b", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "emailReply", "askText", "translate", "meetingNotes", "outline"], "notes": "Gemma 3 small variant for lightweight tasks with Q&A support." },

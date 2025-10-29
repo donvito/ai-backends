@@ -12,7 +12,7 @@ import {
 } from "../config/services";
 import { llmRequestSchema } from "../schemas/v1/llm";
 import { serviceRegistry } from "./registry";
-import type { ProviderName } from "./interfaces";
+import type { ProviderName, OCROptions, OCRResult } from "./interfaces";
 
 enum Provider {
   openai = 'openai',
@@ -49,6 +49,10 @@ export interface ImageDescriptionResponse {
     total_tokens: number;
   };
   service?: string; // Which service was actually used
+}
+
+export interface OCRServiceResponse extends OCRResult {
+  service: AIService;
 }
 
 /**
@@ -104,6 +108,34 @@ export async function generateImageResponse(
       total_tokens: (result.prompt_eval_count || 0) + (result.eval_count || 0),
     },
     service: service
+  };
+}
+
+/**
+ * Perform OCR on image inputs using providers with vision capabilities
+ */
+export async function performOCROnImages(
+  images: string[],
+  service: AIService = Provider.ollama,
+  model?: string,
+  options: OCROptions = {}
+): Promise<OCRServiceResponse> {
+  const provider = serviceRegistry.get(service);
+  if (!provider) {
+    throw new Error(`Provider not registered: ${service}`);
+  }
+
+  if (typeof provider.performOCR !== 'function') {
+    throw new Error(`OCR capabilities not supported for service: ${service}`);
+  }
+
+  const result: OCRResult = await provider.performOCR(images, model, options);
+  const resolvedModel = result.model || model || '';
+
+  return {
+    ...result,
+    model: resolvedModel,
+    service,
   };
 }
 

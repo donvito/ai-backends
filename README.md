@@ -41,6 +41,7 @@ Since APIs are ready to use, you don't need to understand prompt engineering. Ju
 | Endpoint | Description |
 |----------|-------------|
 | **/api/describe-image** | Describe an image (work in progress) |
+| **/api/ocr** | Extract text from images using OCR |
 
 More to come...check swagger docs for updated endpoints.
 

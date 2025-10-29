@@ -1,6 +1,6 @@
 import { z } from 'zod/v3';
-import { describeImagePrompt } from "../utils/prompts";
-import type { AIProvider } from './interfaces';
+import { describeImagePrompt, ocrPrompt } from "../utils/prompts";
+import type { AIProvider, OCROptions, OCRResult } from './interfaces';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { ollamaConfig } from '../config/services';
 
@@ -135,6 +135,51 @@ class OllamaProvider implements AIProvider {
       prompt_eval_duration: response.prompt_eval_duration,
       eval_count: response.eval_count,
       eval_duration: response.eval_duration
+    };
+  }
+
+  async performOCR(
+    images: string[],
+    model?: string,
+    options?: OCROptions
+  ): Promise<OCRResult> {
+    if (!images || images.length === 0) {
+      throw new Error('At least one image is required for OCR.');
+    }
+
+    const { temperature = 0, language, format = 'plain' } = options || {};
+    const modelToUse = model || "llama3.2:latest";
+
+    const messages = [
+      {
+        role: 'user',
+        content: ocrPrompt({ language, format }),
+        images: images
+      }
+    ];
+
+    const payload = {
+      model: modelToUse,
+      messages,
+      stream: false,
+      options: {
+        temperature
+      }
+    };
+
+    const response: OllamaChatResponse = await ollamaRequest('/api/chat', payload);
+    const text = response?.message?.content?.trim() || '';
+
+    return {
+      text,
+      model: response?.model || modelToUse,
+      created_at: response?.created_at,
+      usage: {
+        input_tokens: response?.prompt_eval_count || 0,
+        output_tokens: response?.eval_count || 0,
+        total_tokens: (response?.prompt_eval_count || 0) + (response?.eval_count || 0)
+      },
+      rawResponse: response
     };
   }
 

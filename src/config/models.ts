@@ -12,6 +12,7 @@ export type ModelCapability =
   | 'sentiment'
   | 'planning'
   | 'vision'
+  | 'ocr'
   | 'emailReply'
   | 'translate'
   | 'askText'

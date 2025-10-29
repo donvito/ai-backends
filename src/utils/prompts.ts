@@ -69,6 +69,33 @@ export function describeImagePrompt(): string {
 }
 
 
+export interface OcrPromptOptions {
+  language?: string;
+  format?: 'plain' | 'markdown';
+}
+
+export function ocrPrompt(options: OcrPromptOptions = {}): string {
+  const { language, format = 'plain' } = options;
+  const languageInstruction = language
+    ? `Return the transcription in ${language}.`
+    : 'Return the transcription in the language detected in the image.';
+  const formatInstruction = format === 'markdown'
+    ? 'Preserve headings and bullet structure using Markdown syntax when it appears in the image. Avoid code fences.'
+    : 'Return plain text without Markdown code fences or additional commentary.';
+
+  return `You are an OCR assistant. Extract every piece of legible text from the provided image.
+
+Rules:
+- Preserve the natural reading order and paragraph breaks.
+- ${languageInstruction}
+- ${formatInstruction}
+- If no readable text is present, respond exactly with "No text detected".
+- Do not describe visual elements or add explanations beyond the transcribed text.
+
+Return only the extracted text.`
+}
+
+
 /**
  * System prompt for sentiment analysis
  */

@@ -2,6 +2,24 @@ import { z } from 'zod/v3';
 
 export type ProviderName = 'openai' | 'anthropic' | 'ollama' | 'openrouter' | 'lmstudio' | 'aigateway' | 'llamacpp' | 'google' | 'baseten';
 
+export interface OCROptions {
+  temperature?: number;
+  language?: string;
+  format?: 'plain' | 'markdown';
+}
+
+export interface OCRResult {
+  text: string;
+  model: string;
+  created_at?: string;
+  usage?: {
+    input_tokens: number;
+    output_tokens: number;
+    total_tokens: number;
+  };
+  rawResponse?: unknown;
+}
+
 export interface AIProvider {
   name: ProviderName;
 
@@ -33,4 +51,11 @@ export interface AIProvider {
     stream?: boolean,
     temperature?: number
   ): Promise<any>;
+
+  // Optional OCR capability
+  performOCR?(
+    images: string[],
+    model?: string,
+    options?: OCROptions
+  ): Promise<OCRResult>;
 }
