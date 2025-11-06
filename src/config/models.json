@@ -28,7 +28,8 @@
         { "name": "gpt-oss-20b", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "GPT OSS 20B" },
         { "name": "qwen/qwen3-coder-30b", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "GPT OSS 20B" },
         { "name": "google/gemma-4-b", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Gemma 3 4B google" },
-        { "name": "google/gemma-3-12b", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Gemma 3 12B google" }
+        { "name": "google/gemma-3-12b", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Gemma 3 12B google" },
+        { "name": "google/gemma-3-27b", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Gemma 3 12B google" }
       ]
     },
     "openai": {
