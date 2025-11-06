@@ -1,5 +1,5 @@
 import { z } from 'zod/v3';
-import { aigatewayConfig } from '../config/services';
+import { aigatewayConfig, lmstudioConfig } from '../config/services';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { generateText, streamText, generateObject } from 'ai';
 import type { AIProvider } from './interfaces';
@@ -19,28 +19,23 @@ class AIGatewayProvider implements AIProvider {
   async generateChatStructuredResponse(
     prompt: string,
     schema: z.ZodType,
-    model: string = aigatewayConfig.model,
+    model?: string,
     temperature: number = 0
   ): Promise<any> {
+    
     try {
+      const modelToUse = openaiCompat(model || aigatewayConfig.chatModel);
+
       const result = await generateObject({
-        model: openaiCompat(model || aigatewayConfig.model),
+        model: modelToUse,
         schema,
         prompt,
         temperature,
       });
-
-      return {
-        object: result.object,
-        finishReason: result.finishReason,
-        usage: {
-          inputTokens: result.usage?.inputTokens || 0,
-          outputTokens: result.usage?.outputTokens || 0,
-          totalTokens: result.usage?.totalTokens || 0,
-        },
-        warnings: result.warnings,
-      };
+      
+      return result;
     } catch (error) {
+      console.error('AI Gateway structured response error: ', error);
       throw new Error(`AI Gateway structured response error: ${error}`);
     }
   }

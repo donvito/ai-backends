@@ -65,11 +65,9 @@
     "aigateway": {
       "enabled": true,
       "models": [
-        { "name": "openai/gpt-5-nano", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "GPT-5 nano is a high throughput model that excels at simple instruction or classification tasks." },
-        { "name": "gemini-2.0-flash-lite-preview-02-05", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Gemini 2.0 Flash Lite Preview 02-05" },
-        { "name": "mistral-small-2503", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Mistral Small" }
-
-        
+        { "name": "google/gemini-2.0-flash", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Gemini is a high throughput model that excels at simple instruction or classification tasks." }        ,
+        { "name" : "anthropic/claude-haiku-4.5", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Anthropic Claude 4.5 Haiku; fast and cost-effective" },
+        { "name" : "openai/gpt-4.1-mini", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "GPT 4.1 mini fast and cost-effective" }               
       ]
     },
     "google": {
@@ -94,4 +92,3 @@
     }
   }
 }
-
