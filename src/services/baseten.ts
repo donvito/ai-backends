@@ -7,7 +7,7 @@ import { basetenConfig } from '../config/services';
 const normalizedBase = (basetenConfig.baseURL || 'https://inference.baseten.co/v1').replace(/\/$/, '');
 const BASETEN_BASE_URL = normalizedBase;
 
-const baseten = createOpenAICompatible({
+const openaiCompat = createOpenAICompatible({
   name: 'baseten',
   baseURL: `${BASETEN_BASE_URL}`,
   headers: {
@@ -28,7 +28,7 @@ class BasetenProvider implements AIProvider {
       const modelToUse = model || basetenConfig.chatModel;
       
       const result = await generateObject({
-        model: baseten(modelToUse),
+        model: openaiCompat(modelToUse || basetenConfig.chatModel),
         schema,
         prompt,
         temperature,
@@ -56,7 +56,7 @@ class BasetenProvider implements AIProvider {
     temperature: number = 0
   ): Promise<any> {
     try {
-    const modelToUse = baseten(model || basetenConfig.model);
+    const modelToUse = openaiCompat(model || basetenConfig.model);
 
     const result = await generateText({
       model: modelToUse,
@@ -77,7 +77,7 @@ class BasetenProvider implements AIProvider {
     temperature: number = 0
   ): Promise<any> {
     try {
-    const modelToUse = baseten(model || basetenConfig.model);
+    const modelToUse = openaiCompat(model || basetenConfig.model);
 
     const result = streamText({
       model: modelToUse,

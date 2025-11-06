@@ -22,13 +22,10 @@ interface OllamaChatResponse {
   eval_duration?: number;
 }
 
-export function getOllamaClient() {
-  return createOpenAICompatible({
-    name: 'ollama',
-    baseURL: `${ollamaConfig.baseURL}/v1`,
-  });
-}
-
+const openaiCompat = createOpenAICompatible({
+  name: 'ollama',
+  baseURL: `${ollamaConfig.baseURL}/v1`,
+});
 
 /**
  * Make a request to Ollama API
@@ -144,19 +141,18 @@ class OllamaProvider implements AIProvider {
     model?: string,
     temperature: number = 0
   ): Promise<any> {
+    
     try {
-
-      const ollamaClient = getOllamaClient();
-      const modelToUse = ollamaClient(model || "gemma3:4b");
+      const modelToUse = openaiCompat(model || ollamaConfig.chatModel);
 
       const result = await generateObject({
         model: modelToUse,
-        prompt: prompt,
-        schema: schema,
-        temperature: temperature,
+        schema,
+        prompt,
+        temperature,
       });
 
-      return result;
+      return result;      
     } catch (error) {
       console.error('Ollama structured response error: ', error);
       throw new Error(`Ollama structured response error: ${error}`);
@@ -168,8 +164,7 @@ class OllamaProvider implements AIProvider {
     model?: string,
   ): Promise<any> {
     try {
-    const ollamaClient = getOllamaClient();
-    const modelToUse = ollamaClient(model || "gemma3:4b");
+    const modelToUse = openaiCompat(model || ollamaConfig.chatModel);
     console.log('OLLAMA_BASE_URL', ollamaConfig.baseURL);
     const result = await generateText({
       model: modelToUse,
@@ -186,10 +181,8 @@ class OllamaProvider implements AIProvider {
     prompt: string,
     model?: string,
   ): Promise<any> {
-    try {
-
-    const ollamaClient = getOllamaClient();
-    const modelToUse = ollamaClient(model || ollamaConfig.chatModel);
+    try {  
+    const modelToUse = openaiCompat(model || ollamaConfig.chatModel);
     console.log('OLLAMA STREAMING - BASE_URL', ollamaConfig.baseURL);
     const result = streamText({
       model: modelToUse,

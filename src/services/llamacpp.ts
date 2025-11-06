@@ -1,62 +1,17 @@
 import { z } from 'zod/v3';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
-import { generateText, streamText } from 'ai';
+import { generateObject, generateText, streamText } from 'ai';
 import type { AIProvider } from './interfaces';
-import OpenAI from 'openai';
-import { zodToJsonSchema } from 'zod-to-json-schema';
 import { llamacppConfig } from '../config/services';
 
 // Build base URL ensuring single trailing /v1
 const normalizedBase = (llamacppConfig.baseURL || 'http://localhost:8080').replace(/\/$/, '');
 const LLAMACPP_BASE_URL = `${normalizedBase}`;
 
-const llamacpp = createOpenAICompatible({
+const openaiCompat = createOpenAICompatible({
   name: 'llamacpp',
   baseURL: `${LLAMACPP_BASE_URL}`,
 });
-
-const openAIClient = new OpenAI({
-  baseURL: `${LLAMACPP_BASE_URL}/v1`,
-  apiKey: process.env.LLAMACPP_API_KEY || 'llama-cpp',
-});
-
-function parseLlamaCppStructuredResponse<T>(
-  completion: OpenAI.Chat.Completions.ChatCompletion,
-  schema: z.ZodType<T>,
-  modelFallback: string
-) {
-  const choice = Array.isArray(completion?.choices) ? completion.choices[0] : undefined;
-  const contentRaw = choice?.message?.content;
-
-  if (typeof contentRaw !== 'string') {
-    throw new Error('LlamaCpp returned non-string content for structured response');
-  }
-
-  let parsedObject: unknown;
-  try {
-    parsedObject = JSON.parse(contentRaw);
-  } catch (err) {
-    throw new Error(`Failed to parse assistant JSON content: ${String(err)}`);
-  }
-
-  const validation = schema.safeParse(parsedObject);
-  if (!validation.success) {
-    throw new Error(`Response failed schema validation: ${validation.error.message}`);
-  }
-
-  return {
-    object: validation.data,
-    finishReason: (choice as any)?.finish_reason ?? (choice as any)?.finishReason ?? null,
-    usage: {
-      inputTokens: (completion as any)?.usage?.prompt_tokens ?? 0,
-      outputTokens: (completion as any)?.usage?.completion_tokens ?? 0,
-      totalTokens: (completion as any)?.usage?.total_tokens ?? 0,
-    },
-    id: completion?.id,
-    model: (completion as any)?.model ?? modelFallback,
-  };
-
-} 
 
 class LlamaCppProvider implements AIProvider {
   name = 'llamacpp' as const;
@@ -67,25 +22,22 @@ class LlamaCppProvider implements AIProvider {
     model?: string,
     temperature: number = 0
   ): Promise<any> {
-    const modelId = model || llamacppConfig.chatModel;
+    
+    try {
+      const modelToUse = openaiCompat(model || llamacppConfig.chatModel);
 
-    const jsonSchema = zodToJsonSchema(schema);
-
-    const completion = await openAIClient.chat.completions.create({
-      model: modelId,
-      messages: [{ role: 'user', content: prompt }],
-      temperature: typeof temperature === 'number' ? temperature : 0,
-      response_format: {
-        type: 'json_schema',
-        json_schema: {
-          name: 'structured_output',
-          strict: true,
-          schema: jsonSchema,
-        },
-      } as any,
-    });
-
-    return parseLlamaCppStructuredResponse(completion, schema, modelId);
+      const result = await generateObject({
+        model: modelToUse,
+        schema,
+        prompt,
+        temperature,
+      });
+      
+      return result;
+    } catch (error) {
+      console.error('LlamaCpp structured response error: ', error);
+      throw new Error(`LlamaCpp structured response error: ${error}`);
+    }
   }
   
   
@@ -95,7 +47,7 @@ class LlamaCppProvider implements AIProvider {
     temperature: number = 0
   ): Promise<any> {
     try {
-    const modelToUse = llamacpp(model || 'default');
+    const modelToUse = openaiCompat(model || 'default');
 
     const result = await generateText({
       model: modelToUse,
@@ -116,7 +68,7 @@ class LlamaCppProvider implements AIProvider {
     temperature: number = 0
   ): Promise<any> {
     try {
-    const modelToUse = llamacpp(model || 'default');
+    const modelToUse = openaiCompat(model || 'default');
 
     const result = streamText({
       model: modelToUse,

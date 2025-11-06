@@ -7,7 +7,7 @@ import type { AIProvider } from './interfaces';
 const normalizedBase = (aigatewayConfig.baseURL || '').replace(/\/$/, '');
 const AIGATEWAY_BASE_URL = `${normalizedBase}`;
 
-const aigateway = createOpenAICompatible({
+const openaiCompat = createOpenAICompatible({
   name: 'aigateway',
   baseURL: `${aigatewayConfig.baseURL}`,
   apiKey: `${aigatewayConfig.apiKey}`
@@ -24,7 +24,7 @@ class AIGatewayProvider implements AIProvider {
   ): Promise<any> {
     try {
       const result = await generateObject({
-        model: aigateway(model || aigatewayConfig.model),
+        model: openaiCompat(model || aigatewayConfig.model),
         schema,
         prompt,
         temperature,
@@ -51,7 +51,7 @@ class AIGatewayProvider implements AIProvider {
     temperature: number = 0
   ): Promise<any> {
     try {
-    const modelToUse = aigateway(model || aigatewayConfig.chatModel);
+    const modelToUse = openaiCompat(model || aigatewayConfig.chatModel);
 
     const result = await generateText({
       model: modelToUse,
@@ -73,7 +73,7 @@ class AIGatewayProvider implements AIProvider {
     temperature: number = 0
   ): Promise<any> {
     try {
-    const modelToUse = aigateway(model || aigatewayConfig.chatModel);
+    const modelToUse = openaiCompat(model || aigatewayConfig.chatModel);
 
     const result = streamText({
       model: modelToUse,

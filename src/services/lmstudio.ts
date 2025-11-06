@@ -1,5 +1,5 @@
 import { z } from 'zod/v3';
-import { lmstudioConfig } from '../config/services';
+import { lmstudioConfig, ollamaConfig } from '../config/services';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { generateText, streamText, generateObject } from 'ai';
 import { zodToJsonSchema } from 'zod-to-json-schema';
@@ -10,53 +10,10 @@ import type { AIProvider } from './interfaces';
 const normalizedBase = (lmstudioConfig.baseURL || 'http://localhost:1234').replace(/\/$/, '');
 const LMSTUDIO_BASE_URL = `${normalizedBase}`;
 
-const lmstudio = createOpenAICompatible({
+const openaiCompat = createOpenAICompatible({
   name: 'lmstudio',
   baseURL: `${LMSTUDIO_BASE_URL}/v1`,
 });
-
-const openAIClient = new OpenAI({
-  baseURL: `${LMSTUDIO_BASE_URL}/v1`,
-  apiKey: process.env.LMSTUDIO_API_KEY || 'lm-studio',
-});
-
-
-function parseLmStudioStructuredResponse<T>(
-  completion: OpenAI.Chat.Completions.ChatCompletion,
-  schema: z.ZodType<T>,
-  modelFallback: string
-) {
-  const choice = Array.isArray(completion?.choices) ? completion.choices[0] : undefined;
-  const contentRaw = choice?.message?.content;
-
-  if (typeof contentRaw !== 'string') {
-    throw new Error('LM Studio returned non-string content for structured response');
-  }
-
-  let parsedObject: unknown;
-  try {
-    parsedObject = JSON.parse(contentRaw);
-  } catch (err) {
-    throw new Error(`Failed to parse assistant JSON content: ${String(err)}`);
-  }
-
-  const validation = schema.safeParse(parsedObject);
-  if (!validation.success) {
-    throw new Error(`Response failed schema validation: ${validation.error.message}`);
-  }
-
-  return {
-    object: validation.data,
-    finishReason: (choice as any)?.finish_reason ?? (choice as any)?.finishReason ?? null,
-    usage: {
-      inputTokens: (completion as any)?.usage?.prompt_tokens ?? 0,
-      outputTokens: (completion as any)?.usage?.completion_tokens ?? 0,
-      totalTokens: (completion as any)?.usage?.total_tokens ?? 0,
-    },
-    id: completion?.id,
-    model: (completion as any)?.model ?? modelFallback,
-  };
-}
 
 class LmStudioProvider implements AIProvider {
   name = 'lmstudio' as const;
@@ -67,26 +24,22 @@ class LmStudioProvider implements AIProvider {
     model?: string,
     temperature: number = 0
   ): Promise<any> {
-    const modelId = model || lmstudioConfig.chatModel;
+    
+    try {
+      const modelToUse = openaiCompat(model || lmstudioConfig.chatModel);
 
-    // Convert Zod schema to JSON Schema for LM Studio's OpenAI-compatible endpoint
-    const jsonSchema = zodToJsonSchema(schema);
-
-    const completion = await openAIClient.chat.completions.create({
-      model: modelId,
-      messages: [{ role: 'user', content: prompt }],
-      temperature: typeof temperature === 'number' ? temperature : 0,
-      response_format: {
-        type: 'json_schema',
-        json_schema: {
-          name: 'structured_output',
-          strict: true,
-          schema: jsonSchema,
-        },
-      } as any,
-    });
-
-    return parseLmStudioStructuredResponse(completion, schema, modelId);
+      const result = await generateObject({
+        model: modelToUse,
+        schema,
+        prompt,
+        temperature,
+      });
+      
+      return result;
+    } catch (error) {
+      console.error('LMStudio structured response error: ', error);
+      throw new Error(`LMStudio structured response error: ${error}`);
+    }
   }
 
   async generateChatTextResponse(
@@ -95,7 +48,7 @@ class LmStudioProvider implements AIProvider {
     temperature: number = 0
   ): Promise<any> {
     try {
-    const modelToUse = lmstudio(model || lmstudioConfig.chatModel);
+    const modelToUse = openaiCompat(model || lmstudioConfig.chatModel);
 
     const result = await generateText({
       model: modelToUse,
@@ -117,7 +70,7 @@ class LmStudioProvider implements AIProvider {
     temperature: number = 0
   ): Promise<any> {
     try {
-    const modelToUse = lmstudio(model || lmstudioConfig.chatModel);
+    const modelToUse = openaiCompat(model || lmstudioConfig.chatModel);
 
     const result = streamText({
       model: modelToUse,
