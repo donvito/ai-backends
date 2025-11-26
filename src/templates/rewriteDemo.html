@@ -617,7 +617,7 @@
     cancelBtn.addEventListener('click', (e) => { e.preventDefault(); cancel(); });
     loadSampleBtn.addEventListener('click', (e) => { e.preventDefault(); setSample(); });
 
-    initModels();
+    initModels().then(() => setSample());
     updatePreview();
   </script>
 </body>

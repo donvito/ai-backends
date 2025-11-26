@@ -64,6 +64,14 @@ export interface BasetenConfig extends ServiceConfig {
   timeout?: number;
 }
 
+export interface LLMGatewayConfig extends ServiceConfig {
+  apiKey: string;
+  baseURL: string;
+  model: string;
+  chatModel: string;
+  timeout?: number;
+}
+
 // OpenAI Configuration
 export const openaiConfig: OpenAIConfig = {
   name: 'OpenAI',
@@ -157,8 +165,20 @@ export const basetenConfig: BasetenConfig = {
   timeout: parseInt(process.env.BASETEN_TIMEOUT || '30000'),
 };
 
+// LLM Gateway Configuration
+export const llmgatewayConfig: LLMGatewayConfig = {
+  name: 'LLMGateway',
+  enabled: !!process.env.LLM_GATEWAY_API_KEY,
+  priority: 10,
+  apiKey: process.env.LLM_GATEWAY_API_KEY || '',
+  baseURL: process.env.LLM_GATEWAY_BASE_URL || 'https://api.llmgateway.io/v1',
+  model: process.env.LLM_GATEWAY_MODEL || 'gpt-oss-20b-free',
+  chatModel: process.env.LLM_GATEWAY_CHAT_MODEL || process.env.LLM_GATEWAY_MODEL || 'gpt-oss-20b-free',
+  timeout: parseInt(process.env.LLM_GATEWAY_TIMEOUT || '30000'),
+};
+
 // Available services
-export const availableServices = [openaiConfig, anthropicConfig, ollamaConfig, openrouterConfig, lmstudioConfig, aigatewayConfig, llamacppConfig, googleConfig, basetenConfig];
+export const availableServices = [openaiConfig, anthropicConfig, ollamaConfig, openrouterConfig, lmstudioConfig, aigatewayConfig, llamacppConfig, googleConfig, basetenConfig, llmgatewayConfig];
 
 // Get the primary service (highest priority enabled service)
 export function getPrimaryService(): ServiceConfig | null {

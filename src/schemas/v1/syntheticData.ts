@@ -4,7 +4,7 @@ import { llmRequestSchema } from './llm'
 /**
  * Schema for JSON schema definition that users can provide
  */
-export const jsonSchemaSchema = z.record(z.any()).describe('JSON Schema definition for the synthetic data structure')
+export const jsonSchemaSchema = z.record(z.string(), z.unknown()).describe('JSON Schema definition for the synthetic data structure')
 
 /**
  * Payload sent by the client for synthetic data generation endpoint.

@@ -1,3 +1,3 @@
 import { z } from 'zod';
 
-export const providersSupported = z.enum(['ollama', 'openai', 'anthropic', 'openrouter', 'lmstudio', 'aigateway', 'llamacpp', 'google', 'baseten']);
+export const providersSupported = z.enum(['ollama', 'openai', 'anthropic', 'openrouter', 'lmstudio', 'aigateway', 'llamacpp', 'google', 'baseten', 'llmgateway']);

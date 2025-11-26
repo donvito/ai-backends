@@ -26,6 +26,15 @@
         { "name": "nvidia_nvidia-nemotron-nano-9b-v2", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "NVIDIA Nemotron Nano 9B v2; compact high-performance model." }
       ]
     },
+    "llmgateway": {
+      "enabled": true,
+      "models": [
+        { "name": "gpt-oss-20b-free", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Free GPT OSS 20B model via LLM Gateway." },
+        { "name": "kimi-k2-0905-free", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Free Kimi K2 model via LLM Gateway." },
+        { "name": "deepseek-r1t2-chimera-free", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "DeepSeek via LLM Gateway." },
+        { "name": "gpt-4o-mini", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "GPT 4o mini via LLM Gateway." }
+      ]
+    },
     "openai": {
       "enabled": true,
       "models": [
@@ -35,6 +44,20 @@
         { "name": "gpt-5-nano", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "OpenAI next-gen nano model with Q&A capabilities." },
         { "name": "gpt-5", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "OpenAI next-gen model with Q&A capabilities." },
         { "name": "gpt-4o", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "vision", "emailReply", "translate", "meetingNotes", "outline"], "notes": "OpenAI next-gen vision model with Q&A capabilities." }
+      ]
+    },
+    "anthropic": {
+      "enabled": true,
+      "models": [
+        { "name": "claude-3-haiku-20240307", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Anthropic Claude 3 Haiku; fast and cost-effective with Q&A support." }
+      ]
+    },
+    "google": {
+      "enabled": true,
+      "models": [
+        { "name": "gemini-2.5-flash-lite", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "vision", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Google Gemini 2.5 Flash Lite with fast processing and vision capabilities." },
+        { "name": "gemini-2.5-flash", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "vision", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Google Gemini 2.5 Flash with advanced multimodal capabilities." },
+        { "name": "gemini-2.5-pro", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "vision", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Google Gemini 2.5 Pro with enhanced reasoning and vision support." }
       ]
     },
     "openrouter": {
@@ -51,12 +74,6 @@
         { "name": "nvidia/nemotron-nano-9b-v2", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "NVIDIA Nemotron Nano 9B v2; compact high-performance model." }
       ]
     },
-    "anthropic": {
-      "enabled": true,
-      "models": [
-        { "name": "claude-3-haiku-20240307", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Anthropic Claude 3 Haiku; fast and cost-effective with Q&A support." }
-      ]
-    },
     "aigateway": {
       "enabled": true,
       "models": [
@@ -65,14 +82,6 @@
         { "name": "mistral-small-2503", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Mistral Small" }
 
         
-      ]
-    },
-    "google": {
-      "enabled": true,
-      "models": [
-        { "name": "gemini-2.5-flash-lite", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "vision", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Google Gemini 2.5 Flash Lite with fast processing and vision capabilities." },
-        { "name": "gemini-2.5-flash", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "vision", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Google Gemini 2.5 Flash with advanced multimodal capabilities." },
-        { "name": "gemini-2.5-pro", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "vision", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Google Gemini 2.5 Pro with enhanced reasoning and vision support." }
       ]
     },
     "llamacpp": {
@@ -86,7 +95,7 @@
       "models": [
         { "name": "openai/gpt-oss-120b", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Baseten hosted OpenAI GPT OSS 120B model with comprehensive capabilities." }
       ]
-    }
+    }    
   }
 }
 
