@@ -191,41 +191,15 @@ BASETEN_BASE_URL=https://inference.baseten.co/v1
 LLM_GATEWAY_API_KEY=your-llm-gateway-api-key
 ```
 
-### Google Gemini Setup
+### LLM Gateway Setup (Recommended for Cloud Providers)
 
-To use Google Gemini models:
+[LLM Gateway](https://dub.sh/try-llmgw) provides a unified API to access multiple LLM providers with a single API key. It includes several free models to get started.
 
-1. Get your API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
-2. Set `GOOGLE_AI_API_KEY` in your `.env` file
-3. Optionally configure `GEMINI_MODEL` (defaults to `gemini-2.5-flash-lite`)
-
-Available Gemini models:
-- `gemini-2.5-flash-lite` (default)
-- `gemini-2.5-flash`
-- `gemini-2.5-pro`
-- `gemini-pro-vision`
-
-**Note**: The Gemini provider uses Google's OpenAI-compatible interface to maintain compatibility with AI SDK v4.
-
-### LLM Gateway Setup (Recommended)
-
-[LLM Gateway](https://dub.sh/try-llmgw-gh) provides a unified API to access multiple LLM providers with a single API key. It includes several free models to get started.
-
-1. Sign up at [LLM Gateway](https://dub.sh/try-llmgw-gh)
+1. Sign up at [LLM Gateway](https://dub.sh/try-llmgw)
 2. Get your API key from the dashboard
 3. Set `LLM_GATEWAY_API_KEY` in your `.env` file
 
-Available models:
-- `gpt-oss-20b-free` (default)
-- `glm-4.5-air-free`
-- `llama-3.3-70b-instruct-free`
-- `glm-4.5-flash`
-- `llama-4-maverick-free`
-- `kimi-k2-0905-free`
-- `llama-4-scout-free`
-
 **Important:** Make sure to add `.env` to your `.gitignore` file to avoid committing sensitive information to version control.
-
 
 ## Tech Stack
 
