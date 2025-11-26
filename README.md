@@ -56,13 +56,14 @@ More to come...check swagger docs for updated endpoints.
 ### Cloud Providers
 | Provider | Description | Status |
 |----------|-------------|--------|
-| [LLM Gateway](https://dub.sh/try-llmgw-gh) | **Recommended** - Unified API for multiple LLM providers with free models | Available |
+| [LLM Gateway](https://dub.sh/try-llmgw) | **Recommended** - Unified API for multiple LLM providers with free models | Available |
 | [OpenAI](https://openai.com/) | GPT models | Available |
 | [Anthropic](https://www.anthropic.com/) | Claude models | Available |
 | [OpenRouter](https://openrouter.ai/) | Open source and private models |  Available |
 | [Vercel AI Gateway](https://vercel.com/ai-gateway) | Open source and private models | Available |
 | [Google AI Studio](https://ai.google.dev/) | Gemini models via OpenAI-compatible interface | Available |
 | [Baseten](https://baseten.co/) | Cloud-hosted ML models with OpenAI-compatible API | Available |
+
 
 ## Run the project
 
