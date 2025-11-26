@@ -27,10 +27,16 @@ class LLMGatewayProvider implements AIProvider {
     try {
       const modelToUse = model || llmgatewayConfig.chatModel;
       
+      // OpenAI-compatible APIs require the word "json" in the prompt when using response_format: json_object
+      // The generateObject function uses json_object format, so we need to ensure "json" is in the prompt
+      const promptWithJson = prompt.toLowerCase().includes('json') 
+        ? prompt 
+        : `${prompt}\n\nReturn the response as valid JSON.`;
+      
       const result = await generateObject({
         model: llmgateway(modelToUse),
         schema,
-        prompt,
+        prompt: promptWithJson,
         temperature,
       });
 
