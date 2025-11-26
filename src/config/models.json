@@ -32,7 +32,7 @@
         { "name": "gpt-oss-20b-free", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Free GPT OSS 20B model via LLM Gateway." },
         { "name": "kimi-k2-0905-free", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Free Kimi K2 model via LLM Gateway." },
         { "name": "deepseek-r1t2-chimera-free", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "DeepSeek via LLM Gateway." },
-        { "name": "gpt-4o-mini", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "DeepSeek via LLM Gateway." }
+        { "name": "gpt-4o-mini", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "GPT 4o mini via LLM Gateway." }
       ]
     },
     "openai": {
