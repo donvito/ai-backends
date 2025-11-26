@@ -2,7 +2,7 @@
 
 AIBackends is an API server that you can use to integrate AI into your applications. You can run it locally or self-host it.
 
-The project supports running open source models locally with Ollama and LM Studio. It also supports OpenRouter, OpenAI and Anthropic.
+The project supports running open models locally with Ollama, LM Studio or LlamaCpp. It also supports LLM Gateway, OpenRouter, OpenAI, Anthropic and Google AI Studio, Baseten providers.
 
 ## Why AI Backends?
 
@@ -46,19 +46,23 @@ More to come...check swagger docs for updated endpoints.
 
 ## Supported LLM Providers
 
+### Local Providers
+| Provider | Description | Status |
+|----------|-------------|--------|
+| [Ollama](https://ollama.ai/) | Local models (self-hosted) |  Available |
+| [LM Studio](https://lmstudio.ai/) | Local models via OpenAI-compatible API (self-hosted) | Available |
+| [LlamaCpp](https://github.com/ggml-org/llama.cpp) | Local models via llama.cpp server (self-hosted) | Available |
+
+### Cloud Providers
 | Provider | Description | Status |
 |----------|-------------|--------|
 | [LLM Gateway](https://dub.sh/try-llmgw-gh) | **Recommended** - Unified API for multiple LLM providers with free models | Available |
-| [Ollama](https://ollama.ai/) | Local models (self-hosted) |  Available |
-| [LM Studio](https://lmstudio.ai/) | Local models via OpenAI-compatible API (self-hosted) | Available |
 | [OpenAI](https://openai.com/) | GPT models | Available |
 | [Anthropic](https://www.anthropic.com/) | Claude models | Available |
 | [OpenRouter](https://openrouter.ai/) | Open source and private models |  Available |
 | [Vercel AI Gateway](https://vercel.com/ai-gateway) | Open source and private models | Available |
-| [LlamaCpp](https://github.com/ggml-org/llama.cpp) | Local models via llama.cpp server (self-hosted) | Available |
-| [Google Gemini](https://ai.google.dev/) | Gemini models via OpenAI-compatible interface | Available |
+| [Google AI Studio](https://ai.google.dev/) | Gemini models via OpenAI-compatible interface | Available |
 | [Baseten](https://baseten.co/) | Cloud-hosted ML models with OpenAI-compatible API | Available |
-
 
 ## Run the project
 
