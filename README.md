@@ -48,6 +48,7 @@ More to come...check swagger docs for updated endpoints.
 
 | Provider | Description | Status |
 |----------|-------------|--------|
+| [LLM Gateway](https://dub.sh/try-llmgw-gh) | **Recommended** - Unified API for multiple LLM providers with free models | Available |
 | [Ollama](https://ollama.ai/) | Local models (self-hosted) |  Available |
 | [LM Studio](https://lmstudio.ai/) | Local models via OpenAI-compatible API (self-hosted) | Available |
 | [OpenAI](https://openai.com/) | GPT models | Available |
@@ -180,6 +181,9 @@ OPENROUTER_API_KEY=your-openrouter-api-key
 # Baseten Configuration
 BASETEN_API_KEY=your-baseten-api-key
 BASETEN_BASE_URL=https://inference.baseten.co/v1
+
+# LLM Gateway Configuration (Recommended)
+LLM_GATEWAY_API_KEY=your-llm-gateway-api-key
 ```
 
 ### Google Gemini Setup
@@ -197,6 +201,23 @@ Available Gemini models:
 - `gemini-pro-vision`
 
 **Note**: The Gemini provider uses Google's OpenAI-compatible interface to maintain compatibility with AI SDK v4.
+
+### LLM Gateway Setup (Recommended)
+
+[LLM Gateway](https://dub.sh/try-llmgw-gh) provides a unified API to access multiple LLM providers with a single API key. It includes several free models to get started.
+
+1. Sign up at [LLM Gateway](https://dub.sh/try-llmgw-gh)
+2. Get your API key from the dashboard
+3. Set `LLM_GATEWAY_API_KEY` in your `.env` file
+
+Available models:
+- `gpt-oss-20b-free` (default)
+- `glm-4.5-air-free`
+- `llama-3.3-70b-instruct-free`
+- `glm-4.5-flash`
+- `llama-4-maverick-free`
+- `kimi-k2-0905-free`
+- `llama-4-scout-free`
 
 **Important:** Make sure to add `.env` to your `.gitignore` file to avoid committing sensitive information to version control.
 
