@@ -709,6 +709,10 @@ Beyond Mars lies the asteroid belt, a region filled with rocky debris left over 
 
     // Fallback options if fetch fails or endpoint is unavailable
     const fallbackModelOptions = {
+      llmgateway: [
+        { value: 'gpt-oss-20b-free', label: 'gpt-oss-20b-free' },
+        { value: 'llama-3.3-70b-instruct-free', label: 'llama-3.3-70b-instruct-free' }
+      ],
       ollama: [
         { value: 'gemma3:4b', label: 'gemma3:4b (default)' }
       ],
@@ -725,6 +729,31 @@ Beyond Mars lies the asteroid belt, a region filled with rocky debris left over 
         { value: 'llama-3.2-3b-instruct', label: 'llama-3.2-3b-instruct' }
       ]
     };
+
+    function updateProviderDropdown() {
+      const providerEl = document.getElementById('provider');
+      const source = modelOptions || fallbackModelOptions;
+      const providers = Object.keys(source);
+      const currentValue = providerEl.value;
+
+      // Clear existing options
+      providerEl.innerHTML = '';
+
+      // Add new options
+      providers.forEach(provider => {
+        const option = document.createElement('option');
+        option.value = provider;
+        option.textContent = provider;
+        providerEl.appendChild(option);
+      });
+
+      // Restore selection if still valid, otherwise select first
+      if (providers.includes(currentValue)) {
+        providerEl.value = currentValue;
+      } else if (providers.length > 0) {
+        providerEl.value = providers[0];
+      }
+    }
 
     function updateModelOptions() {
       const provider = document.getElementById('provider').value;
@@ -771,6 +800,7 @@ Beyond Mars lies the asteroid belt, a region filled with rocky debris left over 
         console.warn('Failed to fetch outline models, using fallback:', e);
         modelOptions = null; // fall back to static options
       }
+      updateProviderDropdown();
       updateModelOptions();
     }
 
