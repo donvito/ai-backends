@@ -100,7 +100,6 @@ class ZAIProvider implements AIProvider {
   async getAvailableModels(): Promise<string[]> {
     return [
       'glm-4.5',
-      'glm-4.6V',
       'glm-4.6v',
       'glm-4.6v-flash',
       'glm-4.5-air',
