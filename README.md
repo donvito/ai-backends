@@ -12,73 +12,6 @@ Since APIs are ready to use, you don't need to understand prompt engineering. Ju
 
 ![AI Backends](images/run-aibackends.png)
 
-## Available APIs
-
-### Text Processing
-| Endpoint | Description |
-|----------|-------------|
-| **/api/summarize** | Summarize long text content into concise, key points |
-| **/api/translate** | Translate text between different languages |
-| **/api/sentiment** | Analyze the emotional tone and sentiment of text |
-| **/api/keywords** | Extract important keywords and phrases from text |
-| **/api/email-reply** | Generate professional email responses based on context |
-| **/api/ask-text** | Ask questions about provided text and get intelligent answers |
-| **/api/highlighter** | Identify and highlight the most important information in text |
-| **/api/meeting-notes** | Transform meeting notes into structured summaries |
-| **/api/project-planner** | Create detailed project plans with steps, timelines, and considerations |
-| **/api/rewrite** | Rewrite text with instructions (improve, shorten, fix grammar, tone) |
-| **/api/compose** | Compose short-form text given a topic |
-| **/api/pdf-summarizer** | Extract and summarize content from PDF documents with AI |
-| **/api/web-search** | Perform web searches and get AI-powered summaries of results |
-
-#### Text Processing Examples
-
-**Web Search** - Search the web and get AI-powered summaries:
-
-![Web Search Example](images/websearch-example.png)
-
-**Keywords Extraction** - Extract important keywords from text:
-
-![Keywords Example](images/keywords-example.png)
-
-**Sentiment Analysis** - Analyze emotional tone of text:
-
-![Sentiment Example](images/sentiment-example.png)
-
-**Translation** - Translate text between languages:
-
-![Translate Example](images/translate-example.png)
-
-### Data Generation
-| Endpoint | Description |
-|----------|-------------|
-| **/api/synthetic-data** | Generate realistic synthetic data based on prompts with optional JSON schema validation |
-
-**Synthetic Data Generation** - Generate realistic test data with custom schemas:
-
-![Synthetic Data Example](images/synthetic-data-example.png)
-
-### Image Processing
-
-| Endpoint | Description |
-|----------|-------------|
-| **/api/vision** | Analyze images with vision AI - ask questions, detect objects, get coordinates (ZAI GLM-4.6v) |
-| **/api/ocr** | Extract structured data from images using OCR with optional JSON schema output (ZAI GLM-4.6V) |
-
-#### Vision AI Examples
-
-AIBackends includes powerful vision capabilities powered by ZAI GLM-4.6v models. You can ask questions about images, detect objects, and extract structured data.
-
-**Vision Q&A** - Ask questions about any image:
-
-![Vision Example](images/vision-example.png)
-
-**OCR Extraction** - Extract structured data from documents, receipts, and invoices:
-
-![OCR Example](images/ocr-example.png)
-
-More to come...check swagger docs for updated endpoints.
-
 ## Supported LLM Providers
 
 ### Local Providers
@@ -100,6 +33,68 @@ More to come...check swagger docs for updated endpoints.
 | [Baseten](https://baseten.co/) | Cloud-hosted ML models with OpenAI-compatible API | Available |
 | [ZAI](https://z.ai/) | GLM models with vision/OCR capabilities | Available |
 
+## Set up environment variables
+
+Create a `.env` file in the root directory of this project and configure your preferred AI services:
+
+```env
+# General Configuration
+DEFAULT_ACCESS_TOKEN=your-secret-api-key
+
+# CORS Configuration
+CORS_ALLOWED_ORIGINS=http://localhost:3000,https://example.com,https://*.example.com
+
+# OpenAI Configuration
+OPENAI_API_KEY=your-openai-api-key
+
+# Anthropic Configuration
+ANTHROPIC_API_KEY=your-anthropic-api-key
+
+# Google Gemini Configuration
+GOOGLE_AI_API_KEY=your-google-ai-api-key
+GEMINI_MODEL=gemini-2.5-flash-lite
+
+# Ollama Configuration
+OLLAMA_ENABLED=true
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_TIMEOUT=30000
+
+# You can change OLLAMA_BASE_URL to use a remote Ollama instance
+ 
+# LlamaCpp Configuration
+LLAMACPP_BASE_URL=http://localhost:8080
+
+# You can change LLAMACPP_BASE_URL to use a remote LlamaCpp instance
+ 
+# LM Studio Configuration 
+LMSTUDIO_ENABLED=true
+LMSTUDIO_BASE_URL=http://localhost:1234
+
+# You can change LMSTUDIO_BASE_URL to use a remote LM Studio instance
+
+# OpenRouter Configuration 
+OPENROUTER_API_KEY=your-openrouter-api-key
+
+# Baseten Configuration
+BASETEN_API_KEY=your-baseten-api-key
+BASETEN_BASE_URL=https://inference.baseten.co/v1
+
+# LLM Gateway Configuration (Recommended)
+LLM_GATEWAY_API_KEY=your-llm-gateway-api-key
+
+# ZAI Configuration (for Vision/OCR endpoints)
+ZAI_API_KEY=your-zai-api-key
+```
+
+### LLM Gateway Setup (Recommended for Cloud Providers)
+
+[LLM Gateway](https://dub.sh/try-llmgw) provides a unified API to access multiple LLM providers with a single API key. It includes several free models to get started.
+
+1. Sign up at [LLM Gateway](https://dub.sh/try-llmgw)
+2. Get your API key from the dashboard
+3. Set `LLM_GATEWAY_API_KEY` in your `.env` file
+
+**Important:** Make sure to add `.env` to your `.gitignore` file to avoid committing sensitive information to version control.
 
 ## Run the project
 
@@ -177,68 +172,72 @@ Notes
 - With Docker Compose, the app container can reach the Ollama service over the compose network (service name: ollama, port: 11434).
 - You can customize which models are pulled by editing the ollama service command in docker-compose.yml.
 
-## Set up environment variables
+## Available APIs
 
-Create a `.env` file in the root directory of this project and configure your preferred AI services:
+### Text Processing
+| Endpoint | Description |
+|----------|-------------|
+| **/api/summarize** | Summarize long text content into concise, key points |
+| **/api/translate** | Translate text between different languages |
+| **/api/sentiment** | Analyze the emotional tone and sentiment of text |
+| **/api/keywords** | Extract important keywords and phrases from text |
+| **/api/email-reply** | Generate professional email responses based on context |
+| **/api/ask-text** | Ask questions about provided text and get intelligent answers |
+| **/api/highlighter** | Identify and highlight the most important information in text |
+| **/api/meeting-notes** | Transform meeting notes into structured summaries |
+| **/api/project-planner** | Create detailed project plans with steps, timelines, and considerations |
+| **/api/rewrite** | Rewrite text with instructions (improve, shorten, fix grammar, tone) |
+| **/api/compose** | Compose short-form text given a topic |
+| **/api/pdf-summarizer** | Extract and summarize content from PDF documents with AI |
+| **/api/web-search** | Perform web searches and get AI-powered summaries of results |
 
-```env
-# General Configuration
-DEFAULT_ACCESS_TOKEN=your-secret-api-key
+#### Text Processing Examples
 
-# CORS Configuration
-CORS_ALLOWED_ORIGINS=http://localhost:3000,https://example.com,https://*.example.com
+**Web Search** - Search the web and get AI-powered summaries:
 
-# OpenAI Configuration
-OPENAI_API_KEY=your-openai-api-key
+![Web Search Example](images/websearch-example.png)
 
-# Anthropic Configuration
-ANTHROPIC_API_KEY=your-anthropic-api-key
+**Keywords Extraction** - Extract important keywords from text:
 
-# Google Gemini Configuration
-GOOGLE_AI_API_KEY=your-google-ai-api-key
-GEMINI_MODEL=gemini-2.5-flash-lite
+![Keywords Example](images/keywords-example.png)
 
-# Ollama Configuration
-OLLAMA_ENABLED=true
-OLLAMA_BASE_URL=http://localhost:11434
-OLLAMA_TIMEOUT=30000
+**Sentiment Analysis** - Analyze emotional tone of text:
 
-# You can change OLLAMA_BASE_URL to use a remote Ollama instance
- 
-# LlamaCpp Configuration
-LLAMACPP_BASE_URL=http://localhost:8080
+![Sentiment Example](images/sentiment-example.png)
 
-# You can change LLAMACPP_BASE_URL to use a remote LlamaCpp instance
- 
-# LM Studio Configuration 
-LMSTUDIO_ENABLED=true
-LMSTUDIO_BASE_URL=http://localhost:1234
+**Translation** - Translate text between languages:
 
-# You can change LMSTUDIO_BASE_URL to use a remote LM Studio instance
+![Translate Example](images/translate-example.png)
 
-# OpenRouter Configuration 
-OPENROUTER_API_KEY=your-openrouter-api-key
+### Data Generation
+| Endpoint | Description |
+|----------|-------------|
+| **/api/synthetic-data** | Generate realistic synthetic data based on prompts with optional JSON schema validation |
 
-# Baseten Configuration
-BASETEN_API_KEY=your-baseten-api-key
-BASETEN_BASE_URL=https://inference.baseten.co/v1
+**Synthetic Data Generation** - Generate realistic test data with custom schemas:
 
-# LLM Gateway Configuration (Recommended)
-LLM_GATEWAY_API_KEY=your-llm-gateway-api-key
+![Synthetic Data Example](images/synthetic-data-example.png)
 
-# ZAI Configuration (for Vision/OCR endpoints)
-ZAI_API_KEY=your-zai-api-key
-```
+### Image Processing
 
-### LLM Gateway Setup (Recommended for Cloud Providers)
+| Endpoint | Description |
+|----------|-------------|
+| **/api/vision** | Analyze images with vision AI - ask questions, detect objects, get coordinates (ZAI GLM-4.6v) |
+| **/api/ocr** | Extract structured data from images using OCR with optional JSON schema output (ZAI GLM-4.6V) |
 
-[LLM Gateway](https://dub.sh/try-llmgw) provides a unified API to access multiple LLM providers with a single API key. It includes several free models to get started.
+#### Vision AI Examples
 
-1. Sign up at [LLM Gateway](https://dub.sh/try-llmgw)
-2. Get your API key from the dashboard
-3. Set `LLM_GATEWAY_API_KEY` in your `.env` file
+AIBackends includes powerful vision capabilities powered by ZAI GLM-4.6v models. You can ask questions about images, detect objects, and extract structured data.
 
-**Important:** Make sure to add `.env` to your `.gitignore` file to avoid committing sensitive information to version control.
+**Vision Q&A** - Ask questions about any image:
+
+![Vision Example](images/vision-example.png)
+
+**OCR Extraction** - Extract structured data from documents, receipts, and invoices:
+
+![OCR Example](images/ocr-example.png)
+
+More to come...check swagger docs for updated endpoints.
 
 ## Tech Stack
 
