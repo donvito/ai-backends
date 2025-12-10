@@ -314,6 +314,8 @@ curl --location 'http://localhost:3000/api/v1/summarize' \
 - JSON Editor: `http://localhost:3000/api/jsoneditor`
 - LLM-Friendly API Docs: `http://localhost:3000/api/llms.txt`. Copy the contents of this file and paste it into AI builder tools like Bolt.new, v0, Lovable, or AI coding assistants to help them understand and use the AIBackends API endpoints.
 
+![LLMs.txt Example](images/llms-txt-example.png)
+
 ## Testing Examples
 
 Check swagger docs for examples.
