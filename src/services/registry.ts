@@ -10,6 +10,7 @@ import llamacppProvider from './llamacpp';
 import geminiProvider from './google';
 import basetenProvider from './baseten';
 import llmgatewayProvider from './llmgateway';
+import zaiProvider from './zai';
 
 export class ServiceRegistry {
   private providers = new Map<ProviderName, AIProvider>();
@@ -48,6 +49,7 @@ serviceRegistry.register(llamacppProvider);
 serviceRegistry.register(geminiProvider);
 serviceRegistry.register(basetenProvider);
 serviceRegistry.register(llmgatewayProvider);
+serviceRegistry.register(zaiProvider);
 
 // Helper for tests to replace the registry content
 export function replaceRegistryForTests(registry: ServiceRegistry) {

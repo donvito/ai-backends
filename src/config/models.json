@@ -95,7 +95,17 @@
       "models": [
         { "name": "openai/gpt-oss-120b", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "Baseten hosted OpenAI GPT OSS 120B model with comprehensive capabilities." }
       ]
-    }    
+    },
+    "zai": {
+      "enabled": true,
+      "models": [
+        { "name": "glm-4.5", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "GLM 4.5 general-purpose model via ZAI." },
+        { "name": "glm-4.6v", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "vision", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "GLM 4.6v multimodal model with vision capabilities via ZAI." },
+        { "name": "glm-4.6v-flash", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "vision", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "GLM 4.6v Flash fast multimodal model with vision via ZAI." },
+        { "name": "glm-4.5-air", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "GLM 4.5 Air lightweight model via ZAI." },
+        { "name": "glm-4.5-airx", "capabilities": ["summarize", "web-search", "pdf-summarizer", "pdf-translate", "rewrite", "compose", "planning", "keywords", "sentiment", "askText", "emailReply", "translate", "meetingNotes", "outline"], "notes": "GLM 4.5 AirX extended lightweight model via ZAI." }
+      ]
+    }
   }
 }
 

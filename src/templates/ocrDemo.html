@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Backends - OCR Demo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'brand-purple': '#B341F9',
+            'brand-pink': '#E453C0',
+            'terminal-bg': '#1C2128',
+            'terminal-text': '#A7B5C4'
+          },
+          backgroundImage: {
+            'gradient-brand': 'linear-gradient(135deg, #B341F9, #E453C0)',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .metrics-container {
+      background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+      border-radius: 12px;
+      padding: 12px;
+      border: 1px solid #e5e7eb;
+    }
+    .metric-item {
+      background: white;
+      padding: 8px 12px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    .metric-icon {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .metric-label {
+      font-size: 12px;
+      color: #6b7280;
+      font-weight: 500;
+    }
+    .metric-value {
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .image-preview {
+      max-height: 250px;
+      object-fit: contain;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+      cursor: zoom-in;
+      transition: opacity 0.2s;
+    }
+    .image-preview:hover {
+      opacity: 0.9;
+    }
+    .image-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: rgba(0, 0, 0, 0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: zoom-out;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s, visibility 0.3s;
+    }
+    .image-modal.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    .image-modal img {
+      max-width: 90vw;
+      max-height: 90vh;
+      object-fit: contain;
+      border-radius: 8px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+    .image-modal .close-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      color: white;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .image-modal .close-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    .copy-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      padding: 6px 12px;
+      background: rgba(255, 255, 255, 0.1);
+      color: #a7f3d0;
+      border: 1px solid rgba(167, 243, 208, 0.3);
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .copy-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    .copy-btn.copied {
+      background: rgba(34, 197, 94, 0.3);
+      color: #86efac;
+    }
+  </style>
+  <script src="/api/shared/safedom.js"></script>
+</head>
+<body class="bg-white min-h-screen">
+  <!-- Navigation -->
+  <nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100">
+    <div class="container mx-auto px-6 py-4">
+      <div class="flex justify-between items-center">
+        <a href="/" class="flex items-center space-x-2">
+          <div class="w-10 h-10 rounded-xl bg-[#B341F9] flex items-center justify-center">
+            <span class="text-white font-bold text-xl">AI</span>
+          </div>
+          <span class="text-2xl font-bold text-gray-900">Backends</span>
+          <span class="ml-2 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-50 text-green-700">
+            <svg class="w-4 h-4 mr-1" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0020 10.017C20 4.484 15.522 0 10 0z"/>
+            </svg>
+            Open Source
+          </span>
+        </a>
+        <div class="flex items-center space-x-6">
+          <a href="/api/ui" target="_blank" class="text-gray-700 hover:text-brand-purple transition-colors duration-300">API Docs</a>
+          <a href="/api/demos" class="text-gray-700 hover:text-brand-purple transition-colors duration-300">Demos</a>
+          <a href="/api/jsoneditor" target="_blank" class="text-gray-700 hover:text-brand-purple transition-colors duration-300">JSON Editor</a>
+          <a href="/api/models" class="text-gray-700 hover:text-brand-purple transition-colors duration-300">Models Guide</a>
+          <a href="https://github.com/donvito/ai-backend" class="inline-flex items-center px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors duration-300">
+            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 0C4.477 0 0 4.484 0 10.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0020 10.017C20 4.484 15.522 0 10 0z" clip-rule="evenodd"/>
+            </svg>
+            GitHub
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container mx-auto px-6 py-12">
+    <!-- Breadcrumb -->
+    <nav class="mb-6 text-sm">
+      <ol class="flex items-center space-x-2 text-gray-500">
+        <li><a href="/" class="hover:text-gray-700">Home</a></li>
+        <li><span>/</span></li>
+        <li><a href="/api/demos" class="hover:text-gray-700">Demos</a></li>
+        <li><span>/</span></li>
+        <li class="text-gray-900 font-medium">OCR</li>
+      </ol>
+    </nav>
+
+    <!-- Demo Title and Description -->
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-bold text-gray-900 mb-3">OCR Demo</h1>
+      <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+        Extract structured data from images using ZAI GLM-4.6V. Define a JSON schema to get formatted output from receipts, documents, and more.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
+      <!-- Controls -->
+      <section class="bg-white p-6 rounded-2xl border border-gray-100 shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <h2 class="text-lg font-semibold mb-3">Input</h2>
+
+        <label class="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
+        <input type="url" id="imageUrl" class="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple bg-white" placeholder="Enter image URL..." />
+
+        <!-- Image Preview -->
+        <div id="imagePreviewContainer" class="mt-4 hidden">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Preview <span class="text-gray-400 font-normal">(click to zoom)</span></label>
+          <img id="imagePreview" class="image-preview w-full" alt="Image preview" onclick="openImageModal()" />
+        </div>
+
+        <!-- Image Modal -->
+        <div id="imageModal" class="image-modal" onclick="closeImageModal()">
+          <button class="close-btn" onclick="closeImageModal()" title="Close">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <img id="modalImage" src="" alt="Zoomed image" onclick="event.stopPropagation()" />
+        </div>
+
+        <label class="block text-sm font-medium text-gray-700 mb-1 mt-4">Extraction Prompt</label>
+        <textarea id="prompt" class="w-full h-20 p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple bg-white" placeholder="What data should be extracted from this image?"></textarea>
+
+        <label class="block text-sm font-medium text-gray-700 mb-1 mt-4">JSON Schema (optional)</label>
+        <textarea id="jsonSchema" class="w-full h-32 p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple bg-white font-mono text-sm" placeholder='{"store_name": "string", "total": "number", "items": [{"name": "string", "price": "number"}]}'></textarea>
+        <p class="text-xs text-gray-500 mt-1">Define the structure of the data you want to extract</p>
+
+        <!-- Quick Samples -->
+        <div class="mt-3">
+          <div class="text-xs text-gray-500 mb-2">Sample extractions:</div>
+          <div class="flex flex-wrap gap-2">
+            <button type="button" id="chipReceipt" class="px-3 py-1.5 text-sm bg-gray-50 text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-100">Receipt</button>
+            <button type="button" id="chipBusinessCard" class="px-3 py-1.5 text-sm bg-gray-50 text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-100">Business Card</button>
+            <button type="button" id="chipInvoice" class="px-3 py-1.5 text-sm bg-gray-50 text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-100">Invoice</button>
+            <button type="button" id="chipDocument" class="px-3 py-1.5 text-sm bg-gray-50 text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-100">Document</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 mt-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Model</label>
+            <select id="model" class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple">
+              <option value="glm-4.6v">GLM-4.6V</option>
+              <option value="glm-4.6v-flash">GLM-4.6V Flash</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Bearer Token</label>
+            <input id="token" type="password" placeholder="Optional" class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple" />
+          </div>
+        </div>
+
+        <div class="mt-4 flex items-center gap-2">
+          <button id="runBtn" class="px-4 py-2 rounded-lg bg-brand-purple text-white hover:bg-[#9935D9]">Extract Data</button>
+          <button id="cancelBtn" class="hidden px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700">Cancel</button>
+        </div>
+
+        <details class="mt-4">
+          <summary class="text-sm text-gray-600 cursor-pointer">View JSON request</summary>
+          <pre id="jsonPreview" class="mt-2 bg-gray-900 text-green-400 p-3 rounded-lg text-xs mono overflow-auto max-h-48"></pre>
+        </details>
+      </section>
+
+      <!-- Output -->
+      <section class="bg-white p-6 rounded-2xl border border-gray-100 shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <h2 class="text-lg font-semibold mb-3">Extracted Data</h2>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="hidden">
+          <div class="flex items-center justify-center py-12">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-purple"></div>
+          </div>
+          <p class="text-center text-gray-600 mt-2">Extracting data...</p>
+        </div>
+
+        <!-- Usage Metrics -->
+        <div id="metricsContainer" class="mb-4 hidden"></div>
+
+        <!-- Parse Error Warning -->
+        <div id="parseErrorSection" class="mb-4 hidden">
+          <div class="bg-yellow-50 rounded-lg border border-yellow-200 p-3">
+            <div class="flex items-center gap-2 text-yellow-800">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <span class="text-sm font-medium">JSON Parse Warning</span>
+            </div>
+            <p id="parseErrorText" class="text-sm text-yellow-700 mt-1"></p>
+          </div>
+        </div>
+
+        <!-- Extracted JSON Data -->
+        <div id="extractedDataSection" class="hidden">
+          <h3 class="text-sm font-medium text-gray-700 mb-2">Structured Data</h3>
+          <div class="relative">
+            <button id="copyJsonBtn" class="copy-btn" title="Copy JSON">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+              <span>Copy</span>
+            </button>
+            <pre id="extractedData" class="p-4 rounded-lg bg-gray-900 text-green-400 text-sm font-mono overflow-auto max-h-96"></pre>
+          </div>
+        </div>
+
+        <!-- Raw Response -->
+        <div id="rawResponseSection" class="mt-4">
+          <h3 class="text-sm font-medium text-gray-700 mb-2">Raw Response</h3>
+          <div id="rawText" class="p-4 rounded-lg bg-gray-50 border border-gray-200 leading-7 text-gray-900 whitespace-pre-wrap text-sm max-h-64 overflow-auto">
+            <span class="text-gray-500">Raw response will appear here...</span>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="bg-gray-50 border-t border-gray-200 mt-16">
+    <div class="container mx-auto px-6 py-12 max-w-7xl">
+      <h2 class="text-2xl font-bold text-gray-900 mb-6">Example Use Cases</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+          <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-900 mb-1">Receipt Processing</h3>
+          <p class="text-gray-600 text-sm">Extract store name, items, prices, and totals from receipts automatically.</p>
+        </div>
+        <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+          <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"/></svg>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-900 mb-1">Business Cards</h3>
+          <p class="text-gray-600 text-sm">Extract contact information like name, email, phone, and company from business cards.</p>
+        </div>
+        <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+          <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+            <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-900 mb-1">Invoice Parsing</h3>
+          <p class="text-gray-600 text-sm">Extract invoice numbers, dates, line items, and amounts from invoices.</p>
+        </div>
+        <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+          <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
+            <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-900 mb-1">Document Digitization</h3>
+          <p class="text-gray-600 text-sm">Convert scanned documents to structured, searchable data.</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const defaultImageUrl = 'https://cloudcovert-1305175928.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87grounding.PNG';
+
+    const imageUrlEl = document.getElementById('imageUrl');
+    const promptEl = document.getElementById('prompt');
+    const jsonSchemaEl = document.getElementById('jsonSchema');
+    const modelEl = document.getElementById('model');
+    const tokenEl = document.getElementById('token');
+    const runBtn = document.getElementById('runBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const jsonPreview = document.getElementById('jsonPreview');
+    const metricsContainer = document.getElementById('metricsContainer');
+    const loadingState = document.getElementById('loadingState');
+    const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+    const imagePreview = document.getElementById('imagePreview');
+    const imageModal = document.getElementById('imageModal');
+    const modalImage = document.getElementById('modalImage');
+    const parseErrorSection = document.getElementById('parseErrorSection');
+    const parseErrorText = document.getElementById('parseErrorText');
+    const extractedDataSection = document.getElementById('extractedDataSection');
+    const extractedData = document.getElementById('extractedData');
+    const rawText = document.getElementById('rawText');
+    const copyJsonBtn = document.getElementById('copyJsonBtn');
+
+    let abortController = null;
+
+    // Image modal functions
+    function openImageModal() {
+      const url = imageUrlEl.value.trim() || defaultImageUrl;
+      modalImage.src = url;
+      imageModal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeImageModal() {
+      imageModal.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && imageModal.classList.contains('active')) {
+        closeImageModal();
+      }
+    });
+
+    // Copy JSON function
+    async function copyJsonToClipboard() {
+      const jsonText = extractedData.textContent;
+      if (!jsonText) return;
+
+      try {
+        await navigator.clipboard.writeText(jsonText);
+        copyJsonBtn.classList.add('copied');
+        copyJsonBtn.querySelector('span').textContent = 'Copied!';
+        
+        setTimeout(() => {
+          copyJsonBtn.classList.remove('copied');
+          copyJsonBtn.querySelector('span').textContent = 'Copy';
+        }, 2000);
+      } catch (err) {
+        console.error('Failed to copy:', err);
+      }
+    }
+
+    copyJsonBtn.addEventListener('click', copyJsonToClipboard);
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function updateImagePreview() {
+      const url = imageUrlEl.value.trim();
+      if (url) {
+        imagePreview.src = url;
+        imagePreviewContainer.classList.remove('hidden');
+        imagePreview.onerror = () => {
+          imagePreviewContainer.classList.add('hidden');
+        };
+      } else {
+        imagePreviewContainer.classList.add('hidden');
+      }
+    }
+
+    function updateJsonPreview() {
+      let schema = null;
+      try {
+        if (jsonSchemaEl.value.trim()) {
+          schema = JSON.parse(jsonSchemaEl.value);
+        }
+      } catch (e) {
+        // Invalid JSON, ignore
+      }
+
+      const requestBody = {
+        payload: {
+          imageUrl: imageUrlEl.value || defaultImageUrl,
+          prompt: promptEl.value || 'Extract all information from this image.'
+        },
+        config: {
+          provider: 'zai',
+          model: modelEl.value,
+          temperature: 0,
+          stream: false
+        }
+      };
+
+      if (schema) {
+        requestBody.payload.jsonSchema = schema;
+      }
+
+      jsonPreview.textContent = JSON.stringify(requestBody, null, 2);
+    }
+
+    function displayUsageMetrics(usage, responseTime, provider, model) {
+      metricsContainer.classList.remove('hidden');
+      
+      let metricsHtml = '<div class="metrics-container">';
+      metricsHtml += '<div class="grid grid-cols-2 sm:grid-cols-4 gap-3">';
+      
+      // Response Time metric
+      metricsHtml += '<div class="metric-item">' +
+        '<div class="metric-icon">' +
+          '<svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>' +
+          '</svg>' +
+        '</div>' +
+        '<div>' +
+          '<div class="metric-label">Response</div>' +
+          '<div class="metric-value text-orange-600">' + responseTime + ' ms</div>' +
+        '</div>' +
+      '</div>';
+      
+      if (usage) {
+        const inputTokens = usage.input_tokens || usage.prompt_tokens || 0;
+        const outputTokens = usage.output_tokens || usage.completion_tokens || 0;
+        const totalTokens = usage.total_tokens || (inputTokens + outputTokens);
+        
+        // Input Tokens
+        metricsHtml += '<div class="metric-item">' +
+          '<div class="metric-icon">' +
+            '<svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+              '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>' +
+            '</svg>' +
+          '</div>' +
+          '<div>' +
+            '<div class="metric-label">Input</div>' +
+            '<div class="metric-value text-blue-600">' + inputTokens.toLocaleString() + '</div>' +
+          '</div>' +
+        '</div>';
+        
+        // Output Tokens
+        metricsHtml += '<div class="metric-item">' +
+          '<div class="metric-icon">' +
+            '<svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+              '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path>' +
+            '</svg>' +
+          '</div>' +
+          '<div>' +
+            '<div class="metric-label">Output</div>' +
+            '<div class="metric-value text-green-600">' + outputTokens.toLocaleString() + '</div>' +
+          '</div>' +
+        '</div>';
+        
+        // Total Tokens
+        metricsHtml += '<div class="metric-item">' +
+          '<div class="metric-icon">' +
+            '<svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+              '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>' +
+            '</svg>' +
+          '</div>' +
+          '<div>' +
+            '<div class="metric-label">Total</div>' +
+            '<div class="metric-value text-purple-600">' + totalTokens.toLocaleString() + '</div>' +
+          '</div>' +
+        '</div>';
+      }
+      
+      metricsHtml += '</div>';
+      
+      // Provider and model info
+      if (provider && model) {
+        metricsHtml += '<div class="mt-3 pt-3 border-t border-gray-200 flex items-center gap-2 text-sm text-gray-600">' +
+          '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />' +
+          '</svg>' +
+          '<span>Provider: <strong>' + escapeHtml(provider) + '</strong></span>' +
+          '<span>•</span>' +
+          '<span>Model: <strong>' + escapeHtml(model) + '</strong></span>' +
+        '</div>';
+      }
+      
+      metricsHtml += '</div>';
+      metricsContainer.innerHTML = metricsHtml;
+    }
+
+    async function extractData() {
+      const imageUrl = imageUrlEl.value.trim() || defaultImageUrl;
+      const prompt = promptEl.value.trim() || 'Extract all information from this image.';
+      const model = modelEl.value;
+
+      let jsonSchema = null;
+      try {
+        if (jsonSchemaEl.value.trim()) {
+          jsonSchema = JSON.parse(jsonSchemaEl.value);
+        }
+      } catch (e) {
+        alert('Invalid JSON schema. Please fix the syntax and try again.');
+        return;
+      }
+
+      runBtn.classList.add('hidden');
+      cancelBtn.classList.remove('hidden');
+      loadingState.classList.remove('hidden');
+      extractedDataSection.classList.add('hidden');
+      parseErrorSection.classList.add('hidden');
+      metricsContainer.classList.add('hidden');
+      rawText.innerHTML = '<span class="text-gray-500">Raw response will appear here...</span>';
+
+      abortController = new AbortController();
+      const startTime = performance.now();
+
+      try {
+        const headers = {
+          'Content-Type': 'application/json'
+        };
+
+        if (tokenEl.value) {
+          headers['Authorization'] = `Bearer ${tokenEl.value}`;
+        }
+
+        const body = {
+          payload: {
+            imageUrl: imageUrl,
+            prompt: prompt
+          },
+          config: {
+            provider: 'zai',
+            model: model,
+            temperature: 0,
+            stream: false
+          }
+        };
+
+        if (jsonSchema) {
+          body.payload.jsonSchema = jsonSchema;
+        }
+
+        const response = await fetch('/api/v1/ocr', {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify(body),
+          signal: abortController.signal
+        });
+
+        const endTime = performance.now();
+        const responseTime = (endTime - startTime).toFixed(0);
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || error.details || 'Failed to extract data');
+        }
+
+        const data = await response.json();
+
+        // Display raw text
+        rawText.textContent = data.rawText || 'No response';
+
+        // Display extracted data if available
+        if (data.extractedData) {
+          extractedData.textContent = JSON.stringify(data.extractedData, null, 2);
+          extractedDataSection.classList.remove('hidden');
+        }
+
+        // Display parse error if any
+        if (data.parseError) {
+          parseErrorText.textContent = data.parseError;
+          parseErrorSection.classList.remove('hidden');
+        }
+
+        // Display usage metrics
+        displayUsageMetrics(data.usage, responseTime, data.provider, data.model);
+      } catch (error) {
+        if (error.name === 'AbortError') {
+          rawText.innerHTML = '<span class="text-yellow-600">Request cancelled</span>';
+        } else {
+          rawText.innerHTML = `<span class="text-red-600">Error: ${escapeHtml(error.message)}</span>`;
+        }
+      } finally {
+        runBtn.classList.remove('hidden');
+        cancelBtn.classList.add('hidden');
+        loadingState.classList.add('hidden');
+        abortController = null;
+      }
+    }
+
+    function cancelRequest() {
+      if (abortController) {
+        abortController.abort();
+      }
+    }
+
+    function loadSample(prompt, schema) {
+      promptEl.value = prompt;
+      jsonSchemaEl.value = JSON.stringify(schema, null, 2);
+      updateJsonPreview();
+    }
+
+    // Event listeners
+    imageUrlEl.addEventListener('input', () => {
+      updateImagePreview();
+      updateJsonPreview();
+    });
+    promptEl.addEventListener('input', updateJsonPreview);
+    jsonSchemaEl.addEventListener('input', updateJsonPreview);
+    modelEl.addEventListener('change', updateJsonPreview);
+
+    runBtn.addEventListener('click', extractData);
+    cancelBtn.addEventListener('click', cancelRequest);
+
+    // Quick sample buttons
+    document.getElementById('chipReceipt').addEventListener('click', () => {
+      loadSample('Extract receipt information from this image.', {
+        store_name: 'string',
+        date: 'string',
+        items: [{ name: 'string', quantity: 'number', price: 'number' }],
+        subtotal: 'number',
+        tax: 'number',
+        total: 'number'
+      });
+    });
+
+    document.getElementById('chipBusinessCard').addEventListener('click', () => {
+      loadSample('Extract contact information from this business card.', {
+        name: 'string',
+        title: 'string',
+        company: 'string',
+        email: 'string',
+        phone: 'string',
+        address: 'string',
+        website: 'string'
+      });
+    });
+
+    document.getElementById('chipInvoice').addEventListener('click', () => {
+      loadSample('Extract invoice details from this image.', {
+        invoice_number: 'string',
+        date: 'string',
+        due_date: 'string',
+        vendor: 'string',
+        customer: 'string',
+        line_items: [{ description: 'string', quantity: 'number', unit_price: 'number', total: 'number' }],
+        subtotal: 'number',
+        tax: 'number',
+        total: 'number'
+      });
+    });
+
+    document.getElementById('chipDocument').addEventListener('click', () => {
+      loadSample('Extract all text and key information from this document.', {
+        title: 'string',
+        date: 'string',
+        author: 'string',
+        content: 'string',
+        key_points: ['string']
+      });
+    });
+
+    // Initialize with default values
+    imageUrlEl.value = defaultImageUrl;
+    promptEl.value = 'Extract all information from this image.';
+    updateImagePreview();
+    updateJsonPreview();
+  </script>
+</body>
+</html>

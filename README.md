@@ -2,7 +2,7 @@
 
 AIBackends is an API server that you can use to integrate AI into your applications. You can run it locally or self-host it.
 
-The project supports running open models locally with Ollama, LM Studio or LlamaCpp. It also supports LLM Gateway, OpenRouter, OpenAI, Anthropic and Google AI Studio, Baseten providers.
+The project supports running open models locally with Ollama, LM Studio or LlamaCpp. It also supports LLM Gateway, OpenRouter, OpenAI, Anthropic, Google AI Studio, Baseten and ZAI providers.
 
 ## Why AI Backends?
 
@@ -31,16 +31,51 @@ Since APIs are ready to use, you don't need to understand prompt engineering. Ju
 | **/api/pdf-summarizer** | Extract and summarize content from PDF documents with AI |
 | **/api/web-search** | Perform web searches and get AI-powered summaries of results |
 
+#### Text Processing Examples
+
+**Web Search** - Search the web and get AI-powered summaries:
+
+![Web Search Example](images/websearch-example.png)
+
+**Keywords Extraction** - Extract important keywords from text:
+
+![Keywords Example](images/keywords-example.png)
+
+**Sentiment Analysis** - Analyze emotional tone of text:
+
+![Sentiment Example](images/sentiment-example.png)
+
+**Translation** - Translate text between languages:
+
+![Translate Example](images/translate-example.png)
+
 ### Data Generation
 | Endpoint | Description |
 |----------|-------------|
 | **/api/synthetic-data** | Generate realistic synthetic data based on prompts with optional JSON schema validation |
 
+**Synthetic Data Generation** - Generate realistic test data with custom schemas:
+
+![Synthetic Data Example](images/synthetic-data-example.png)
+
 ### Image Processing
 
 | Endpoint | Description |
 |----------|-------------|
-| **/api/describe-image** | Describe an image (work in progress) |
+| **/api/vision** | Analyze images with vision AI - ask questions, detect objects, get coordinates (ZAI GLM-4.6v) |
+| **/api/ocr** | Extract structured data from images using OCR with optional JSON schema output (ZAI GLM-4.6V) |
+
+#### Vision AI Examples
+
+AIBackends includes powerful vision capabilities powered by ZAI GLM-4.6v models. You can ask questions about images, detect objects, and extract structured data.
+
+**Vision Q&A** - Ask questions about any image:
+
+![Vision Example](images/vision-example.png)
+
+**OCR Extraction** - Extract structured data from documents, receipts, and invoices:
+
+![OCR Example](images/ocr-example.png)
 
 More to come...check swagger docs for updated endpoints.
 
@@ -63,6 +98,7 @@ More to come...check swagger docs for updated endpoints.
 | [Vercel AI Gateway](https://vercel.com/ai-gateway) | Open source and private models | Available |
 | [Google AI Studio](https://ai.google.dev/) | Gemini models via OpenAI-compatible interface | Available |
 | [Baseten](https://baseten.co/) | Cloud-hosted ML models with OpenAI-compatible API | Available |
+| [ZAI](https://z.ai/) | GLM models with vision/OCR capabilities | Available |
 
 
 ## Run the project
@@ -189,6 +225,9 @@ BASETEN_BASE_URL=https://inference.baseten.co/v1
 
 # LLM Gateway Configuration (Recommended)
 LLM_GATEWAY_API_KEY=your-llm-gateway-api-key
+
+# ZAI Configuration (for Vision/OCR endpoints)
+ZAI_API_KEY=your-zai-api-key
 ```
 
 ### LLM Gateway Setup (Recommended for Cloud Providers)
@@ -273,6 +312,9 @@ curl --location 'http://localhost:3000/api/v1/summarize' \
 - Home Page: `http://localhost:3000/`
 - Swagger Docs: `http://localhost:3000/api/ui`. You can test the API endpoints here.
 - JSON Editor: `http://localhost:3000/api/jsoneditor`
+- LLM-Friendly API Docs: `http://localhost:3000/api/llms.txt`. Copy the contents of this file and paste it into AI builder tools like Bolt.new, v0, Lovable, or AI coding assistants to help them understand and use the AIBackends API endpoints.
+
+![LLMs.txt Example](images/llms-txt-example.png)
 
 ## Testing Examples
 

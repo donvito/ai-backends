@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Backends - Vision Demo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'brand-purple': '#B341F9',
+            'brand-pink': '#E453C0',
+            'terminal-bg': '#1C2128',
+            'terminal-text': '#A7B5C4'
+          },
+          backgroundImage: {
+            'gradient-brand': 'linear-gradient(135deg, #B341F9, #E453C0)',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .metrics-container {
+      background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+      border-radius: 12px;
+      padding: 12px;
+      border: 1px solid #e5e7eb;
+    }
+    .metric-item {
+      background: white;
+      padding: 8px 12px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    .metric-icon {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .metric-label {
+      font-size: 12px;
+      color: #6b7280;
+      font-weight: 500;
+    }
+    .metric-value {
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .image-preview {
+      max-height: 300px;
+      object-fit: contain;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+    }
+    /* Markdown styling */
+    .markdown-content h1 { font-size: 1.5rem; font-weight: 700; margin-top: 1rem; margin-bottom: 0.5rem; }
+    .markdown-content h2 { font-size: 1.25rem; font-weight: 600; margin-top: 1rem; margin-bottom: 0.5rem; }
+    .markdown-content h3 { font-size: 1.1rem; font-weight: 600; margin-top: 0.75rem; margin-bottom: 0.5rem; }
+    .markdown-content p { margin-bottom: 0.75rem; line-height: 1.7; }
+    .markdown-content ul, .markdown-content ol { margin-left: 1.5rem; margin-bottom: 0.75rem; }
+    .markdown-content ul { list-style-type: disc; }
+    .markdown-content ol { list-style-type: decimal; }
+    .markdown-content li { margin-bottom: 0.25rem; line-height: 1.6; }
+    .markdown-content code { 
+      background-color: #f3f4f6; 
+      padding: 0.125rem 0.375rem; 
+      border-radius: 0.25rem; 
+      font-size: 0.875rem;
+      font-family: ui-monospace, monospace;
+    }
+    .markdown-content pre { 
+      background-color: #1f2937; 
+      color: #a7f3d0; 
+      padding: 1rem; 
+      border-radius: 0.5rem; 
+      overflow-x: auto;
+      margin-bottom: 0.75rem;
+    }
+    .markdown-content pre code { 
+      background-color: transparent; 
+      padding: 0; 
+      color: inherit;
+    }
+    .markdown-content blockquote { 
+      border-left: 4px solid #d1d5db; 
+      padding-left: 1rem; 
+      margin-left: 0;
+      margin-bottom: 0.75rem;
+      color: #6b7280;
+      font-style: italic;
+    }
+    .markdown-content strong { font-weight: 600; }
+    .markdown-content em { font-style: italic; }
+    .markdown-content a { color: #B341F9; text-decoration: underline; }
+    .markdown-content table { border-collapse: collapse; width: 100%; margin-bottom: 0.75rem; }
+    .markdown-content th, .markdown-content td { border: 1px solid #e5e7eb; padding: 0.5rem; text-align: left; }
+    .markdown-content th { background-color: #f9fafb; font-weight: 600; }
+    .markdown-content hr { border: 0; border-top: 1px solid #e5e7eb; margin: 1rem 0; }
+  </style>
+  <script src="/api/shared/safedom.js"></script>
+</head>
+<body class="bg-white min-h-screen">
+  <!-- Navigation -->
+  <nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100">
+    <div class="container mx-auto px-6 py-4">
+      <div class="flex justify-between items-center">
+        <a href="/" class="flex items-center space-x-2">
+          <div class="w-10 h-10 rounded-xl bg-[#B341F9] flex items-center justify-center">
+            <span class="text-white font-bold text-xl">AI</span>
+          </div>
+          <span class="text-2xl font-bold text-gray-900">Backends</span>
+          <span class="ml-2 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-50 text-green-700">
+            <svg class="w-4 h-4 mr-1" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0020 10.017C20 4.484 15.522 0 10 0z"/>
+            </svg>
+            Open Source
+          </span>
+        </a>
+        <div class="flex items-center space-x-6">
+          <a href="/api/ui" target="_blank" class="text-gray-700 hover:text-brand-purple transition-colors duration-300">API Docs</a>
+          <a href="/api/demos" class="text-gray-700 hover:text-brand-purple transition-colors duration-300">Demos</a>
+          <a href="/api/jsoneditor" target="_blank" class="text-gray-700 hover:text-brand-purple transition-colors duration-300">JSON Editor</a>
+          <a href="/api/models" class="text-gray-700 hover:text-brand-purple transition-colors duration-300">Models Guide</a>
+          <a href="https://github.com/donvito/ai-backend" class="inline-flex items-center px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors duration-300">
+            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 0C4.477 0 0 4.484 0 10.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0020 10.017C20 4.484 15.522 0 10 0z" clip-rule="evenodd"/>
+            </svg>
+            GitHub
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container mx-auto px-6 py-12">
+    <!-- Breadcrumb -->
+    <nav class="mb-6 text-sm">
+      <ol class="flex items-center space-x-2 text-gray-500">
+        <li><a href="/" class="hover:text-gray-700">Home</a></li>
+        <li><span>/</span></li>
+        <li><a href="/api/demos" class="hover:text-gray-700">Demos</a></li>
+        <li><span>/</span></li>
+        <li class="text-gray-900 font-medium">Vision</li>
+      </ol>
+    </nav>
+
+    <!-- Demo Title and Description -->
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-bold text-gray-900 mb-3">Vision Demo</h1>
+      <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+        Ask questions about images using ZAI GLM-4.6V vision models. Describe images, detect objects, and get coordinates.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
+      <!-- Controls -->
+      <section class="bg-white p-6 rounded-2xl border border-gray-100 shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <h2 class="text-lg font-semibold mb-3">Input</h2>
+
+        <label class="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
+        <input type="url" id="imageUrl" class="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple bg-white" placeholder="Enter image URL..." />
+
+        <!-- Image Preview -->
+        <div id="imagePreviewContainer" class="mt-4 hidden">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Preview</label>
+          <img id="imagePreview" class="image-preview w-full" alt="Image preview" />
+        </div>
+
+        <label class="block text-sm font-medium text-gray-700 mb-1 mt-4">Prompt</label>
+        <textarea id="prompt" class="w-full h-24 p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple bg-white" placeholder="Ask a question about the image..."></textarea>
+
+        <!-- Quick Samples -->
+        <div class="mt-3">
+          <div class="text-xs text-gray-500 mb-2">Sample prompts:</div>
+          <div class="flex flex-wrap gap-2">
+            <button type="button" id="chipCoordinates" class="px-3 py-1.5 text-sm bg-gray-50 text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-100">Find Coordinates</button>
+            <button type="button" id="chipDescribe" class="px-3 py-1.5 text-sm bg-gray-50 text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-100">Describe Image</button>
+            <button type="button" id="chipCount" class="px-3 py-1.5 text-sm bg-gray-50 text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-100">Count Objects</button>
+            <button type="button" id="chipColors" class="px-3 py-1.5 text-sm bg-gray-50 text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-100">Identify Colors</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 mt-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Model</label>
+            <select id="model" class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple">
+              <option value="glm-4.6v">GLM-4.6V</option>
+              <option value="glm-4.6v-flash">GLM-4.6V Flash</option>
+            </select>
+          </div>
+          <div class="flex items-end">
+            <label class="flex items-center gap-2 cursor-pointer pb-2">
+              <input type="checkbox" id="thinkingEnabled" class="rounded border-gray-300 text-brand-purple focus:ring-brand-purple">
+              <span class="text-sm font-medium text-gray-700">Enable thinking</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="mt-3">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Bearer Token (optional)</label>
+          <input id="token" type="password" placeholder="Only needed in production deployments" class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple" />
+        </div>
+
+        <div class="mt-4 flex items-center gap-2">
+          <button id="runBtn" class="px-4 py-2 rounded-lg bg-brand-purple text-white hover:bg-[#9935D9]">Analyze Image</button>
+          <button id="cancelBtn" class="hidden px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700">Cancel</button>
+        </div>
+
+        <details class="mt-4">
+          <summary class="text-sm text-gray-600 cursor-pointer">View JSON request</summary>
+          <pre id="jsonPreview" class="mt-2 bg-gray-900 text-green-400 p-3 rounded-lg text-xs mono overflow-auto"></pre>
+        </details>
+      </section>
+
+      <!-- Output -->
+      <section class="bg-white p-6 rounded-2xl border border-gray-100 shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <h2 class="text-lg font-semibold mb-3">Result</h2>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="hidden">
+          <div class="flex items-center justify-center py-12">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-purple"></div>
+          </div>
+          <p class="text-center text-gray-600 mt-2">Analyzing image...</p>
+        </div>
+
+        <!-- Usage Metrics -->
+        <div id="metricsContainer" class="mb-4 hidden"></div>
+
+        <!-- Thinking Section -->
+        <div id="thinkingSection" class="mb-4 hidden">
+          <details class="bg-blue-50 rounded-lg border border-blue-200">
+            <summary class="text-sm font-medium text-blue-800 cursor-pointer p-3">View model thinking process</summary>
+            <div id="thinkingContent" class="p-3 pt-0 text-sm text-blue-700 whitespace-pre-wrap"></div>
+          </details>
+        </div>
+
+        <div id="resultText" class="p-4 rounded-lg bg-gray-50 border border-gray-200 text-gray-900 min-h-[200px] markdown-content">
+          <span class="text-gray-500">Response will appear here...</span>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="bg-gray-50 border-t border-gray-200 mt-16">
+    <div class="container mx-auto px-6 py-12 max-w-7xl">
+      <h2 class="text-2xl font-bold text-gray-900 mb-6">Example Use Cases</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+          <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-900 mb-1">Object Detection</h3>
+          <p class="text-gray-600 text-sm">Locate specific objects in images and get their bounding box coordinates.</p>
+        </div>
+        <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+          <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-900 mb-1">Image Description</h3>
+          <p class="text-gray-600 text-sm">Get detailed descriptions of image contents, scenes, and visual elements.</p>
+        </div>
+        <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+          <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+            <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-900 mb-1">Visual Q&A</h3>
+          <p class="text-gray-600 text-sm">Ask specific questions about image contents and get accurate answers.</p>
+        </div>
+        <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+          <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
+            <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-900 mb-1">Visual Grounding</h3>
+          <p class="text-gray-600 text-sm">Get precise coordinates for objects referenced in natural language queries.</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const defaultImageUrl = 'https://cloudcovert-1305175928.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87grounding.PNG';
+
+    const imageUrlEl = document.getElementById('imageUrl');
+    const promptEl = document.getElementById('prompt');
+    const modelEl = document.getElementById('model');
+    const thinkingEl = document.getElementById('thinkingEnabled');
+    const tokenEl = document.getElementById('token');
+    const runBtn = document.getElementById('runBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const resultText = document.getElementById('resultText');
+    const jsonPreview = document.getElementById('jsonPreview');
+    const metricsContainer = document.getElementById('metricsContainer');
+    const loadingState = document.getElementById('loadingState');
+    const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+    const imagePreview = document.getElementById('imagePreview');
+    const thinkingSection = document.getElementById('thinkingSection');
+    const thinkingContent = document.getElementById('thinkingContent');
+
+    let abortController = null;
+
+    function displayUsageMetrics(usage, responseTime, provider, model) {
+      metricsContainer.classList.remove('hidden');
+      
+      let metricsHtml = '<div class="metrics-container">';
+      metricsHtml += '<div class="grid grid-cols-2 sm:grid-cols-4 gap-3">';
+      
+      // Response Time metric
+      metricsHtml += '<div class="metric-item">' +
+        '<div class="metric-icon">' +
+          '<svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>' +
+          '</svg>' +
+        '</div>' +
+        '<div>' +
+          '<div class="metric-label">Response</div>' +
+          '<div class="metric-value text-orange-600">' + responseTime + ' ms</div>' +
+        '</div>' +
+      '</div>';
+      
+      if (usage) {
+        const inputTokens = usage.input_tokens || usage.prompt_tokens || 0;
+        const outputTokens = usage.output_tokens || usage.completion_tokens || 0;
+        const totalTokens = usage.total_tokens || (inputTokens + outputTokens);
+        
+        // Input Tokens
+        metricsHtml += '<div class="metric-item">' +
+          '<div class="metric-icon">' +
+            '<svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+              '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>' +
+            '</svg>' +
+          '</div>' +
+          '<div>' +
+            '<div class="metric-label">Input</div>' +
+            '<div class="metric-value text-blue-600">' + inputTokens.toLocaleString() + '</div>' +
+          '</div>' +
+        '</div>';
+        
+        // Output Tokens
+        metricsHtml += '<div class="metric-item">' +
+          '<div class="metric-icon">' +
+            '<svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+              '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path>' +
+            '</svg>' +
+          '</div>' +
+          '<div>' +
+            '<div class="metric-label">Output</div>' +
+            '<div class="metric-value text-green-600">' + outputTokens.toLocaleString() + '</div>' +
+          '</div>' +
+        '</div>';
+        
+        // Total Tokens
+        metricsHtml += '<div class="metric-item">' +
+          '<div class="metric-icon">' +
+            '<svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+              '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>' +
+            '</svg>' +
+          '</div>' +
+          '<div>' +
+            '<div class="metric-label">Total</div>' +
+            '<div class="metric-value text-purple-600">' + totalTokens.toLocaleString() + '</div>' +
+          '</div>' +
+        '</div>';
+      }
+      
+      metricsHtml += '</div>';
+      
+      // Provider and model info
+      if (provider && model) {
+        metricsHtml += '<div class="mt-3 pt-3 border-t border-gray-200 flex items-center gap-2 text-sm text-gray-600">' +
+          '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />' +
+          '</svg>' +
+          '<span>Provider: <strong>' + escapeHtml(provider) + '</strong></span>' +
+          '<span>•</span>' +
+          '<span>Model: <strong>' + escapeHtml(model) + '</strong></span>' +
+        '</div>';
+      }
+      
+      metricsHtml += '</div>';
+      metricsContainer.innerHTML = metricsHtml;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function renderMarkdown(text) {
+      if (typeof marked !== 'undefined') {
+        // Configure marked for safe rendering
+        marked.setOptions({
+          breaks: true,
+          gfm: true
+        });
+        return marked.parse(text);
+      }
+      // Fallback to escaped text if marked is not available
+      return escapeHtml(text).replace(/\n/g, '<br>');
+    }
+
+    function updateImagePreview() {
+      const url = imageUrlEl.value.trim();
+      if (url) {
+        imagePreview.src = url;
+        imagePreviewContainer.classList.remove('hidden');
+        imagePreview.onerror = () => {
+          imagePreviewContainer.classList.add('hidden');
+        };
+      } else {
+        imagePreviewContainer.classList.add('hidden');
+      }
+    }
+
+    function updateJsonPreview() {
+      const requestBody = {
+        payload: {
+          imageUrl: imageUrlEl.value || defaultImageUrl,
+          prompt: promptEl.value || 'Describe this image',
+          thinking: thinkingEl.checked
+        },
+        config: {
+          provider: 'zai',
+          model: modelEl.value,
+          temperature: 0,
+          stream: false
+        }
+      };
+
+      jsonPreview.textContent = JSON.stringify(requestBody, null, 2);
+    }
+
+    async function analyzeImage() {
+      const imageUrl = imageUrlEl.value.trim() || defaultImageUrl;
+      const prompt = promptEl.value.trim();
+      const model = modelEl.value;
+      const thinking = thinkingEl.checked;
+
+      if (!prompt) {
+        alert('Please enter a prompt');
+        return;
+      }
+
+      runBtn.classList.add('hidden');
+      cancelBtn.classList.remove('hidden');
+      loadingState.classList.remove('hidden');
+      resultText.classList.add('hidden');
+      metricsContainer.classList.add('hidden');
+      thinkingSection.classList.add('hidden');
+
+      abortController = new AbortController();
+      const startTime = performance.now();
+
+      try {
+        const headers = {
+          'Content-Type': 'application/json'
+        };
+
+        if (tokenEl.value) {
+          headers['Authorization'] = `Bearer ${tokenEl.value}`;
+        }
+
+        const response = await fetch('/api/v1/vision', {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify({
+            payload: {
+              imageUrl: imageUrl,
+              prompt: prompt,
+              thinking: thinking
+            },
+            config: {
+              provider: 'zai',
+              model: model,
+              temperature: 0,
+              stream: false
+            }
+          }),
+          signal: abortController.signal
+        });
+
+        const endTime = performance.now();
+        const responseTime = (endTime - startTime).toFixed(0);
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || error.details || 'Failed to analyze image');
+        }
+
+        const data = await response.json();
+
+        // Display the result with markdown rendering
+        resultText.innerHTML = renderMarkdown(data.text || 'No response');
+        resultText.classList.remove('hidden');
+
+        // Display thinking if available
+        if (data.thinking) {
+          thinkingContent.textContent = data.thinking;
+          thinkingSection.classList.remove('hidden');
+        }
+
+        // Display usage metrics
+        displayUsageMetrics(data.usage, responseTime, data.provider, data.model);
+      } catch (error) {
+        if (error.name === 'AbortError') {
+          resultText.innerHTML = '<span class="text-yellow-600">Request cancelled</span>';
+        } else {
+          resultText.innerHTML = `<span class="text-red-600">Error: ${escapeHtml(error.message)}</span>`;
+        }
+        resultText.classList.remove('hidden');
+      } finally {
+        runBtn.classList.remove('hidden');
+        cancelBtn.classList.add('hidden');
+        loadingState.classList.add('hidden');
+        abortController = null;
+      }
+    }
+
+    function cancelRequest() {
+      if (abortController) {
+        abortController.abort();
+      }
+    }
+
+    // Event listeners
+    imageUrlEl.addEventListener('input', () => {
+      updateImagePreview();
+      updateJsonPreview();
+    });
+    promptEl.addEventListener('input', updateJsonPreview);
+    modelEl.addEventListener('change', updateJsonPreview);
+    thinkingEl.addEventListener('change', updateJsonPreview);
+
+    runBtn.addEventListener('click', analyzeImage);
+    cancelBtn.addEventListener('click', cancelRequest);
+
+    // Quick sample buttons
+    document.getElementById('chipCoordinates').addEventListener('click', () => {
+      imageUrlEl.value = defaultImageUrl;
+      promptEl.value = 'Where is the second bottle of beer from the right on the table? Provide coordinates in [[xmin,ymin,xmax,ymax]] format';
+      updateImagePreview();
+      updateJsonPreview();
+    });
+
+    document.getElementById('chipDescribe').addEventListener('click', () => {
+      promptEl.value = 'Describe this image in detail. What objects, people, and scenes do you see?';
+      updateJsonPreview();
+    });
+
+    document.getElementById('chipCount').addEventListener('click', () => {
+      promptEl.value = 'Count all the objects you can see in this image and list them with their quantities.';
+      updateJsonPreview();
+    });
+
+    document.getElementById('chipColors').addEventListener('click', () => {
+      promptEl.value = 'What are the dominant colors in this image? Describe the color palette.';
+      updateJsonPreview();
+    });
+
+    // Initialize with default values
+    imageUrlEl.value = defaultImageUrl;
+    promptEl.value = 'Where is the second bottle of beer from the right on the table? Provide coordinates in [[xmin,ymin,xmax,ymax]] format';
+    updateImagePreview();
+    updateJsonPreview();
+  </script>
+</body>
+</html>

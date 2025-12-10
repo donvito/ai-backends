@@ -72,6 +72,14 @@ export interface LLMGatewayConfig extends ServiceConfig {
   timeout?: number;
 }
 
+export interface ZAIConfig extends ServiceConfig {
+  apiKey: string;
+  baseURL: string;
+  model: string;
+  chatModel: string;
+  timeout?: number;
+}
+
 // OpenAI Configuration
 export const openaiConfig: OpenAIConfig = {
   name: 'OpenAI',
@@ -177,8 +185,20 @@ export const llmgatewayConfig: LLMGatewayConfig = {
   timeout: parseInt(process.env.LLM_GATEWAY_TIMEOUT || '30000'),
 };
 
+// ZAI Configuration
+export const zaiConfig: ZAIConfig = {
+  name: 'ZAI',
+  enabled: !!process.env.ZAI_API_KEY,
+  priority: 11,
+  apiKey: process.env.ZAI_API_KEY || '',
+  baseURL: process.env.ZAI_BASE_URL || 'https://api.z.ai/api/paas/v4',
+  model: process.env.ZAI_MODEL || 'glm-4.5-air',
+  chatModel: process.env.ZAI_CHAT_MODEL || process.env.ZAI_MODEL || 'glm-4.5-air',
+  timeout: parseInt(process.env.ZAI_TIMEOUT || '30000'),
+};
+
 // Available services
-export const availableServices = [openaiConfig, anthropicConfig, ollamaConfig, openrouterConfig, lmstudioConfig, aigatewayConfig, llamacppConfig, googleConfig, basetenConfig, llmgatewayConfig];
+export const availableServices = [openaiConfig, anthropicConfig, ollamaConfig, openrouterConfig, lmstudioConfig, aigatewayConfig, llamacppConfig, googleConfig, basetenConfig, llmgatewayConfig, zaiConfig];
 
 // Get the primary service (highest priority enabled service)
 export function getPrimaryService(): ServiceConfig | null {
