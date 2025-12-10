@@ -81,8 +81,6 @@ class ZAIProvider implements AIProvider {
     model?: string,
     temperature: number = 0
   ): Promise<any> {
-    console.log('ZAI_BASE_URL', ZAI_BASE_URL);
-    
     try {
       const modelToUse = zai(model || zaiConfig.model);
 
@@ -163,6 +161,11 @@ class ZAIProvider implements AIProvider {
 
     const data = await response.json() as ZAIAPIResponse;
 
+    // Check for API-level errors in the response
+    if ((data as any).error) {
+      throw new Error(`ZAI Vision API error: ${JSON.stringify((data as any).error)}`);
+    }
+
     return {
       text: data.choices?.[0]?.message?.content || '',
       thinking: data.choices?.[0]?.message?.reasoning_content,
@@ -189,8 +192,6 @@ class ZAIProvider implements AIProvider {
     jsonSchema?: object,
     model: string = 'glm-4.6v'
   ): Promise<ZAIOCRResponse> {
-    console.log('[ZAI OCR] extractFromImage called with:', { imageUrl: imageUrl.substring(0, 50) + '...', extractionPrompt, hasSchema: !!jsonSchema, model });
-    
     let fullPrompt = extractionPrompt;
 
     if (jsonSchema) {
@@ -239,9 +240,6 @@ Rules:
       max_tokens: 4096
     };
 
-    console.log('[ZAI OCR] Sending request to:', `${ZAI_BASE_URL}/chat/completions`);
-    console.log('[ZAI OCR] Request body:', JSON.stringify(requestBody, null, 2));
-
     const response = await fetch(`${ZAI_BASE_URL}/chat/completions`, {
       method: 'POST',
       headers: {
@@ -251,26 +249,18 @@ Rules:
       body: JSON.stringify(requestBody)
     });
 
-    console.log('[ZAI OCR] Response status:', response.status);
-
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('[ZAI OCR] Error response:', errorText);
       throw new Error(`ZAI OCR API error: ${errorText}`);
     }
 
     const data = await response.json() as ZAIAPIResponse;
-    console.log('[ZAI OCR] Full response data:', JSON.stringify(data, null, 2));
-    
+
     // Check for API-level errors in the response
     if ((data as any).error) {
-      console.error('[ZAI OCR] API returned error:', (data as any).error);
       throw new Error(`ZAI OCR API error: ${JSON.stringify((data as any).error)}`);
     }
-    
-    // Log the choices structure for debugging
-    console.log('[ZAI OCR] Choices:', JSON.stringify(data.choices, null, 2));
-    
+
     // Try multiple ways to extract content from the response
     let rawText = '';
     const choice = data.choices?.[0];
@@ -291,9 +281,6 @@ Rules:
         rawText = (choice as any).delta.content;
       }
     }
-    
-    console.log('[ZAI OCR] Extracted rawText length:', rawText.length);
-    console.log('[ZAI OCR] Extracted rawText (first 500 chars):', rawText.substring(0, 500));
 
     // Try to parse as JSON using multiple strategies
     let extractedData: object | null = null;
