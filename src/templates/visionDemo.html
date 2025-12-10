@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AI Backends - Vision Demo</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script>
     tailwind.config = {
       theme: {
@@ -60,6 +61,50 @@
       border-radius: 8px;
       border: 1px solid #e5e7eb;
     }
+    /* Markdown styling */
+    .markdown-content h1 { font-size: 1.5rem; font-weight: 700; margin-top: 1rem; margin-bottom: 0.5rem; }
+    .markdown-content h2 { font-size: 1.25rem; font-weight: 600; margin-top: 1rem; margin-bottom: 0.5rem; }
+    .markdown-content h3 { font-size: 1.1rem; font-weight: 600; margin-top: 0.75rem; margin-bottom: 0.5rem; }
+    .markdown-content p { margin-bottom: 0.75rem; line-height: 1.7; }
+    .markdown-content ul, .markdown-content ol { margin-left: 1.5rem; margin-bottom: 0.75rem; }
+    .markdown-content ul { list-style-type: disc; }
+    .markdown-content ol { list-style-type: decimal; }
+    .markdown-content li { margin-bottom: 0.25rem; line-height: 1.6; }
+    .markdown-content code { 
+      background-color: #f3f4f6; 
+      padding: 0.125rem 0.375rem; 
+      border-radius: 0.25rem; 
+      font-size: 0.875rem;
+      font-family: ui-monospace, monospace;
+    }
+    .markdown-content pre { 
+      background-color: #1f2937; 
+      color: #a7f3d0; 
+      padding: 1rem; 
+      border-radius: 0.5rem; 
+      overflow-x: auto;
+      margin-bottom: 0.75rem;
+    }
+    .markdown-content pre code { 
+      background-color: transparent; 
+      padding: 0; 
+      color: inherit;
+    }
+    .markdown-content blockquote { 
+      border-left: 4px solid #d1d5db; 
+      padding-left: 1rem; 
+      margin-left: 0;
+      margin-bottom: 0.75rem;
+      color: #6b7280;
+      font-style: italic;
+    }
+    .markdown-content strong { font-weight: 600; }
+    .markdown-content em { font-style: italic; }
+    .markdown-content a { color: #B341F9; text-decoration: underline; }
+    .markdown-content table { border-collapse: collapse; width: 100%; margin-bottom: 0.75rem; }
+    .markdown-content th, .markdown-content td { border: 1px solid #e5e7eb; padding: 0.5rem; text-align: left; }
+    .markdown-content th { background-color: #f9fafb; font-weight: 600; }
+    .markdown-content hr { border: 0; border-top: 1px solid #e5e7eb; margin: 1rem 0; }
   </style>
   <script src="/api/shared/safedom.js"></script>
 </head>
@@ -179,7 +224,6 @@
       <!-- Output -->
       <section class="bg-white p-6 rounded-2xl border border-gray-100 shadow-lg hover:shadow-xl transition-shadow duration-300">
         <h2 class="text-lg font-semibold mb-3">Result</h2>
-        <div id="usageInfo" class="hidden mb-3 text-sm"></div>
 
         <!-- Loading State -->
         <div id="loadingState" class="hidden">
@@ -189,46 +233,8 @@
           <p class="text-center text-gray-600 mt-2">Analyzing image...</p>
         </div>
 
-        <!-- Token Usage Info -->
-        <div id="tokenInfo" class="mb-4 hidden">
-          <div class="metrics-container">
-            <div class="grid grid-cols-3 gap-2">
-              <div class="metric-item">
-                <div class="metric-icon">
-                  <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-                  </svg>
-                </div>
-                <div>
-                  <div class="metric-label">Input</div>
-                  <div class="metric-value" id="inputTokens">-</div>
-                </div>
-              </div>
-              <div class="metric-item">
-                <div class="metric-icon">
-                  <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4v-4z" />
-                  </svg>
-                </div>
-                <div>
-                  <div class="metric-label">Output</div>
-                  <div class="metric-value" id="outputTokens">-</div>
-                </div>
-              </div>
-              <div class="metric-item">
-                <div class="metric-icon">
-                  <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                </div>
-                <div>
-                  <div class="metric-label">Total</div>
-                  <div class="metric-value" id="totalTokens">-</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <!-- Usage Metrics -->
+        <div id="metricsContainer" class="mb-4 hidden"></div>
 
         <!-- Thinking Section -->
         <div id="thinkingSection" class="mb-4 hidden">
@@ -238,7 +244,7 @@
           </details>
         </div>
 
-        <div id="resultText" class="p-4 rounded-lg bg-gray-50 border border-gray-200 leading-7 text-gray-900 min-h-[200px] whitespace-pre-wrap">
+        <div id="resultText" class="p-4 rounded-lg bg-gray-50 border border-gray-200 text-gray-900 min-h-[200px] markdown-content">
           <span class="text-gray-500">Response will appear here...</span>
         </div>
       </section>
@@ -292,12 +298,8 @@
     const runBtn = document.getElementById('runBtn');
     const cancelBtn = document.getElementById('cancelBtn');
     const resultText = document.getElementById('resultText');
-    const usageInfo = document.getElementById('usageInfo');
     const jsonPreview = document.getElementById('jsonPreview');
-    const tokenInfo = document.getElementById('tokenInfo');
-    const inputTokensEl = document.getElementById('inputTokens');
-    const outputTokensEl = document.getElementById('outputTokens');
-    const totalTokensEl = document.getElementById('totalTokens');
+    const metricsContainer = document.getElementById('metricsContainer');
     const loadingState = document.getElementById('loadingState');
     const imagePreviewContainer = document.getElementById('imagePreviewContainer');
     const imagePreview = document.getElementById('imagePreview');
@@ -306,10 +308,105 @@
 
     let abortController = null;
 
+    function displayUsageMetrics(usage, responseTime, provider, model) {
+      metricsContainer.classList.remove('hidden');
+      
+      let metricsHtml = '<div class="metrics-container">';
+      metricsHtml += '<div class="grid grid-cols-2 sm:grid-cols-4 gap-3">';
+      
+      // Response Time metric
+      metricsHtml += '<div class="metric-item">' +
+        '<div class="metric-icon">' +
+          '<svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>' +
+          '</svg>' +
+        '</div>' +
+        '<div>' +
+          '<div class="metric-label">Response</div>' +
+          '<div class="metric-value text-orange-600">' + responseTime + ' ms</div>' +
+        '</div>' +
+      '</div>';
+      
+      if (usage) {
+        const inputTokens = usage.input_tokens || usage.prompt_tokens || 0;
+        const outputTokens = usage.output_tokens || usage.completion_tokens || 0;
+        const totalTokens = usage.total_tokens || (inputTokens + outputTokens);
+        
+        // Input Tokens
+        metricsHtml += '<div class="metric-item">' +
+          '<div class="metric-icon">' +
+            '<svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+              '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>' +
+            '</svg>' +
+          '</div>' +
+          '<div>' +
+            '<div class="metric-label">Input</div>' +
+            '<div class="metric-value text-blue-600">' + inputTokens.toLocaleString() + '</div>' +
+          '</div>' +
+        '</div>';
+        
+        // Output Tokens
+        metricsHtml += '<div class="metric-item">' +
+          '<div class="metric-icon">' +
+            '<svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+              '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path>' +
+            '</svg>' +
+          '</div>' +
+          '<div>' +
+            '<div class="metric-label">Output</div>' +
+            '<div class="metric-value text-green-600">' + outputTokens.toLocaleString() + '</div>' +
+          '</div>' +
+        '</div>';
+        
+        // Total Tokens
+        metricsHtml += '<div class="metric-item">' +
+          '<div class="metric-icon">' +
+            '<svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+              '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>' +
+            '</svg>' +
+          '</div>' +
+          '<div>' +
+            '<div class="metric-label">Total</div>' +
+            '<div class="metric-value text-purple-600">' + totalTokens.toLocaleString() + '</div>' +
+          '</div>' +
+        '</div>';
+      }
+      
+      metricsHtml += '</div>';
+      
+      // Provider and model info
+      if (provider && model) {
+        metricsHtml += '<div class="mt-3 pt-3 border-t border-gray-200 flex items-center gap-2 text-sm text-gray-600">' +
+          '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />' +
+          '</svg>' +
+          '<span>Provider: <strong>' + escapeHtml(provider) + '</strong></span>' +
+          '<span>•</span>' +
+          '<span>Model: <strong>' + escapeHtml(model) + '</strong></span>' +
+        '</div>';
+      }
+      
+      metricsHtml += '</div>';
+      metricsContainer.innerHTML = metricsHtml;
+    }
+
     function escapeHtml(text) {
       const div = document.createElement('div');
       div.textContent = text;
       return div.innerHTML;
+    }
+
+    function renderMarkdown(text) {
+      if (typeof marked !== 'undefined') {
+        // Configure marked for safe rendering
+        marked.setOptions({
+          breaks: true,
+          gfm: true
+        });
+        return marked.parse(text);
+      }
+      // Fallback to escaped text if marked is not available
+      return escapeHtml(text).replace(/\n/g, '<br>');
     }
 
     function updateImagePreview() {
@@ -326,14 +423,21 @@
     }
 
     function updateJsonPreview() {
-      const payload = {
-        imageUrl: imageUrlEl.value || defaultImageUrl,
-        prompt: promptEl.value || 'Describe this image',
-        model: modelEl.value,
-        thinking: thinkingEl.checked
+      const requestBody = {
+        payload: {
+          imageUrl: imageUrlEl.value || defaultImageUrl,
+          prompt: promptEl.value || 'Describe this image',
+          thinking: thinkingEl.checked
+        },
+        config: {
+          provider: 'zai',
+          model: modelEl.value,
+          temperature: 0,
+          stream: false
+        }
       };
 
-      jsonPreview.textContent = JSON.stringify(payload, null, 2);
+      jsonPreview.textContent = JSON.stringify(requestBody, null, 2);
     }
 
     async function analyzeImage() {
@@ -351,11 +455,11 @@
       cancelBtn.classList.remove('hidden');
       loadingState.classList.remove('hidden');
       resultText.classList.add('hidden');
-      tokenInfo.classList.add('hidden');
+      metricsContainer.classList.add('hidden');
       thinkingSection.classList.add('hidden');
-      usageInfo.classList.add('hidden');
 
       abortController = new AbortController();
+      const startTime = performance.now();
 
       try {
         const headers = {
@@ -370,13 +474,23 @@
           method: 'POST',
           headers: headers,
           body: JSON.stringify({
-            imageUrl: imageUrl,
-            prompt: prompt,
-            model: model,
-            thinking: thinking
+            payload: {
+              imageUrl: imageUrl,
+              prompt: prompt,
+              thinking: thinking
+            },
+            config: {
+              provider: 'zai',
+              model: model,
+              temperature: 0,
+              stream: false
+            }
           }),
           signal: abortController.signal
         });
+
+        const endTime = performance.now();
+        const responseTime = (endTime - startTime).toFixed(0);
 
         if (!response.ok) {
           const error = await response.json();
@@ -385,17 +499,9 @@
 
         const data = await response.json();
 
-        // Display the result
-        resultText.innerHTML = escapeHtml(data.text || 'No response');
+        // Display the result with markdown rendering
+        resultText.innerHTML = renderMarkdown(data.text || 'No response');
         resultText.classList.remove('hidden');
-
-        // Display token usage
-        if (data.usage) {
-          tokenInfo.classList.remove('hidden');
-          inputTokensEl.textContent = data.usage.input_tokens || '-';
-          outputTokensEl.textContent = data.usage.output_tokens || '-';
-          totalTokensEl.textContent = data.usage.total_tokens || '-';
-        }
 
         // Display thinking if available
         if (data.thinking) {
@@ -403,20 +509,8 @@
           thinkingSection.classList.remove('hidden');
         }
 
-        // Display provider and model info
-        if (data.provider && data.model) {
-          usageInfo.innerHTML = `
-            <div class="flex items-center gap-2 text-gray-600">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>Provider: <strong>${escapeHtml(data.provider)}</strong></span>
-              <span>-</span>
-              <span>Model: <strong>${escapeHtml(data.model)}</strong></span>
-            </div>
-          `;
-          usageInfo.classList.remove('hidden');
-        }
+        // Display usage metrics
+        displayUsageMetrics(data.usage, responseTime, data.provider, data.model);
       } catch (error) {
         if (error.name === 'AbortError') {
           resultText.innerHTML = '<span class="text-yellow-600">Request cancelled</span>';

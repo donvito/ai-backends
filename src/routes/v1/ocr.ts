@@ -10,9 +10,22 @@ const router = new OpenAPIHono()
 async function handleOcrRequest(c: Context) {
   try {
     const body = await c.req.json()
-    const { imageUrl, prompt, jsonSchema, model } = ocrRequestSchema.parse(body)
+    const { payload, config } = ocrRequestSchema.parse(body)
+    const { imageUrl, prompt, jsonSchema } = payload
+    const { provider, model } = config
 
-    console.log('[OCR] Request received:', { imageUrl: imageUrl.substring(0, 50) + '...', prompt, model, hasSchema: !!jsonSchema })
+    console.log('[OCR] Request received:', { 
+      imageUrl: imageUrl.substring(0, 50) + '...', 
+      prompt, 
+      provider,
+      model, 
+      hasSchema: !!jsonSchema 
+    })
+
+    // Currently only ZAI provider supports OCR
+    if (provider !== 'zai') {
+      return handleValidationError(c, 'OCR currently only supports the ZAI provider. Please set provider to "zai".')
+    }
 
     if (!zaiConfig.enabled || !zaiConfig.apiKey) {
       return handleValidationError(c, 'ZAI provider is not configured. Please set ZAI_API_KEY in your environment.')

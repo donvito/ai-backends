@@ -1,10 +1,21 @@
 import { z } from 'zod'
+import { llmRequestSchema } from './llm'
 
-export const visionRequestSchema = z.object({
+/**
+ * Vision payload schema - endpoint-specific parameters
+ */
+export const visionPayloadSchema = z.object({
   imageUrl: z.string().url().describe('URL of the image to analyze'),
   prompt: z.string().describe('Question or prompt about the image'),
-  model: z.enum(['glm-4.6v', 'glm-4.6v-flash']).optional().default('glm-4.6v').describe('The ZAI vision model to use'),
   thinking: z.boolean().optional().default(false).describe('Enable thinking mode for more detailed analysis')
+})
+
+/**
+ * Vision request schema following the standard payload/config pattern
+ */
+export const visionRequestSchema = z.object({
+  payload: visionPayloadSchema,
+  config: llmRequestSchema
 })
 
 export const visionResponseSchema = z.object({
@@ -23,3 +34,6 @@ export const visionErrorSchema = z.object({
   error: z.string().describe('Error message'),
   details: z.string().optional().describe('Additional error details')
 })
+
+export type VisionRequest = z.infer<typeof visionRequestSchema>
+export type VisionResponse = z.infer<typeof visionResponseSchema>

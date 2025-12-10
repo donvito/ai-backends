@@ -257,7 +257,6 @@
       <!-- Output -->
       <section class="bg-white p-6 rounded-2xl border border-gray-100 shadow-lg hover:shadow-xl transition-shadow duration-300">
         <h2 class="text-lg font-semibold mb-3">Extracted Data</h2>
-        <div id="usageInfo" class="hidden mb-3 text-sm"></div>
 
         <!-- Loading State -->
         <div id="loadingState" class="hidden">
@@ -267,46 +266,8 @@
           <p class="text-center text-gray-600 mt-2">Extracting data...</p>
         </div>
 
-        <!-- Token Usage Info -->
-        <div id="tokenInfo" class="mb-4 hidden">
-          <div class="metrics-container">
-            <div class="grid grid-cols-3 gap-2">
-              <div class="metric-item">
-                <div class="metric-icon">
-                  <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-                  </svg>
-                </div>
-                <div>
-                  <div class="metric-label">Input</div>
-                  <div class="metric-value" id="inputTokens">-</div>
-                </div>
-              </div>
-              <div class="metric-item">
-                <div class="metric-icon">
-                  <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4v-4z" />
-                  </svg>
-                </div>
-                <div>
-                  <div class="metric-label">Output</div>
-                  <div class="metric-value" id="outputTokens">-</div>
-                </div>
-              </div>
-              <div class="metric-item">
-                <div class="metric-icon">
-                  <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                </div>
-                <div>
-                  <div class="metric-label">Total</div>
-                  <div class="metric-value" id="totalTokens">-</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <!-- Usage Metrics -->
+        <div id="metricsContainer" class="mb-4 hidden"></div>
 
         <!-- Parse Error Warning -->
         <div id="parseErrorSection" class="mb-4 hidden">
@@ -392,12 +353,8 @@
     const tokenEl = document.getElementById('token');
     const runBtn = document.getElementById('runBtn');
     const cancelBtn = document.getElementById('cancelBtn');
-    const usageInfo = document.getElementById('usageInfo');
     const jsonPreview = document.getElementById('jsonPreview');
-    const tokenInfo = document.getElementById('tokenInfo');
-    const inputTokensEl = document.getElementById('inputTokens');
-    const outputTokensEl = document.getElementById('outputTokens');
-    const totalTokensEl = document.getElementById('totalTokens');
+    const metricsContainer = document.getElementById('metricsContainer');
     const loadingState = document.getElementById('loadingState');
     const imagePreviewContainer = document.getElementById('imagePreviewContainer');
     const imagePreview = document.getElementById('imagePreview');
@@ -482,17 +439,106 @@
         // Invalid JSON, ignore
       }
 
-      const payload = {
-        imageUrl: imageUrlEl.value || defaultImageUrl,
-        prompt: promptEl.value || 'Extract all information from this image.',
-        model: modelEl.value
+      const requestBody = {
+        payload: {
+          imageUrl: imageUrlEl.value || defaultImageUrl,
+          prompt: promptEl.value || 'Extract all information from this image.'
+        },
+        config: {
+          provider: 'zai',
+          model: modelEl.value,
+          temperature: 0,
+          stream: false
+        }
       };
 
       if (schema) {
-        payload.jsonSchema = schema;
+        requestBody.payload.jsonSchema = schema;
       }
 
-      jsonPreview.textContent = JSON.stringify(payload, null, 2);
+      jsonPreview.textContent = JSON.stringify(requestBody, null, 2);
+    }
+
+    function displayUsageMetrics(usage, responseTime, provider, model) {
+      metricsContainer.classList.remove('hidden');
+      
+      let metricsHtml = '<div class="metrics-container">';
+      metricsHtml += '<div class="grid grid-cols-2 sm:grid-cols-4 gap-3">';
+      
+      // Response Time metric
+      metricsHtml += '<div class="metric-item">' +
+        '<div class="metric-icon">' +
+          '<svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>' +
+          '</svg>' +
+        '</div>' +
+        '<div>' +
+          '<div class="metric-label">Response</div>' +
+          '<div class="metric-value text-orange-600">' + responseTime + ' ms</div>' +
+        '</div>' +
+      '</div>';
+      
+      if (usage) {
+        const inputTokens = usage.input_tokens || usage.prompt_tokens || 0;
+        const outputTokens = usage.output_tokens || usage.completion_tokens || 0;
+        const totalTokens = usage.total_tokens || (inputTokens + outputTokens);
+        
+        // Input Tokens
+        metricsHtml += '<div class="metric-item">' +
+          '<div class="metric-icon">' +
+            '<svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+              '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>' +
+            '</svg>' +
+          '</div>' +
+          '<div>' +
+            '<div class="metric-label">Input</div>' +
+            '<div class="metric-value text-blue-600">' + inputTokens.toLocaleString() + '</div>' +
+          '</div>' +
+        '</div>';
+        
+        // Output Tokens
+        metricsHtml += '<div class="metric-item">' +
+          '<div class="metric-icon">' +
+            '<svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+              '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path>' +
+            '</svg>' +
+          '</div>' +
+          '<div>' +
+            '<div class="metric-label">Output</div>' +
+            '<div class="metric-value text-green-600">' + outputTokens.toLocaleString() + '</div>' +
+          '</div>' +
+        '</div>';
+        
+        // Total Tokens
+        metricsHtml += '<div class="metric-item">' +
+          '<div class="metric-icon">' +
+            '<svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+              '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>' +
+            '</svg>' +
+          '</div>' +
+          '<div>' +
+            '<div class="metric-label">Total</div>' +
+            '<div class="metric-value text-purple-600">' + totalTokens.toLocaleString() + '</div>' +
+          '</div>' +
+        '</div>';
+      }
+      
+      metricsHtml += '</div>';
+      
+      // Provider and model info
+      if (provider && model) {
+        metricsHtml += '<div class="mt-3 pt-3 border-t border-gray-200 flex items-center gap-2 text-sm text-gray-600">' +
+          '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />' +
+          '</svg>' +
+          '<span>Provider: <strong>' + escapeHtml(provider) + '</strong></span>' +
+          '<span>•</span>' +
+          '<span>Model: <strong>' + escapeHtml(model) + '</strong></span>' +
+        '</div>';
+      }
+      
+      metricsHtml += '</div>';
+      metricsContainer.innerHTML = metricsHtml;
     }
 
     async function extractData() {
@@ -515,11 +561,11 @@
       loadingState.classList.remove('hidden');
       extractedDataSection.classList.add('hidden');
       parseErrorSection.classList.add('hidden');
-      tokenInfo.classList.add('hidden');
-      usageInfo.classList.add('hidden');
+      metricsContainer.classList.add('hidden');
       rawText.innerHTML = '<span class="text-gray-500">Raw response will appear here...</span>';
 
       abortController = new AbortController();
+      const startTime = performance.now();
 
       try {
         const headers = {
@@ -531,13 +577,20 @@
         }
 
         const body = {
-          imageUrl: imageUrl,
-          prompt: prompt,
-          model: model
+          payload: {
+            imageUrl: imageUrl,
+            prompt: prompt
+          },
+          config: {
+            provider: 'zai',
+            model: model,
+            temperature: 0,
+            stream: false
+          }
         };
 
         if (jsonSchema) {
-          body.jsonSchema = jsonSchema;
+          body.payload.jsonSchema = jsonSchema;
         }
 
         const response = await fetch('/api/v1/ocr', {
@@ -546,6 +599,9 @@
           body: JSON.stringify(body),
           signal: abortController.signal
         });
+
+        const endTime = performance.now();
+        const responseTime = (endTime - startTime).toFixed(0);
 
         if (!response.ok) {
           const error = await response.json();
@@ -569,28 +625,8 @@
           parseErrorSection.classList.remove('hidden');
         }
 
-        // Display token usage
-        if (data.usage) {
-          tokenInfo.classList.remove('hidden');
-          inputTokensEl.textContent = data.usage.input_tokens || '-';
-          outputTokensEl.textContent = data.usage.output_tokens || '-';
-          totalTokensEl.textContent = data.usage.total_tokens || '-';
-        }
-
-        // Display provider and model info
-        if (data.provider && data.model) {
-          usageInfo.innerHTML = `
-            <div class="flex items-center gap-2 text-gray-600">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>Provider: <strong>${escapeHtml(data.provider)}</strong></span>
-              <span>-</span>
-              <span>Model: <strong>${escapeHtml(data.model)}</strong></span>
-            </div>
-          `;
-          usageInfo.classList.remove('hidden');
-        }
+        // Display usage metrics
+        displayUsageMetrics(data.usage, responseTime, data.provider, data.model);
       } catch (error) {
         if (error.name === 'AbortError') {
           rawText.innerHTML = '<span class="text-yellow-600">Request cancelled</span>';

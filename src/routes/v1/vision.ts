@@ -10,7 +10,22 @@ const router = new OpenAPIHono()
 async function handleVisionRequest(c: Context) {
   try {
     const body = await c.req.json()
-    const { imageUrl, prompt, model, thinking } = visionRequestSchema.parse(body)
+    const { payload, config } = visionRequestSchema.parse(body)
+    const { imageUrl, prompt, thinking } = payload
+    const { provider, model } = config
+
+    console.log('[Vision] Request received:', { 
+      imageUrl: imageUrl.substring(0, 50) + '...', 
+      prompt: prompt.substring(0, 50) + '...', 
+      provider,
+      model,
+      thinking 
+    })
+
+    // Currently only ZAI provider supports vision
+    if (provider !== 'zai') {
+      return handleValidationError(c, 'Vision currently only supports the ZAI provider. Please set provider to "zai".')
+    }
 
     if (!zaiConfig.enabled || !zaiConfig.apiKey) {
       return handleValidationError(c, 'ZAI provider is not configured. Please set ZAI_API_KEY in your environment.')
@@ -20,7 +35,7 @@ async function handleVisionRequest(c: Context) {
 
     return c.json(result, 200)
   } catch (error) {
-    console.error('Vision endpoint error:', error)
+    console.error('[Vision] Endpoint error:', error)
     return handleError(c, error, 'Failed to analyze image')
   }
 }
