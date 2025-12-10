@@ -109,6 +109,308 @@ class ZAIProvider implements AIProvider {
       'glm-4.5-airx',
     ];
   }
+
+  /**
+   * Vision API - Ask questions about an image
+   * @param imageUrl - URL of the image to analyze
+   * @param prompt - Question or prompt about the image
+   * @param model - Vision model to use (default: glm-4.6v)
+   * @param thinking - Enable thinking mode for detailed analysis
+   */
+  async analyzeImage(
+    imageUrl: string,
+    prompt: string,
+    model: string = 'glm-4.6v',
+    thinking: boolean = false
+  ): Promise<ZAIVisionResponse> {
+    const requestBody: ZAIVisionRequest = {
+      model,
+      messages: [
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: prompt
+            },
+            {
+              type: 'image_url',
+              image_url: { url: imageUrl }
+            }
+          ]
+        }
+      ],
+      max_tokens: 4096
+    };
+
+    if (thinking) {
+      requestBody.thinking = { type: 'enabled' };
+    }
+
+    const response = await fetch(`${ZAI_BASE_URL}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${zaiConfig.apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestBody)
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`ZAI Vision API error: ${errorText}`);
+    }
+
+    const data = await response.json() as ZAIAPIResponse;
+
+    return {
+      text: data.choices?.[0]?.message?.content || '',
+      thinking: data.choices?.[0]?.message?.reasoning_content,
+      model,
+      provider: 'zai',
+      usage: data.usage ? {
+        input_tokens: data.usage.prompt_tokens,
+        output_tokens: data.usage.completion_tokens,
+        total_tokens: data.usage.total_tokens
+      } : undefined
+    };
+  }
+
+  /**
+   * OCR API - Extract structured data from an image
+   * @param imageUrl - URL of the image to extract data from
+   * @param extractionPrompt - Instructions for what data to extract
+   * @param jsonSchema - Optional JSON schema to structure the output
+   * @param model - Vision model to use (default: glm-4.6v)
+   */
+  async extractFromImage(
+    imageUrl: string,
+    extractionPrompt: string,
+    jsonSchema?: object,
+    model: string = 'glm-4.6v'
+  ): Promise<ZAIOCRResponse> {
+    console.log('[ZAI OCR] extractFromImage called with:', { imageUrl: imageUrl.substring(0, 50) + '...', extractionPrompt, hasSchema: !!jsonSchema, model });
+    
+    let fullPrompt = extractionPrompt;
+
+    if (jsonSchema) {
+      fullPrompt = `You are a data extraction assistant. Analyze the image and extract information.
+
+Task: ${extractionPrompt}
+
+Return ONLY a JSON object with this exact structure (replace values with actual extracted data):
+${JSON.stringify(jsonSchema, null, 2)}
+
+Rules:
+- Output ONLY the JSON object, nothing else
+- No markdown, no code blocks, no explanations
+- Use null for fields you cannot find
+- Start your response with { and end with }`;
+    } else {
+      fullPrompt = `You are a data extraction assistant. Analyze the image and extract all visible information.
+
+Task: ${extractionPrompt}
+
+Return ONLY a JSON object containing the extracted data.
+
+Rules:
+- Output ONLY the JSON object, nothing else
+- No markdown, no code blocks, no explanations
+- Start your response with { and end with }`;
+    }
+
+    const requestBody: ZAIVisionRequest = {
+      model,
+      messages: [
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: fullPrompt
+            },
+            {
+              type: 'image_url',
+              image_url: { url: imageUrl }
+            }
+          ]
+        }
+      ],
+      max_tokens: 4096
+    };
+
+    console.log('[ZAI OCR] Sending request to:', `${ZAI_BASE_URL}/chat/completions`);
+    console.log('[ZAI OCR] Request body:', JSON.stringify(requestBody, null, 2));
+
+    const response = await fetch(`${ZAI_BASE_URL}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${zaiConfig.apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestBody)
+    });
+
+    console.log('[ZAI OCR] Response status:', response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[ZAI OCR] Error response:', errorText);
+      throw new Error(`ZAI OCR API error: ${errorText}`);
+    }
+
+    const data = await response.json() as ZAIAPIResponse;
+    console.log('[ZAI OCR] Full response data:', JSON.stringify(data, null, 2));
+    
+    // Check for API-level errors in the response
+    if ((data as any).error) {
+      console.error('[ZAI OCR] API returned error:', (data as any).error);
+      throw new Error(`ZAI OCR API error: ${JSON.stringify((data as any).error)}`);
+    }
+    
+    // Log the choices structure for debugging
+    console.log('[ZAI OCR] Choices:', JSON.stringify(data.choices, null, 2));
+    
+    // Try multiple ways to extract content from the response
+    let rawText = '';
+    const choice = data.choices?.[0];
+    if (choice) {
+      // Standard format: message.content as string
+      if (typeof choice.message?.content === 'string') {
+        rawText = choice.message.content;
+      }
+      // Some APIs return content as an array
+      else if (Array.isArray(choice.message?.content)) {
+        const textPart = (choice.message.content as any[]).find(
+          (part: any) => part.type === 'text'
+        );
+        rawText = textPart?.text || '';
+      }
+      // Check for delta format (streaming response remnant)
+      else if ((choice as any).delta?.content) {
+        rawText = (choice as any).delta.content;
+      }
+    }
+    
+    console.log('[ZAI OCR] Extracted rawText length:', rawText.length);
+    console.log('[ZAI OCR] Extracted rawText (first 500 chars):', rawText.substring(0, 500));
+
+    // Try to parse as JSON using multiple strategies
+    let extractedData: object | null = null;
+    let parseError: string | undefined;
+
+    const parseStrategies = [
+      // Strategy 1: Extract from ```json ... ``` code blocks
+      () => {
+        const match = rawText.match(/```json\s*([\s\S]*?)```/);
+        if (match) return JSON.parse(match[1].trim());
+        return null;
+      },
+      // Strategy 2: Extract from ``` ... ``` code blocks (any language)
+      () => {
+        const match = rawText.match(/```\s*([\s\S]*?)```/);
+        if (match) return JSON.parse(match[1].trim());
+        return null;
+      },
+      // Strategy 3: Find JSON object pattern { ... }
+      () => {
+        const match = rawText.match(/\{[\s\S]*\}/);
+        if (match) return JSON.parse(match[0]);
+        return null;
+      },
+      // Strategy 4: Find JSON array pattern [ ... ]
+      () => {
+        const match = rawText.match(/\[[\s\S]*\]/);
+        if (match) return JSON.parse(match[0]);
+        return null;
+      },
+      // Strategy 5: Try parsing the entire response as JSON
+      () => JSON.parse(rawText.trim())
+    ];
+
+    for (const strategy of parseStrategies) {
+      try {
+        const result = strategy();
+        if (result !== null) {
+          extractedData = result;
+          break;
+        }
+      } catch {
+        // Try next strategy
+      }
+    }
+
+    if (!extractedData && rawText.trim()) {
+      parseError = 'Could not extract valid JSON from the response. The raw text is shown below.';
+    }
+
+    return {
+      rawText,
+      extractedData,
+      parseError,
+      model,
+      provider: 'zai',
+      usage: data.usage ? {
+        input_tokens: data.usage.prompt_tokens,
+        output_tokens: data.usage.completion_tokens,
+        total_tokens: data.usage.total_tokens
+      } : undefined
+    };
+  }
+}
+
+// Type definitions for ZAI Vision/OCR API
+interface ZAIVisionRequest {
+  model: string;
+  messages: Array<{
+    role: string;
+    content: Array<{
+      type: string;
+      text?: string;
+      image_url?: { url: string };
+    }>;
+  }>;
+  thinking?: { type: string };
+  max_tokens?: number;
+}
+
+interface ZAIAPIResponse {
+  choices?: Array<{
+    message: {
+      content: string;
+      reasoning_content?: string;
+    };
+  }>;
+  usage?: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
+}
+
+export interface ZAIVisionResponse {
+  text: string;
+  thinking?: string;
+  model: string;
+  provider: string;
+  usage?: {
+    input_tokens: number;
+    output_tokens: number;
+    total_tokens: number;
+  };
+}
+
+export interface ZAIOCRResponse {
+  rawText: string;
+  extractedData: object | null;
+  parseError?: string;
+  model: string;
+  provider: string;
+  usage?: {
+    input_tokens: number;
+    output_tokens: number;
+    total_tokens: number;
+  };
 }
 
 const provider = new ZAIProvider();

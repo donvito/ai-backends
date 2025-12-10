@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI Backends - OCR Demo</title>
+  <title>AI Backends - Vision Demo</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -55,81 +55,10 @@
       font-weight: 600;
     }
     .image-preview {
-      max-height: 250px;
+      max-height: 300px;
       object-fit: contain;
       border-radius: 8px;
       border: 1px solid #e5e7eb;
-      cursor: zoom-in;
-      transition: opacity 0.2s;
-    }
-    .image-preview:hover {
-      opacity: 0.9;
-    }
-    .image-modal {
-      position: fixed;
-      inset: 0;
-      z-index: 100;
-      background: rgba(0, 0, 0, 0.9);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: zoom-out;
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.3s, visibility 0.3s;
-    }
-    .image-modal.active {
-      opacity: 1;
-      visibility: visible;
-    }
-    .image-modal img {
-      max-width: 90vw;
-      max-height: 90vh;
-      object-fit: contain;
-      border-radius: 8px;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-    }
-    .image-modal .close-btn {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      color: white;
-      background: rgba(255, 255, 255, 0.1);
-      border: none;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .image-modal .close-btn:hover {
-      background: rgba(255, 255, 255, 0.2);
-    }
-    .copy-btn {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      padding: 6px 12px;
-      background: rgba(255, 255, 255, 0.1);
-      color: #a7f3d0;
-      border: 1px solid rgba(167, 243, 208, 0.3);
-      border-radius: 6px;
-      font-size: 12px;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-    .copy-btn:hover {
-      background: rgba(255, 255, 255, 0.2);
-    }
-    .copy-btn.copied {
-      background: rgba(34, 197, 94, 0.3);
-      color: #86efac;
     }
   </style>
   <script src="/api/shared/safedom.js"></script>
@@ -175,15 +104,15 @@
         <li><span>/</span></li>
         <li><a href="/api/demos" class="hover:text-gray-700">Demos</a></li>
         <li><span>/</span></li>
-        <li class="text-gray-900 font-medium">OCR</li>
+        <li class="text-gray-900 font-medium">Vision</li>
       </ol>
     </nav>
 
     <!-- Demo Title and Description -->
     <div class="text-center mb-8">
-      <h1 class="text-3xl font-bold text-gray-900 mb-3">OCR Demo</h1>
+      <h1 class="text-3xl font-bold text-gray-900 mb-3">Vision Demo</h1>
       <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-        Extract structured data from images using ZAI GLM-4.6V. Define a JSON schema to get formatted output from receipts, documents, and more.
+        Ask questions about images using ZAI GLM-4.6V vision models. Describe images, detect objects, and get coordinates.
       </p>
     </div>
 
@@ -197,35 +126,21 @@
 
         <!-- Image Preview -->
         <div id="imagePreviewContainer" class="mt-4 hidden">
-          <label class="block text-sm font-medium text-gray-700 mb-2">Preview <span class="text-gray-400 font-normal">(click to zoom)</span></label>
-          <img id="imagePreview" class="image-preview w-full" alt="Image preview" onclick="openImageModal()" />
+          <label class="block text-sm font-medium text-gray-700 mb-2">Preview</label>
+          <img id="imagePreview" class="image-preview w-full" alt="Image preview" />
         </div>
 
-        <!-- Image Modal -->
-        <div id="imageModal" class="image-modal" onclick="closeImageModal()">
-          <button class="close-btn" onclick="closeImageModal()" title="Close">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-          <img id="modalImage" src="" alt="Zoomed image" onclick="event.stopPropagation()" />
-        </div>
-
-        <label class="block text-sm font-medium text-gray-700 mb-1 mt-4">Extraction Prompt</label>
-        <textarea id="prompt" class="w-full h-20 p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple bg-white" placeholder="What data should be extracted from this image?"></textarea>
-
-        <label class="block text-sm font-medium text-gray-700 mb-1 mt-4">JSON Schema (optional)</label>
-        <textarea id="jsonSchema" class="w-full h-32 p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple bg-white font-mono text-sm" placeholder='{"store_name": "string", "total": "number", "items": [{"name": "string", "price": "number"}]}'></textarea>
-        <p class="text-xs text-gray-500 mt-1">Define the structure of the data you want to extract</p>
+        <label class="block text-sm font-medium text-gray-700 mb-1 mt-4">Prompt</label>
+        <textarea id="prompt" class="w-full h-24 p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple bg-white" placeholder="Ask a question about the image..."></textarea>
 
         <!-- Quick Samples -->
         <div class="mt-3">
-          <div class="text-xs text-gray-500 mb-2">Sample extractions:</div>
+          <div class="text-xs text-gray-500 mb-2">Sample prompts:</div>
           <div class="flex flex-wrap gap-2">
-            <button type="button" id="chipReceipt" class="px-3 py-1.5 text-sm bg-gray-50 text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-100">Receipt</button>
-            <button type="button" id="chipBusinessCard" class="px-3 py-1.5 text-sm bg-gray-50 text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-100">Business Card</button>
-            <button type="button" id="chipInvoice" class="px-3 py-1.5 text-sm bg-gray-50 text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-100">Invoice</button>
-            <button type="button" id="chipDocument" class="px-3 py-1.5 text-sm bg-gray-50 text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-100">Document</button>
+            <button type="button" id="chipCoordinates" class="px-3 py-1.5 text-sm bg-gray-50 text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-100">Find Coordinates</button>
+            <button type="button" id="chipDescribe" class="px-3 py-1.5 text-sm bg-gray-50 text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-100">Describe Image</button>
+            <button type="button" id="chipCount" class="px-3 py-1.5 text-sm bg-gray-50 text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-100">Count Objects</button>
+            <button type="button" id="chipColors" class="px-3 py-1.5 text-sm bg-gray-50 text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-100">Identify Colors</button>
           </div>
         </div>
 
@@ -237,26 +152,33 @@
               <option value="glm-4.6v-flash">GLM-4.6V Flash</option>
             </select>
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Bearer Token</label>
-            <input id="token" type="password" placeholder="Optional" class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple" />
+          <div class="flex items-end">
+            <label class="flex items-center gap-2 cursor-pointer pb-2">
+              <input type="checkbox" id="thinkingEnabled" class="rounded border-gray-300 text-brand-purple focus:ring-brand-purple">
+              <span class="text-sm font-medium text-gray-700">Enable thinking</span>
+            </label>
           </div>
         </div>
 
+        <div class="mt-3">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Bearer Token (optional)</label>
+          <input id="token" type="password" placeholder="Only needed in production deployments" class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple" />
+        </div>
+
         <div class="mt-4 flex items-center gap-2">
-          <button id="runBtn" class="px-4 py-2 rounded-lg bg-brand-purple text-white hover:bg-[#9935D9]">Extract Data</button>
+          <button id="runBtn" class="px-4 py-2 rounded-lg bg-brand-purple text-white hover:bg-[#9935D9]">Analyze Image</button>
           <button id="cancelBtn" class="hidden px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700">Cancel</button>
         </div>
 
         <details class="mt-4">
           <summary class="text-sm text-gray-600 cursor-pointer">View JSON request</summary>
-          <pre id="jsonPreview" class="mt-2 bg-gray-900 text-green-400 p-3 rounded-lg text-xs mono overflow-auto max-h-48"></pre>
+          <pre id="jsonPreview" class="mt-2 bg-gray-900 text-green-400 p-3 rounded-lg text-xs mono overflow-auto"></pre>
         </details>
       </section>
 
       <!-- Output -->
       <section class="bg-white p-6 rounded-2xl border border-gray-100 shadow-lg hover:shadow-xl transition-shadow duration-300">
-        <h2 class="text-lg font-semibold mb-3">Extracted Data</h2>
+        <h2 class="text-lg font-semibold mb-3">Result</h2>
         <div id="usageInfo" class="hidden mb-3 text-sm"></div>
 
         <!-- Loading State -->
@@ -264,7 +186,7 @@
           <div class="flex items-center justify-center py-12">
             <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-purple"></div>
           </div>
-          <p class="text-center text-gray-600 mt-2">Extracting data...</p>
+          <p class="text-center text-gray-600 mt-2">Analyzing image...</p>
         </div>
 
         <!-- Token Usage Info -->
@@ -308,39 +230,16 @@
           </div>
         </div>
 
-        <!-- Parse Error Warning -->
-        <div id="parseErrorSection" class="mb-4 hidden">
-          <div class="bg-yellow-50 rounded-lg border border-yellow-200 p-3">
-            <div class="flex items-center gap-2 text-yellow-800">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-              <span class="text-sm font-medium">JSON Parse Warning</span>
-            </div>
-            <p id="parseErrorText" class="text-sm text-yellow-700 mt-1"></p>
-          </div>
+        <!-- Thinking Section -->
+        <div id="thinkingSection" class="mb-4 hidden">
+          <details class="bg-blue-50 rounded-lg border border-blue-200">
+            <summary class="text-sm font-medium text-blue-800 cursor-pointer p-3">View model thinking process</summary>
+            <div id="thinkingContent" class="p-3 pt-0 text-sm text-blue-700 whitespace-pre-wrap"></div>
+          </details>
         </div>
 
-        <!-- Extracted JSON Data -->
-        <div id="extractedDataSection" class="hidden">
-          <h3 class="text-sm font-medium text-gray-700 mb-2">Structured Data</h3>
-          <div class="relative">
-            <button id="copyJsonBtn" class="copy-btn" title="Copy JSON">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
-              <span>Copy</span>
-            </button>
-            <pre id="extractedData" class="p-4 rounded-lg bg-gray-900 text-green-400 text-sm font-mono overflow-auto max-h-96"></pre>
-          </div>
-        </div>
-
-        <!-- Raw Response -->
-        <div id="rawResponseSection" class="mt-4">
-          <h3 class="text-sm font-medium text-gray-700 mb-2">Raw Response</h3>
-          <div id="rawText" class="p-4 rounded-lg bg-gray-50 border border-gray-200 leading-7 text-gray-900 whitespace-pre-wrap text-sm max-h-64 overflow-auto">
-            <span class="text-gray-500">Raw response will appear here...</span>
-          </div>
+        <div id="resultText" class="p-4 rounded-lg bg-gray-50 border border-gray-200 leading-7 text-gray-900 min-h-[200px] whitespace-pre-wrap">
+          <span class="text-gray-500">Response will appear here...</span>
         </div>
       </section>
     </div>
@@ -352,31 +251,31 @@
       <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
         <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
           <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
           </div>
-          <h3 class="text-lg font-semibold text-gray-900 mb-1">Receipt Processing</h3>
-          <p class="text-gray-600 text-sm">Extract store name, items, prices, and totals from receipts automatically.</p>
+          <h3 class="text-lg font-semibold text-gray-900 mb-1">Object Detection</h3>
+          <p class="text-gray-600 text-sm">Locate specific objects in images and get their bounding box coordinates.</p>
         </div>
         <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
           <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mb-4">
-            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"/></svg>
+            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
           </div>
-          <h3 class="text-lg font-semibold text-gray-900 mb-1">Business Cards</h3>
-          <p class="text-gray-600 text-sm">Extract contact information like name, email, phone, and company from business cards.</p>
+          <h3 class="text-lg font-semibold text-gray-900 mb-1">Image Description</h3>
+          <p class="text-gray-600 text-sm">Get detailed descriptions of image contents, scenes, and visual elements.</p>
         </div>
         <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
           <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
-            <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           </div>
-          <h3 class="text-lg font-semibold text-gray-900 mb-1">Invoice Parsing</h3>
-          <p class="text-gray-600 text-sm">Extract invoice numbers, dates, line items, and amounts from invoices.</p>
+          <h3 class="text-lg font-semibold text-gray-900 mb-1">Visual Q&A</h3>
+          <p class="text-gray-600 text-sm">Ask specific questions about image contents and get accurate answers.</p>
         </div>
         <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
           <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
-            <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
           </div>
-          <h3 class="text-lg font-semibold text-gray-900 mb-1">Document Digitization</h3>
-          <p class="text-gray-600 text-sm">Convert scanned documents to structured, searchable data.</p>
+          <h3 class="text-lg font-semibold text-gray-900 mb-1">Visual Grounding</h3>
+          <p class="text-gray-600 text-sm">Get precise coordinates for objects referenced in natural language queries.</p>
         </div>
       </div>
     </div>
@@ -387,11 +286,12 @@
 
     const imageUrlEl = document.getElementById('imageUrl');
     const promptEl = document.getElementById('prompt');
-    const jsonSchemaEl = document.getElementById('jsonSchema');
     const modelEl = document.getElementById('model');
+    const thinkingEl = document.getElementById('thinkingEnabled');
     const tokenEl = document.getElementById('token');
     const runBtn = document.getElementById('runBtn');
     const cancelBtn = document.getElementById('cancelBtn');
+    const resultText = document.getElementById('resultText');
     const usageInfo = document.getElementById('usageInfo');
     const jsonPreview = document.getElementById('jsonPreview');
     const tokenInfo = document.getElementById('tokenInfo');
@@ -401,57 +301,10 @@
     const loadingState = document.getElementById('loadingState');
     const imagePreviewContainer = document.getElementById('imagePreviewContainer');
     const imagePreview = document.getElementById('imagePreview');
-    const imageModal = document.getElementById('imageModal');
-    const modalImage = document.getElementById('modalImage');
-    const parseErrorSection = document.getElementById('parseErrorSection');
-    const parseErrorText = document.getElementById('parseErrorText');
-    const extractedDataSection = document.getElementById('extractedDataSection');
-    const extractedData = document.getElementById('extractedData');
-    const rawText = document.getElementById('rawText');
-    const copyJsonBtn = document.getElementById('copyJsonBtn');
+    const thinkingSection = document.getElementById('thinkingSection');
+    const thinkingContent = document.getElementById('thinkingContent');
 
     let abortController = null;
-
-    // Image modal functions
-    function openImageModal() {
-      const url = imageUrlEl.value.trim() || defaultImageUrl;
-      modalImage.src = url;
-      imageModal.classList.add('active');
-      document.body.style.overflow = 'hidden';
-    }
-
-    function closeImageModal() {
-      imageModal.classList.remove('active');
-      document.body.style.overflow = '';
-    }
-
-    // Close modal on Escape key
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && imageModal.classList.contains('active')) {
-        closeImageModal();
-      }
-    });
-
-    // Copy JSON function
-    async function copyJsonToClipboard() {
-      const jsonText = extractedData.textContent;
-      if (!jsonText) return;
-
-      try {
-        await navigator.clipboard.writeText(jsonText);
-        copyJsonBtn.classList.add('copied');
-        copyJsonBtn.querySelector('span').textContent = 'Copied!';
-        
-        setTimeout(() => {
-          copyJsonBtn.classList.remove('copied');
-          copyJsonBtn.querySelector('span').textContent = 'Copy';
-        }, 2000);
-      } catch (err) {
-        console.error('Failed to copy:', err);
-      }
-    }
-
-    copyJsonBtn.addEventListener('click', copyJsonToClipboard);
 
     function escapeHtml(text) {
       const div = document.createElement('div');
@@ -473,51 +326,34 @@
     }
 
     function updateJsonPreview() {
-      let schema = null;
-      try {
-        if (jsonSchemaEl.value.trim()) {
-          schema = JSON.parse(jsonSchemaEl.value);
-        }
-      } catch (e) {
-        // Invalid JSON, ignore
-      }
-
       const payload = {
         imageUrl: imageUrlEl.value || defaultImageUrl,
-        prompt: promptEl.value || 'Extract all information from this image.',
-        model: modelEl.value
+        prompt: promptEl.value || 'Describe this image',
+        model: modelEl.value,
+        thinking: thinkingEl.checked
       };
-
-      if (schema) {
-        payload.jsonSchema = schema;
-      }
 
       jsonPreview.textContent = JSON.stringify(payload, null, 2);
     }
 
-    async function extractData() {
+    async function analyzeImage() {
       const imageUrl = imageUrlEl.value.trim() || defaultImageUrl;
-      const prompt = promptEl.value.trim() || 'Extract all information from this image.';
+      const prompt = promptEl.value.trim();
       const model = modelEl.value;
+      const thinking = thinkingEl.checked;
 
-      let jsonSchema = null;
-      try {
-        if (jsonSchemaEl.value.trim()) {
-          jsonSchema = JSON.parse(jsonSchemaEl.value);
-        }
-      } catch (e) {
-        alert('Invalid JSON schema. Please fix the syntax and try again.');
+      if (!prompt) {
+        alert('Please enter a prompt');
         return;
       }
 
       runBtn.classList.add('hidden');
       cancelBtn.classList.remove('hidden');
       loadingState.classList.remove('hidden');
-      extractedDataSection.classList.add('hidden');
-      parseErrorSection.classList.add('hidden');
+      resultText.classList.add('hidden');
       tokenInfo.classList.add('hidden');
+      thinkingSection.classList.add('hidden');
       usageInfo.classList.add('hidden');
-      rawText.innerHTML = '<span class="text-gray-500">Raw response will appear here...</span>';
 
       abortController = new AbortController();
 
@@ -530,44 +366,28 @@
           headers['Authorization'] = `Bearer ${tokenEl.value}`;
         }
 
-        const body = {
-          imageUrl: imageUrl,
-          prompt: prompt,
-          model: model
-        };
-
-        if (jsonSchema) {
-          body.jsonSchema = jsonSchema;
-        }
-
-        const response = await fetch('/api/v1/ocr', {
+        const response = await fetch('/api/v1/vision', {
           method: 'POST',
           headers: headers,
-          body: JSON.stringify(body),
+          body: JSON.stringify({
+            imageUrl: imageUrl,
+            prompt: prompt,
+            model: model,
+            thinking: thinking
+          }),
           signal: abortController.signal
         });
 
         if (!response.ok) {
           const error = await response.json();
-          throw new Error(error.error || error.details || 'Failed to extract data');
+          throw new Error(error.error || error.details || 'Failed to analyze image');
         }
 
         const data = await response.json();
 
-        // Display raw text
-        rawText.textContent = data.rawText || 'No response';
-
-        // Display extracted data if available
-        if (data.extractedData) {
-          extractedData.textContent = JSON.stringify(data.extractedData, null, 2);
-          extractedDataSection.classList.remove('hidden');
-        }
-
-        // Display parse error if any
-        if (data.parseError) {
-          parseErrorText.textContent = data.parseError;
-          parseErrorSection.classList.remove('hidden');
-        }
+        // Display the result
+        resultText.innerHTML = escapeHtml(data.text || 'No response');
+        resultText.classList.remove('hidden');
 
         // Display token usage
         if (data.usage) {
@@ -575,6 +395,12 @@
           inputTokensEl.textContent = data.usage.input_tokens || '-';
           outputTokensEl.textContent = data.usage.output_tokens || '-';
           totalTokensEl.textContent = data.usage.total_tokens || '-';
+        }
+
+        // Display thinking if available
+        if (data.thinking) {
+          thinkingContent.textContent = data.thinking;
+          thinkingSection.classList.remove('hidden');
         }
 
         // Display provider and model info
@@ -593,10 +419,11 @@
         }
       } catch (error) {
         if (error.name === 'AbortError') {
-          rawText.innerHTML = '<span class="text-yellow-600">Request cancelled</span>';
+          resultText.innerHTML = '<span class="text-yellow-600">Request cancelled</span>';
         } else {
-          rawText.innerHTML = `<span class="text-red-600">Error: ${escapeHtml(error.message)}</span>`;
+          resultText.innerHTML = `<span class="text-red-600">Error: ${escapeHtml(error.message)}</span>`;
         }
+        resultText.classList.remove('hidden');
       } finally {
         runBtn.classList.remove('hidden');
         cancelBtn.classList.add('hidden');
@@ -611,75 +438,44 @@
       }
     }
 
-    function loadSample(prompt, schema) {
-      promptEl.value = prompt;
-      jsonSchemaEl.value = JSON.stringify(schema, null, 2);
-      updateJsonPreview();
-    }
-
     // Event listeners
     imageUrlEl.addEventListener('input', () => {
       updateImagePreview();
       updateJsonPreview();
     });
     promptEl.addEventListener('input', updateJsonPreview);
-    jsonSchemaEl.addEventListener('input', updateJsonPreview);
     modelEl.addEventListener('change', updateJsonPreview);
+    thinkingEl.addEventListener('change', updateJsonPreview);
 
-    runBtn.addEventListener('click', extractData);
+    runBtn.addEventListener('click', analyzeImage);
     cancelBtn.addEventListener('click', cancelRequest);
 
     // Quick sample buttons
-    document.getElementById('chipReceipt').addEventListener('click', () => {
-      loadSample('Extract receipt information from this image.', {
-        store_name: 'string',
-        date: 'string',
-        items: [{ name: 'string', quantity: 'number', price: 'number' }],
-        subtotal: 'number',
-        tax: 'number',
-        total: 'number'
-      });
+    document.getElementById('chipCoordinates').addEventListener('click', () => {
+      imageUrlEl.value = defaultImageUrl;
+      promptEl.value = 'Where is the second bottle of beer from the right on the table? Provide coordinates in [[xmin,ymin,xmax,ymax]] format';
+      updateImagePreview();
+      updateJsonPreview();
     });
 
-    document.getElementById('chipBusinessCard').addEventListener('click', () => {
-      loadSample('Extract contact information from this business card.', {
-        name: 'string',
-        title: 'string',
-        company: 'string',
-        email: 'string',
-        phone: 'string',
-        address: 'string',
-        website: 'string'
-      });
+    document.getElementById('chipDescribe').addEventListener('click', () => {
+      promptEl.value = 'Describe this image in detail. What objects, people, and scenes do you see?';
+      updateJsonPreview();
     });
 
-    document.getElementById('chipInvoice').addEventListener('click', () => {
-      loadSample('Extract invoice details from this image.', {
-        invoice_number: 'string',
-        date: 'string',
-        due_date: 'string',
-        vendor: 'string',
-        customer: 'string',
-        line_items: [{ description: 'string', quantity: 'number', unit_price: 'number', total: 'number' }],
-        subtotal: 'number',
-        tax: 'number',
-        total: 'number'
-      });
+    document.getElementById('chipCount').addEventListener('click', () => {
+      promptEl.value = 'Count all the objects you can see in this image and list them with their quantities.';
+      updateJsonPreview();
     });
 
-    document.getElementById('chipDocument').addEventListener('click', () => {
-      loadSample('Extract all text and key information from this document.', {
-        title: 'string',
-        date: 'string',
-        author: 'string',
-        content: 'string',
-        key_points: ['string']
-      });
+    document.getElementById('chipColors').addEventListener('click', () => {
+      promptEl.value = 'What are the dominant colors in this image? Describe the color palette.';
+      updateJsonPreview();
     });
 
     // Initialize with default values
     imageUrlEl.value = defaultImageUrl;
-    promptEl.value = 'Extract all information from this image.';
+    promptEl.value = 'Where is the second bottle of beer from the right on the table? Provide coordinates in [[xmin,ymin,xmax,ymax]] format';
     updateImagePreview();
     updateJsonPreview();
   </script>

@@ -1,17 +1,18 @@
 import { z } from 'zod'
 
 export const ocrRequestSchema = z.object({
-  imageUrl: z.string().url().describe('URL of the image to process'),
-  prompt: z.string().optional().default('Extract all text from this image. Provide the extracted text in a clear, organized format.').describe('Custom prompt for OCR processing'),
-  model: z.enum(['glm-4.6v', 'glm-4.6v-flash']).optional().default('glm-4.6v').describe('The ZAI vision model to use'),
-  thinking: z.boolean().optional().default(false).describe('Enable thinking mode for more detailed analysis')
+  imageUrl: z.string().url().describe('URL of the image to extract data from'),
+  prompt: z.string().optional().default('Extract all information from this image.').describe('Instructions for what data to extract'),
+  jsonSchema: z.record(z.any()).optional().describe('Optional JSON schema to structure the output'),
+  model: z.enum(['glm-4.6v', 'glm-4.6v-flash']).optional().default('glm-4.6v').describe('The ZAI vision model to use')
 })
 
 export const ocrResponseSchema = z.object({
-  text: z.string().describe('Extracted text from the image'),
-  model: z.string().describe('The model used for OCR'),
+  rawText: z.string().describe('Raw text response from the model'),
+  extractedData: z.record(z.any()).nullable().describe('Parsed JSON data if extraction was successful'),
+  parseError: z.string().optional().describe('Error message if JSON parsing failed'),
+  model: z.string().describe('The model used'),
   provider: z.string().describe('The provider used'),
-  thinking: z.string().optional().describe('Model thinking process if enabled'),
   usage: z.object({
     input_tokens: z.number(),
     output_tokens: z.number(),
