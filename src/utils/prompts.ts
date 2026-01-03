@@ -487,6 +487,74 @@ Summary:`;
 }
 
 /**
+ * System prompt for legal document / contract / lease review
+ */
+export function textDocReviewPrompt(
+  text: string,
+  reviewRules: string,
+  documentType: 'contract' | 'lease' | 'legal' | 'agreement' | 'terms' | 'policy' | 'other' = 'other'
+): string {
+  const documentTypeDescriptions: Record<string, string> = {
+    contract: 'This is a contract. Focus on obligations, deliverables, payment terms, liability, termination clauses, and dispute resolution.',
+    lease: 'This is a lease/rental agreement. Focus on rent terms, security deposits, maintenance responsibilities, termination conditions, renewal terms, and tenant/landlord rights.',
+    legal: 'This is a legal document. Focus on legal obligations, rights, liabilities, indemnification, and compliance requirements.',
+    agreement: 'This is a general agreement. Focus on mutual obligations, terms and conditions, breach provisions, and enforceability.',
+    terms: 'This is a terms of service/use document. Focus on user rights, limitations, liability waivers, data usage, and termination policies.',
+    policy: 'This is a policy document. Focus on coverage, exclusions, limitations, claims procedures, and compliance requirements.',
+    other: 'Review this document for legal risks, unfavorable terms, and missing protections.'
+  };
+
+  const typeInstruction = documentTypeDescriptions[documentType] || documentTypeDescriptions.other;
+
+  return `You are an expert legal document reviewer specializing in contracts, leases, and legal agreements. Your role is to protect the interests of the party reviewing this document by identifying red flags, unfavorable terms, and potential risks.
+
+Document Type: ${documentType}
+${typeInstruction}
+
+Custom Review Rules/Criteria from the User:
+"""
+${reviewRules}
+"""
+
+Document to Review:
+"""
+${text}
+"""
+
+Analyze the document thoroughly from the perspective of protecting the reviewing party's interests. Provide your review in the following JSON format:
+{
+  "summary": "Executive summary of the document review (2-3 sentences highlighting the most important findings)",
+  "overallRisk": "<low|medium|high|critical>",
+  "score": <number 0-100 representing how favorable the document is for the reviewing party, higher is better>,
+  "findings": [
+    {
+      "category": "<Red Flag|Risk|Unfavorable Term|Missing Clause|Ambiguity|Compliance|Hidden Fee|Liability|Termination|Other>",
+      "severity": "<low|medium|high|critical>",
+      "clause": "<the exact clause or section text, if applicable>",
+      "issue": "<clear description of the issue or concern>",
+      "recommendation": "<specific action or suggested revision>",
+      "legalImplication": "<potential legal or financial consequences if not addressed>"
+    }
+  ],
+  "missingClauses": ["<important protection or clause that should be added>", ...],
+  "positiveTerms": ["<favorable term or protection present in the document>", ...],
+  "negotiationPoints": ["<key point to negotiate before signing>", ...]
+}
+
+Review Guidelines:
+- Apply the user's custom review rules strictly
+- Identify ALL red flags, risks, and unfavorable terms
+- Flag any one-sided or unconscionable clauses
+- Note missing standard protections (e.g., caps on liability, grace periods, dispute resolution)
+- Highlight ambiguous language that could be interpreted against the reviewing party
+- Identify hidden fees, automatic renewals, or penalty clauses
+- Use severity levels: critical for deal-breakers, high for significant risks, medium for concerns, low for minor issues
+- Provide specific, actionable recommendations
+- Include positive terms to give a balanced view
+- Return ONLY valid JSON, no additional text or markdown code blocks`;
+}
+
+/**
  * System prompt for synthetic data generation
  */
 export function syntheticDataPrompt(
