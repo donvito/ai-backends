@@ -12,7 +12,7 @@ import { apiVersion } from './versionConfig'
 const aiResponseSchema = z.object({
   summary: z.string(),
   overallRisk: z.enum(['low', 'medium', 'high', 'critical']).optional(),
-  score: z.number().min(0).max(100).optional(),
+  score: z.coerce.number().min(0).max(100).optional(),
   findings: z.array(z.object({
     category: z.string(),
     severity: z.enum(['low', 'medium', 'high', 'critical']),
@@ -38,7 +38,8 @@ async function handleTextDocReviewRequest(c: Context) {
     const result = await processStructuredOutputRequest(
       prompt,
       aiResponseSchema,
-      config
+      config,
+      config.temperature ?? 0
     )
 
     const { summary, overallRisk, score, findings, missingClauses, positiveTerms, negotiationPoints } = result.object

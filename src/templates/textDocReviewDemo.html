@@ -351,11 +351,11 @@ Tenant: John Doe`,
         const res = await fetch('/api/v1/services/models?source=config&view=capability', { headers });
         if (!res.ok) throw new Error('Failed to load models');
         const data = await res.json();
-        const summarize = data?.byCapability?.summarize;
-        if (!summarize || typeof summarize !== 'object') throw new Error('Invalid response');
+        const textDocReview = data?.byCapability?.textDocReview;
+        if (!textDocReview || typeof textDocReview !== 'object') throw new Error('Invalid response');
         const mapped = {};
-        for (const provider in summarize) {
-          const list = Array.isArray(summarize[provider]) ? summarize[provider] : [];
+        for (const provider in textDocReview) {
+          const list = Array.isArray(textDocReview[provider]) ? textDocReview[provider] : [];
           mapped[provider] = list.map(name => ({ value: name, label: name }));
         }
         return mapped;
