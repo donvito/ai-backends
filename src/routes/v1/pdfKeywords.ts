@@ -1,25 +1,35 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
 import { Context } from 'hono'
-import { pdfSummarizePrompt } from '../../utils/prompts'
+import { processStructuredOutputRequest } from '../../services/ai'
+import { keywordsPrompt } from '../../utils/prompts'
 import { handleError } from '../../utils/errorHandler'
-import { pdfSummarizerRequestSchema, pdfSummarizerResponseSchema, createPdfSummarizerResponse } from '../../schemas/v1/pdf-summarizer'
-import { processTextOutputRequest } from '../../services/ai'
+import { pdfKeywordsRequestSchema, pdfKeywordsResponseSchema, createPdfKeywordsResponse } from '../../schemas/v1/pdfKeywords'
 import { apiVersion } from './versionConfig'
 import { createFinalResponse } from './finalResponse'
 import { extractPDF, truncateText } from '../../utils/pdfExtractor'
-import { handleStreamingWithPdfMetadata} from "../../utils/streamingHandler";
 
 const router = new OpenAPIHono()
+
+const responseSchema = z.object({
+  keywords: z.array(z.string()).describe('List of keywords extracted from the PDF text')
+})
 
 // Maximum text length to send to the LLM (to avoid token limits)
 const MAX_PDF_TEXT_LENGTH = 50000
 
-async function handlePdfSummarizerRequest(c: Context) {
+async function handlePdfKeywordsRequest(c: Context) {
   try {
-    const { payload, config } = await c.req.json()
+    const body = await c.req.json()
+    
+    // Validate the request body against the schema
+    const validationResult = pdfKeywordsRequestSchema.safeParse(body)
+    if (!validationResult.success) {
+      return c.json({ error: 'Invalid request format', details: validationResult.error.errors }, 400)
+    }
+    
+    const { payload, config } = validationResult.data
     const provider = config.provider
     const model = config.model
-    const isStreaming = config.stream || false
     
     // Extract PDF content
     const pdfData = await extractPDF(payload.url)
@@ -29,22 +39,24 @@ async function handlePdfSummarizerRequest(c: Context) {
     }
     
     // Truncate text if it's too long
-    const textToSummarize = truncateText(pdfData.text, MAX_PDF_TEXT_LENGTH)
+    const textToAnalyze = truncateText(pdfData.text, MAX_PDF_TEXT_LENGTH)
     
     // Create the prompt
-    const prompt = pdfSummarizePrompt(textToSummarize, payload.maxLength)
+    const prompt = keywordsPrompt(textToAnalyze, payload.maxKeywords)
+    const temperature = config.temperature || 0
     
-    // Handle streaming response
-    if (isStreaming) {
-      const result = await processTextOutputRequest(prompt, config)
-        return handleStreamingWithPdfMetadata(c, result, provider, model, apiVersion, pdfData)
-    }
+    // Process the structured output request
+    const result = await processStructuredOutputRequest(
+      prompt,
+      responseSchema,
+      config,
+      temperature
+    )
     
-    // Handle non-streaming response
-    const result = await processTextOutputRequest(prompt, config)
-    const finalResponse = createPdfSummarizerResponse(
-      result.text, 
-      provider, 
+    const keywords = result.object.keywords
+    const finalResponse = createPdfKeywordsResponse(
+      keywords,
+      provider,
       model,
       {
         title: pdfData.title,
@@ -63,7 +75,7 @@ async function handlePdfSummarizerRequest(c: Context) {
 
     return c.json(finalResponseWithVersion, 200)
   } catch (error) {
-    return handleError(c, error, 'Failed to summarize PDF')
+    return handleError(c, error, 'Failed to extract keywords from PDF')
   }
 }
 
@@ -76,17 +88,17 @@ router.openapi(
       body: {
         content: {
           'application/json': {
-            schema: pdfSummarizerRequestSchema
+            schema: pdfKeywordsRequestSchema
           }
         }
       }
     },
     responses: {
       200: {
-        description: 'Returns the summarized PDF content.',
+        description: 'Returns the extracted keywords from the PDF.',
         content: {
           'application/json': {
-            schema: pdfSummarizerResponseSchema
+            schema: pdfKeywordsResponseSchema
           }
         }
       },
@@ -111,15 +123,14 @@ router.openapi(
         }
       }
     },
-    summary: 'Summarize PDF document',
-    description: 'This endpoint receives a PDF URL and uses an LLM to summarize the document\'s content.',
+    summary: 'Extract keywords from PDF document',
+    description: 'This endpoint receives a PDF URL and uses an LLM to extract keywords from the document\'s content.',
     tags: ['API']
   }),
-  handlePdfSummarizerRequest as any
+  handlePdfKeywordsRequest as any
 )
 
 export default {
   handler: router,
-  mountPath: 'pdf-summarizer'
+  mountPath: 'pdf-keywords'
 }
-

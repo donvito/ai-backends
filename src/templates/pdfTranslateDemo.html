@@ -448,7 +448,7 @@
       const res = await fetch('/api/v1/services/models?source=config&view=capability', { headers });
       if (!res.ok) throw new Error('Failed to load models: ' + res.status);
       const data = await res.json();
-      const pdfTranslate = data && data.byCapability && data.byCapability['pdf-translate'];
+      const pdfTranslate = data && data.byCapability && data.byCapability.pdfTranslate;
       if (!pdfTranslate || typeof pdfTranslate !== 'object') throw new Error('Invalid models response');
       const mapped = {};
       for (const provider in pdfTranslate) {

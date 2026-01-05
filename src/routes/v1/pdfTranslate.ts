@@ -1,61 +1,49 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
 import { Context } from 'hono'
-import { processStructuredOutputRequest } from '../../services/ai'
-import { keywordsPrompt } from '../../utils/prompts'
+import { pdfTranslatePrompt } from '../../utils/prompts'
 import { handleError } from '../../utils/errorHandler'
-import { pdfKeywordsRequestSchema, pdfKeywordsResponseSchema, createPdfKeywordsResponse } from '../../schemas/v1/pdf-keywords'
+import { pdfTranslateRequestSchema, pdfTranslateResponseSchema, createPdfTranslateResponse } from '../../schemas/v1/pdfTranslate'
+import { processTextOutputRequest } from '../../services/ai'
 import { apiVersion } from './versionConfig'
 import { createFinalResponse } from './finalResponse'
 import { extractPDF, truncateText } from '../../utils/pdfExtractor'
+import { handleStreamingWithPdfMetadata } from "../../utils/streamingHandler";
 
 const router = new OpenAPIHono()
-
-const responseSchema = z.object({
-  keywords: z.array(z.string()).describe('List of keywords extracted from the PDF text')
-})
 
 // Maximum text length to send to the LLM (to avoid token limits)
 const MAX_PDF_TEXT_LENGTH = 50000
 
-async function handlePdfKeywordsRequest(c: Context) {
+async function handlePdfTranslateRequest(c: Context) {
   try {
-    const body = await c.req.json()
-    
-    // Validate the request body against the schema
-    const validationResult = pdfKeywordsRequestSchema.safeParse(body)
-    if (!validationResult.success) {
-      return c.json({ error: 'Invalid request format', details: validationResult.error.errors }, 400)
-    }
-    
-    const { payload, config } = validationResult.data
+    const { payload, config } = await c.req.json()
     const provider = config.provider
     const model = config.model
-    
+    const isStreaming = config.stream || false
+
     // Extract PDF content
     const pdfData = await extractPDF(payload.url)
-    
+
     if (!pdfData.text || pdfData.text.length === 0) {
       throw new Error('No text content found in the PDF')
     }
-    
+
     // Truncate text if it's too long
-    const textToAnalyze = truncateText(pdfData.text, MAX_PDF_TEXT_LENGTH)
-    
+    const textToTranslate = truncateText(pdfData.text, MAX_PDF_TEXT_LENGTH)
+
     // Create the prompt
-    const prompt = keywordsPrompt(textToAnalyze, payload.maxKeywords)
-    const temperature = config.temperature || 0
-    
-    // Process the structured output request
-    const result = await processStructuredOutputRequest(
-      prompt,
-      responseSchema,
-      config,
-      temperature
-    )
-    
-    const keywords = result.object.keywords
-    const finalResponse = createPdfKeywordsResponse(
-      keywords,
+    const prompt = pdfTranslatePrompt(textToTranslate, payload.targetLanguage)
+
+    // Handle streaming response
+    if (isStreaming) {
+        const result = await processTextOutputRequest(prompt, config)
+        return handleStreamingWithPdfMetadata(c, result, provider, model, apiVersion, pdfData)
+    }
+
+    // Handle non-streaming response
+    const result = await processTextOutputRequest(prompt, config)
+    const finalResponse = createPdfTranslateResponse(
+      result.text,
       provider,
       model,
       {
@@ -75,7 +63,7 @@ async function handlePdfKeywordsRequest(c: Context) {
 
     return c.json(finalResponseWithVersion, 200)
   } catch (error) {
-    return handleError(c, error, 'Failed to extract keywords from PDF')
+    return handleError(c, error, 'Failed to translate PDF')
   }
 }
 
@@ -88,17 +76,17 @@ router.openapi(
       body: {
         content: {
           'application/json': {
-            schema: pdfKeywordsRequestSchema
+            schema: pdfTranslateRequestSchema
           }
         }
       }
     },
     responses: {
       200: {
-        description: 'Returns the extracted keywords from the PDF.',
+        description: 'Returns the translated PDF content.',
         content: {
           'application/json': {
-            schema: pdfKeywordsResponseSchema
+            schema: pdfTranslateResponseSchema
           }
         }
       },
@@ -123,15 +111,14 @@ router.openapi(
         }
       }
     },
-    summary: 'Extract keywords from PDF document',
-    description: 'This endpoint receives a PDF URL and uses an LLM to extract keywords from the document\'s content.',
+    summary: 'Translate PDF document',
+    description: 'This endpoint receives a PDF URL and uses an LLM to translate the document\'s content to the target language.',
     tags: ['API']
   }),
-  handlePdfKeywordsRequest as any
+  handlePdfTranslateRequest as any
 )
 
 export default {
   handler: router,
-  mountPath: 'pdf-keywords'
+  mountPath: 'pdf-translate'
 }
-

@@ -57,4 +57,3 @@ export function createPdfKeywordsResponse(
 
 export type PdfKeywordsReq = z.infer<typeof pdfKeywordsRequestSchema>
 export type PdfKeywordsRes = z.infer<typeof pdfKeywordsResponseSchema>
-

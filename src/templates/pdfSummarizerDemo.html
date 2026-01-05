@@ -429,7 +429,7 @@
       const res = await fetch('/api/v1/services/models?source=config&view=capability', { headers });
       if (!res.ok) throw new Error('Failed to load models: ' + res.status);
       const data = await res.json();
-      const pdfSummarizer = data && data.byCapability && data.byCapability['pdf-summarizer'];
+      const pdfSummarizer = data && data.byCapability && data.byCapability.pdfSummarizer;
       if (!pdfSummarizer || typeof pdfSummarizer !== 'object') throw new Error('Invalid models response');
       const mapped = {};
       for (const provider in pdfSummarizer) {

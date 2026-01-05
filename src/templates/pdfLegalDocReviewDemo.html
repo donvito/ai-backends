@@ -150,7 +150,7 @@
     <div class="text-center mb-8">
       <h1 class="text-3xl font-bold text-gray-900 mb-3">PDF Legal Document Review Demo</h1>
       <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-        Upload or provide a URL to a PDF legal document (contract, lease, agreement) and get AI-powered review with red flags, risks, and negotiation points.
+        Provide a URL to a PDF legal document (contract, lease, agreement) and get AI-powered review with red flags, risks, and negotiation points.
       </p>
     </div>
 
@@ -303,7 +303,7 @@
         const res = await fetch('/api/v1/services/models?source=config&view=capability', { headers });
         if (!res.ok) throw new Error('Failed to load models');
         const data = await res.json();
-        const pdfLegalDocReview = data?.byCapability?.['pdf-legal-doc-review'];
+        const pdfLegalDocReview = data?.byCapability?.pdfLegalDocReview;
         if (!pdfLegalDocReview || typeof pdfLegalDocReview !== 'object') throw new Error('Invalid response');
         const mapped = {};
         for (const provider in pdfLegalDocReview) {
