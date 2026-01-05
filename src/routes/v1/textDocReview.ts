@@ -43,7 +43,6 @@ async function handleTextDocReviewRequest(c: Context) {
     )
 
     const { summary, overallRisk, score, findings, missingClauses, positiveTerms, negotiationPoints } = result.object
-    const { usage } = result
 
     const finalResponse = createTextDocReviewResponse(
       summary,
@@ -55,7 +54,11 @@ async function handleTextDocReviewRequest(c: Context) {
       negotiationPoints,
       config.provider,
       config.model,
-      usage
+      {
+        input_tokens: result.usage.promptTokens,
+        output_tokens: result.usage.completionTokens,
+        total_tokens: result.usage.totalTokens
+      }
     )
 
     const finalResponseWithVersion = createFinalResponse(finalResponse, apiVersion)

@@ -70,7 +70,7 @@ const modelsSchema = z.object({
   available: z.boolean()
 })
 
-const capabilityEnum = z.enum(['summarize', 'web-search', 'pdf-summarizer', 'pdf-translate', 'rewrite', 'compose', 'keywords', 'sentiment', 'emailReply', 'vision', 'askText', 'translate', 'meetingNotes', 'planning', 'outline'])
+const capabilityEnum = z.enum(['summarize', 'webSearch', 'pdfSummarizer', 'pdfTranslate', 'pdfLegalDocReview', 'rewrite', 'compose', 'keywords', 'sentiment', 'emailReply', 'vision', 'askText', 'translate', 'meetingNotes', 'planning', 'outline', 'textDocReview'])
 const byProviderSchema = z.record(z.array(z.string()))
 const providerViewSchema = z.record(z.array(z.object({
   name: z.string(),
@@ -81,9 +81,10 @@ const providerViewSchema = z.record(z.array(z.object({
     source: z.literal('config'),
     byCapability: z.object({
       summarize: byProviderSchema,
-      'web-search': byProviderSchema,
-      'pdf-summarizer': byProviderSchema,
-      'pdf-translate': byProviderSchema,
+      webSearch: byProviderSchema,
+      pdfSummarizer: byProviderSchema,
+      pdfTranslate: byProviderSchema,
+      pdfLegalDocReview: byProviderSchema,
       rewrite: byProviderSchema,
       compose: byProviderSchema,
       keywords: byProviderSchema,
@@ -95,6 +96,7 @@ const providerViewSchema = z.record(z.array(z.object({
       translate: byProviderSchema,
       meetingNotes: byProviderSchema,
       outline: byProviderSchema,
+      textDocReview: byProviderSchema,
     })
   })
 
@@ -116,9 +118,10 @@ async function handleGetModels(c: Context) {
     if (source === 'config') {
       const byCapability = {
         summarize: getModelsByCapability('summarize'),
-        'web-search': getModelsByCapability('web-search'),
-        'pdf-summarizer': getModelsByCapability('pdf-summarizer'),
-        'pdf-translate': getModelsByCapability('pdf-translate'),
+        webSearch: getModelsByCapability('webSearch'),
+        pdfSummarizer: getModelsByCapability('pdfSummarizer'),
+        pdfTranslate: getModelsByCapability('pdfTranslate'),
+        pdfLegalDocReview: getModelsByCapability('pdfLegalDocReview'),
         rewrite: getModelsByCapability('rewrite'),
         compose: getModelsByCapability('compose'),
         keywords: getModelsByCapability('keywords'),
@@ -130,6 +133,7 @@ async function handleGetModels(c: Context) {
         translate: getModelsByCapability('translate'),
         meetingNotes: getModelsByCapability('meetingNotes'),
         outline: getModelsByCapability('outline'),
+        textDocReview: getModelsByCapability('textDocReview'),
       }
       const byProvider = getModelsCatalogByProvider()
       if (view === 'provider') return c.json({ source: 'config', byProvider }, 200)
