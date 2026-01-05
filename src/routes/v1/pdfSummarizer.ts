@@ -1,50 +1,50 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
 import { Context } from 'hono'
-import { pdfTranslatePrompt } from '../../utils/prompts'
+import { pdfSummarizePrompt } from '../../utils/prompts'
 import { handleError } from '../../utils/errorHandler'
-import { pdfTranslateRequestSchema, pdfTranslateResponseSchema, createPdfTranslateResponse } from '../../schemas/v1/pdf-translate'
+import { pdfSummarizerRequestSchema, pdfSummarizerResponseSchema, createPdfSummarizerResponse } from '../../schemas/v1/pdfSummarizer'
 import { processTextOutputRequest } from '../../services/ai'
 import { apiVersion } from './versionConfig'
 import { createFinalResponse } from './finalResponse'
 import { extractPDF, truncateText } from '../../utils/pdfExtractor'
-import { handleStreamingWithPdfMetadata } from "../../utils/streamingHandler";
+import { handleStreamingWithPdfMetadata} from "../../utils/streamingHandler";
 
 const router = new OpenAPIHono()
 
 // Maximum text length to send to the LLM (to avoid token limits)
 const MAX_PDF_TEXT_LENGTH = 50000
 
-async function handlePdfTranslateRequest(c: Context) {
+async function handlePdfSummarizerRequest(c: Context) {
   try {
     const { payload, config } = await c.req.json()
     const provider = config.provider
     const model = config.model
     const isStreaming = config.stream || false
-
+    
     // Extract PDF content
     const pdfData = await extractPDF(payload.url)
-
+    
     if (!pdfData.text || pdfData.text.length === 0) {
       throw new Error('No text content found in the PDF')
     }
-
+    
     // Truncate text if it's too long
-    const textToTranslate = truncateText(pdfData.text, MAX_PDF_TEXT_LENGTH)
-
+    const textToSummarize = truncateText(pdfData.text, MAX_PDF_TEXT_LENGTH)
+    
     // Create the prompt
-    const prompt = pdfTranslatePrompt(textToTranslate, payload.targetLanguage)
-
+    const prompt = pdfSummarizePrompt(textToSummarize, payload.maxLength)
+    
     // Handle streaming response
     if (isStreaming) {
-        const result = await processTextOutputRequest(prompt, config)
+      const result = await processTextOutputRequest(prompt, config)
         return handleStreamingWithPdfMetadata(c, result, provider, model, apiVersion, pdfData)
     }
-
+    
     // Handle non-streaming response
     const result = await processTextOutputRequest(prompt, config)
-    const finalResponse = createPdfTranslateResponse(
-      result.text,
-      provider,
+    const finalResponse = createPdfSummarizerResponse(
+      result.text, 
+      provider, 
       model,
       {
         title: pdfData.title,
@@ -63,7 +63,7 @@ async function handlePdfTranslateRequest(c: Context) {
 
     return c.json(finalResponseWithVersion, 200)
   } catch (error) {
-    return handleError(c, error, 'Failed to translate PDF')
+    return handleError(c, error, 'Failed to summarize PDF')
   }
 }
 
@@ -76,17 +76,17 @@ router.openapi(
       body: {
         content: {
           'application/json': {
-            schema: pdfTranslateRequestSchema
+            schema: pdfSummarizerRequestSchema
           }
         }
       }
     },
     responses: {
       200: {
-        description: 'Returns the translated PDF content.',
+        description: 'Returns the summarized PDF content.',
         content: {
           'application/json': {
-            schema: pdfTranslateResponseSchema
+            schema: pdfSummarizerResponseSchema
           }
         }
       },
@@ -111,14 +111,14 @@ router.openapi(
         }
       }
     },
-    summary: 'Translate PDF document',
-    description: 'This endpoint receives a PDF URL and uses an LLM to translate the document\'s content to the target language.',
+    summary: 'Summarize PDF document',
+    description: 'This endpoint receives a PDF URL and uses an LLM to summarize the document\'s content.',
     tags: ['API']
   }),
-  handlePdfTranslateRequest as any
+  handlePdfSummarizerRequest as any
 )
 
 export default {
   handler: router,
-  mountPath: 'pdf-translate'
+  mountPath: 'pdf-summarizer'
 }

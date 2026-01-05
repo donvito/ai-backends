@@ -367,7 +367,7 @@
       const res = await fetch('/api/v1/services/models?source=config&view=capability', { headers });
       if (!res.ok) throw new Error('Failed to load models: ' + res.status);
       const data = await res.json();
-      const webSearch = data && data.byCapability && data.byCapability['web-search'];
+      const webSearch = data && data.byCapability && data.byCapability.webSearch;
       if (!webSearch || typeof webSearch !== 'object') throw new Error('Invalid models response');
       const mapped = {};
       for (const provider in webSearch) {

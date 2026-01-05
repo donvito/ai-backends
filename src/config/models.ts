@@ -3,9 +3,10 @@ import * as path from 'path'
 
 export type ModelCapability =
   | 'summarize'
-  | 'web-search'
-  | 'pdf-summarizer'
-  | 'pdf-translate'
+  | 'webSearch'
+  | 'pdfSummarizer'
+  | 'pdfTranslate'
+  | 'pdfLegalDocReview'
   | 'rewrite'
   | 'compose'
   | 'keywords'
@@ -17,6 +18,7 @@ export type ModelCapability =
   | 'askText'
   | 'meetingNotes'
   | 'outline'
+  | 'textDocReview'
 
 export interface ProviderModelConfigItem {
   name: string
