@@ -555,6 +555,22 @@ Review Guidelines:
 }
 
 /**
+ * System prompt for understanding and analyzing images
+ */
+export function understandImagePrompt(question: string): string {
+  return `You are a vision AI assistant. Carefully analyze the provided image and answer the following question.
+
+Question: ${question}
+
+Instructions:
+- Base your answer solely on what you can observe in the image.
+- If the image does not contain sufficient information to answer the question, say so clearly.
+- Be thorough and accurate in your response.
+
+Answer:`
+}
+
+/**
  * System prompt for synthetic data generation
  */
 export function syntheticDataPrompt(

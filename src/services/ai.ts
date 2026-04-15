@@ -1,18 +1,26 @@
 import { z } from "zod";
-import { 
-  openaiConfig, 
-  ollamaConfig, 
+import { generateText } from "ai";
+import { anthropic } from "@ai-sdk/anthropic";
+import { openai } from "@ai-sdk/openai";
+import { openrouter } from "@openrouter/ai-sdk-provider";
+import {
+  openaiConfig,
+  ollamaConfig,
   anthropicConfig,
   openrouterConfig,
   lmstudioConfig,
   aigatewayConfig,
   llamacppConfig,
   googleConfig,
-  isServiceEnabled 
+  isServiceEnabled
 } from "../config/services";
 import { llmRequestSchema } from "../schemas/v1/llm";
 import { serviceRegistry } from "./registry";
 import type { ProviderName } from "./interfaces";
+import { getGoogleProvider, GEMINI_MODEL } from "./google";
+import { ANTHROPIC_MODEL } from "./anthropic";
+import { OPENAI_MODEL } from "./openai";
+import { understandImagePrompt } from "../utils/prompts";
 
 enum Provider {
   openai = 'openai',
@@ -240,7 +248,7 @@ export async function processTextOutputRequest(
 
 export async function processTextOutputStreamRequest(
   prompt: string,
-  config: z.infer<typeof llmRequestSchema>,  
+  config: z.infer<typeof llmRequestSchema>,
 ): Promise<any> {
   const providerName = config.provider as ProviderName;
   const model = config.model;
@@ -252,4 +260,77 @@ export async function processTextOutputStreamRequest(
     throw new Error(`Unsupported service: ${providerName}`);
   }
   return provider.generateChatTextStreamResponse(prompt, model);
-}   
+}
+
+/**
+ * Generate an answer to a question about an image using vision-capable LLM providers.
+ * Supports image URLs (https://...) and base64 data URLs (data:image/jpeg;base64,...).
+ * Supported providers: anthropic, openai, openrouter, google.
+ */
+export async function generateImageUnderstandingResponse(
+  imageUrl: string,
+  question: string,
+  config: { provider: string; model?: string; temperature?: number }
+): Promise<{ text: string; usage: { promptTokens: number; completionTokens: number; totalTokens: number } }> {
+  const { provider: providerName, model, temperature = 0 } = config;
+
+  // Build image content part from URL or base64 data URL
+  let imageContent: any;
+  if (imageUrl.startsWith('data:')) {
+    const base64Match = imageUrl.match(/^data:([^;]+);base64,(.+)$/);
+    if (!base64Match) {
+      throw new Error('Invalid data URL format. Expected: data:<mimeType>;base64,<data>');
+    }
+    imageContent = {
+      type: 'image' as const,
+      image: base64Match[2],
+      mimeType: base64Match[1],
+    };
+  } else {
+    imageContent = {
+      type: 'image' as const,
+      image: new URL(imageUrl),
+    };
+  }
+
+  const messages = [
+    {
+      role: 'user' as const,
+      content: [
+        imageContent,
+        { type: 'text' as const, text: understandImagePrompt(question) },
+      ],
+    },
+  ];
+
+  let modelInstance: any;
+
+  switch (providerName) {
+    case 'anthropic':
+      modelInstance = anthropic(model || ANTHROPIC_MODEL);
+      break;
+    case 'openai':
+      modelInstance = openai(model || OPENAI_MODEL);
+      break;
+    case 'openrouter':
+      modelInstance = openrouter(model || openrouterConfig.model);
+      break;
+    case 'google': {
+      const gemini = getGoogleProvider();
+      modelInstance = gemini(model || GEMINI_MODEL);
+      break;
+    }
+    default:
+      throw new Error(
+        `Provider '${providerName}' does not support image understanding. Supported providers: anthropic, openai, openrouter, google`
+      );
+  }
+
+  const result = await generateText({
+    model: modelInstance,
+    messages,
+    temperature,
+  });
+
+  return result;
+}
