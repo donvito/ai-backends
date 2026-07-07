@@ -1,9 +1,3 @@
-> [!IMPORTANT]
-> This project will be archived and is no longer being maintained.
-> Feel free to fork this project in its current state and make it your own.
-> It will be replaced by [aibackends](https://github.com/donvito/aibackends), a new Python-based version designed to support more AI and ML pipelines.
-> I am excited to bring you a better development and deployment experience in the new version of aibackends using the latest open models.
-
 # AI Backends
 
 AIBackends is an API server that you can use to integrate AI into your applications. You can run it locally or self-host it.
