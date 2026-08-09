@@ -10,7 +10,11 @@ class RuntimeOptions(BaseModel):
     )
     model: str | None = Field(
         default=None,
-        description="Model ref name, e.g. gemma4-e2b or minilm-l6",
+        description="Model ref name, e.g. gemma3-270m-it or minilm-l6",
+    )
+    model_path: str | None = Field(
+        default=None,
+        description="Optional local GGUF/weights path (overrides HF download)",
     )
 
 

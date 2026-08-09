@@ -32,8 +32,12 @@ services:
       - DEFAULT_ACCESS_TOKEN=${DEFAULT_ACCESS_TOKEN:-}
       - AIBACKENDS_ACCESS_TOKEN=${AIBACKENDS_ACCESS_TOKEN:-${DEFAULT_ACCESS_TOKEN:-}}
       - AIBACKENDS_RUNTIME=${AIBACKENDS_RUNTIME:-llamacpp}
-      - AIBACKENDS_MODEL=${AIBACKENDS_MODEL:-gemma4-e2b}
+      - AIBACKENDS_MODEL=${AIBACKENDS_MODEL:-gemma3-270m-it}
+      - AIBACKENDS_MODEL_PATH=${AIBACKENDS_MODEL_PATH:-}
       - AIBACKENDS_SKIP_AUTH=${AIBACKENDS_SKIP_AUTH:-false}
+    volumes:
+      # Optional: mount a local GGUF so summarize/classify work without HF download
+      - ./python-sidecar/models:/models:ro
     networks:
       - ollama-net
 

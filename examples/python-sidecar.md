@@ -5,18 +5,24 @@ Use the FastAPI sidecar (or the TypeScript same-origin proxy) to run local tasks
 ## Prerequisites
 
 ```bash
-# Start the Python sidecar (API layer)
-docker compose up python-sidecar --build
-
-# For real inference, rebuild with a runtime extra, e.g.:
-# docker compose build --build-arg AIBACKENDS_EXTRAS=api,llamacpp,pii python-sidecar
-
-# Or run locally
+# Run locally (recommended for the interactive demo)
 cd python-sidecar
 pip install -r requirements.txt
 pip install "aibackends[llamacpp]"
+
+# Small CPU GGUF used by the demo defaults (~253MB)
+hf download bartowski/google_gemma-3-270m-it-GGUF \
+  --include 'google_gemma-3-270m-it-Q4_K_M.gguf' \
+  --local-dir models
+
 export AIBACKENDS_ACCESS_TOKEN=your-secret-api-key
+export AIBACKENDS_RUNTIME=llamacpp
+export AIBACKENDS_MODEL=gemma3-270m-it
+export AIBACKENDS_MODEL_PATH=$PWD/models/google_gemma-3-270m-it-Q4_K_M.gguf
 uvicorn app.main:app --port 8000
+
+# Or via Docker (mount models/ and set AIBACKENDS_MODEL_PATH=/models/...)
+# docker compose up python-sidecar --build
 ```
 
 Interactive demo page: [http://localhost:3000/api/v1/python-sidecar-demo](http://localhost:3000/api/v1/python-sidecar-demo)
@@ -35,7 +41,7 @@ curl -s http://localhost:8000/v1/summarize \
   -d '{
     "text": "Payments failed after the checkout deploy. Cart totals looked correct, but the payment webhook returned 500 for Visa cards.",
     "runtime": "llamacpp",
-    "model": "gemma4-e2b"
+    "model": "gemma3-270m-it"
   }'
 ```
 
@@ -49,7 +55,7 @@ curl -s http://localhost:8000/v1/classify \
     "text": "Please find attached invoice #1042 for March hosting fees.",
     "labels": ["invoice", "contract", "receipt", "support"],
     "runtime": "llamacpp",
-    "model": "gemma4-e2b"
+    "model": "gemma3-270m-it"
   }'
 ```
 
@@ -116,7 +122,7 @@ async function summarizeLocal(text, token) {
     body: JSON.stringify({
       text,
       runtime: 'llamacpp',
-      model: 'gemma4-e2b',
+      model: 'gemma3-270m-it',
     }),
   });
 

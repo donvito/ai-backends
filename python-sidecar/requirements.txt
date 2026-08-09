@@ -1,9 +1,12 @@
 # Thin HTTP wrapper around the aibackends Python library.
-# Install a runtime extra to actually run models, e.g.:
+# For the interactive demo (summarize/classify), also install a runtime:
 #   pip install -r requirements.txt
 #   pip install "aibackends[llamacpp]"
-#   pip install "aibackends[transformers]"
-#   pip install "aibackends[pii]"
+# Then download a small GGUF, e.g.:
+#   hf download bartowski/google_gemma-3-270m-it-GGUF \
+#     --include 'google_gemma-3-270m-it-Q4_K_M.gguf' \
+#     --local-dir models
+#   export AIBACKENDS_MODEL_PATH=$PWD/models/google_gemma-3-270m-it-Q4_K_M.gguf
 aibackends[api]==0.3.0
 pydantic>=2.0
 python-multipart>=0.0.9

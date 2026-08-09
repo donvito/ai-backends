@@ -4,7 +4,7 @@ from aibackends import configure
 from aibackends.core.config import parse_model_text, parse_runtime_text
 from aibackends.core.registry import ModelRef, RuntimeSpec
 
-from app.config import DEFAULT_MODEL, DEFAULT_RUNTIME
+from app.config import DEFAULT_MODEL, DEFAULT_MODEL_PATH, DEFAULT_RUNTIME
 
 
 def resolve_runtime(name: str | None) -> RuntimeSpec | None:
@@ -22,5 +22,12 @@ def resolve_model(name: str | None) -> ModelRef | None:
 def apply_defaults() -> None:
     runtime = resolve_runtime(DEFAULT_RUNTIME)
     model = resolve_model(DEFAULT_MODEL)
-    if runtime is not None or model is not None:
-        configure(runtime=runtime, model=model)
+    kwargs: dict = {}
+    if runtime is not None:
+        kwargs["runtime"] = runtime
+    if model is not None:
+        kwargs["model"] = model
+    if DEFAULT_MODEL_PATH:
+        kwargs["model_path"] = DEFAULT_MODEL_PATH
+    if kwargs:
+        configure(**kwargs)

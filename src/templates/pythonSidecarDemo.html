@@ -107,9 +107,13 @@
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Model</label>
-            <input id="model" type="text" value="gemma4-e2b" class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple" />
+            <input id="model" type="text" value="gemma3-270m-it" class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple" />
           </div>
         </div>
+        <p class="mt-2 text-xs text-gray-500">
+          Demo default uses a small local GGUF via sidecar <code class="mono">AIBACKENDS_MODEL_PATH</code>
+          (gemma3-270m-it). Install <code class="mono">aibackends[llamacpp]</code> first.
+        </p>
 
         <div class="mt-3">
           <label class="block text-sm font-medium text-gray-700 mb-1">Bearer Token (optional in development)</label>
@@ -181,7 +185,7 @@
       piiFields.classList.toggle('hidden', task !== 'redact-pii');
       runtimeFields.classList.toggle('hidden', task === 'redact-pii');
       if (task === 'embed') modelEl.value = 'minilm-l6';
-      if (task !== 'embed' && modelEl.value === 'minilm-l6') modelEl.value = 'gemma4-e2b';
+      if (task !== 'embed' && modelEl.value === 'minilm-l6') modelEl.value = 'gemma3-270m-it';
       updatePreview();
     }
 

@@ -147,3 +147,5 @@ test_scripts/
 venv/
 __pycache__/
 *.py[cod]
+python-sidecar/models/*.gguf
+python-sidecar/models/**/*.gguf

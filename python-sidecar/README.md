@@ -36,14 +36,21 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 
-# Pick the extras you need for real inference:
+# Required for summarize/classify demo:
 pip install "aibackends[llamacpp]"
+# Optional extras:
 # pip install "aibackends[transformers]"
 # pip install "aibackends[pii]"
 
+# Small CPU-friendly GGUF (~253MB) for the demo defaults
+hf download bartowski/google_gemma-3-270m-it-GGUF \
+  --include 'google_gemma-3-270m-it-Q4_K_M.gguf' \
+  --local-dir models
+
 export AIBACKENDS_ACCESS_TOKEN=your-secret-api-key
 export AIBACKENDS_RUNTIME=llamacpp
-export AIBACKENDS_MODEL=gemma4-e2b
+export AIBACKENDS_MODEL=gemma3-270m-it
+export AIBACKENDS_MODEL_PATH=$PWD/models/google_gemma-3-270m-it-Q4_K_M.gguf
 # For local smoke tests without auth:
 # export AIBACKENDS_SKIP_AUTH=true
 
@@ -78,5 +85,6 @@ For GPU clouds, build/run the CUDA image from the Python library repo and mount 
 | `AIBACKENDS_ACCESS_TOKEN` / `DEFAULT_ACCESS_TOKEN` | — | Bearer token |
 | `AIBACKENDS_SKIP_AUTH` | `false` | Skip auth (dev only) |
 | `AIBACKENDS_RUNTIME` | `llamacpp` | Default runtime |
-| `AIBACKENDS_MODEL` | `gemma4-e2b` | Default model ref |
+| `AIBACKENDS_MODEL` | `gemma3-270m-it` | Default model ref |
+| `AIBACKENDS_MODEL_PATH` | — | Local GGUF/weights path (skips HF download) |
 | `AIBACKENDS_SIDECAR_PORT` | `8000` | Listen port |

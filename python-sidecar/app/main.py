@@ -17,7 +17,7 @@ from aibackends.tasks import (
 )
 
 from app.auth import require_bearer
-from app.config import DEFAULT_MODEL, DEFAULT_RUNTIME, HOST, PORT
+from app.config import DEFAULT_MODEL, DEFAULT_MODEL_PATH, DEFAULT_RUNTIME, HOST, PORT
 from app.runtime import apply_defaults, resolve_model, resolve_runtime
 from app.schemas import (
     ClassifyRequest,
@@ -60,7 +60,11 @@ app.add_middleware(
 )
 
 
-def _runtime_kwargs(runtime: str | None, model: str | None) -> dict[str, Any]:
+def _runtime_kwargs(
+    runtime: str | None,
+    model: str | None,
+    model_path: str | None = None,
+) -> dict[str, Any]:
     """Resolve request overrides, falling back to sidecar defaults."""
     kwargs: dict[str, Any] = {}
     resolved_runtime = resolve_runtime(runtime or DEFAULT_RUNTIME)
@@ -69,6 +73,9 @@ def _runtime_kwargs(runtime: str | None, model: str | None) -> dict[str, Any]:
         kwargs["runtime"] = resolved_runtime
     if resolved_model is not None:
         kwargs["model"] = resolved_model
+    path = model_path or DEFAULT_MODEL_PATH
+    if path:
+        kwargs["model_path"] = path
     return kwargs
 
 
@@ -100,6 +107,7 @@ async def health() -> dict[str, Any]:
         "library_version": library_version,
         "default_runtime": DEFAULT_RUNTIME,
         "default_model": DEFAULT_MODEL,
+        "default_model_path": DEFAULT_MODEL_PATH,
     }
 
 
@@ -114,7 +122,7 @@ async def summarize(body: SummarizeRequest) -> SummarizeResponse:
     try:
         summary = await summarize_async(
             body.text,
-            **_runtime_kwargs(body.runtime, body.model),
+            **_runtime_kwargs(body.runtime, body.model, body.model_path),
         )
     except Exception as exc:  # noqa: BLE001 - surface library errors as HTTP
         raise _http_error(exc) from exc
@@ -135,7 +143,7 @@ async def classify(body: ClassifyRequest) -> ClassifyResponse:
             labels=body.labels,
             label_descriptions=body.label_descriptions,
             prompt=body.prompt,
-            **_runtime_kwargs(body.runtime, body.model),
+            **_runtime_kwargs(body.runtime, body.model, body.model_path),
         )
     except Exception as exc:  # noqa: BLE001
         raise _http_error(exc) from exc
@@ -176,7 +184,7 @@ async def embed(body: EmbedRequest) -> EmbedResponse:
     try:
         vector = await embed_async(
             body.text,
-            **_runtime_kwargs(body.runtime, body.model),
+            **_runtime_kwargs(body.runtime, body.model, body.model_path),
         )
     except Exception as exc:  # noqa: BLE001
         raise _http_error(exc) from exc
@@ -194,7 +202,7 @@ async def extract_invoice(body: ExtractInvoiceRequest) -> ExtractInvoiceResponse
     try:
         result = await extract_invoice_async(
             body.text,
-            **_runtime_kwargs(body.runtime, body.model),
+            **_runtime_kwargs(body.runtime, body.model, body.model_path),
         )
     except Exception as exc:  # noqa: BLE001
         raise _http_error(exc) from exc
