@@ -1,19 +1,18 @@
 import { z } from 'zod';
-import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
-import { generateText, streamText, generateObject } from 'ai';
+import { createOpenAICompatibleModel, generateText, streamText, generateObject } from './pi-ai';
 import type { AIProvider } from './interfaces';
 import { llmgatewayConfig } from '../config/services';
 
 const normalizedBase = (llmgatewayConfig.baseURL || 'https://api.llmgateway.io/v1').replace(/\/$/, '');
 const LLM_GATEWAY_BASE_URL = normalizedBase;
 
-const llmgateway = createOpenAICompatible({
-  name: 'llmgateway',
-  baseURL: `${LLM_GATEWAY_BASE_URL}`,
-  headers: {
-    'Authorization': `Bearer ${llmgatewayConfig.apiKey}`,
-  },
-});
+function llmgateway(modelId: string) {
+  return createOpenAICompatibleModel({
+    provider: 'llmgateway',
+    modelId,
+    baseUrl: LLM_GATEWAY_BASE_URL,
+  });
+}
 
 class LLMGatewayProvider implements AIProvider {
   name = 'llmgateway' as const;
@@ -27,16 +26,11 @@ class LLMGatewayProvider implements AIProvider {
     try {
       const modelToUse = model || llmgatewayConfig.chatModel;
       
-      // OpenAI-compatible APIs require the word "json" in the prompt when using response_format: json_object
-      // The generateObject function uses json_object format, so we need to ensure "json" is in the prompt
-      const promptWithJson = prompt.toLowerCase().includes('json') 
-        ? prompt 
-        : `${prompt}\n\nReturn the response as valid JSON.`;
-      
       const result = await generateObject({
         model: llmgateway(modelToUse),
+        apiKey: llmgatewayConfig.apiKey,
         schema,
-        prompt: promptWithJson,
+        prompt,
         temperature,
       });
 
@@ -48,7 +42,6 @@ class LLMGatewayProvider implements AIProvider {
           completionTokens: result.usage?.completionTokens || 0,
           totalTokens: result.usage?.totalTokens || 0,
         },
-        warnings: result.warnings,
       };
     } catch (error) {
       throw new Error(`LLM Gateway structured response error: ${error}`);
@@ -66,6 +59,7 @@ class LLMGatewayProvider implements AIProvider {
 
     const result = await generateText({
       model: modelToUse,
+      apiKey: llmgatewayConfig.apiKey,
       prompt,
       temperature,
     });
@@ -85,8 +79,9 @@ class LLMGatewayProvider implements AIProvider {
     try {
     const modelToUse = llmgateway(model || llmgatewayConfig.model);
 
-    const result = await streamText({
+    const result = streamText({
       model: modelToUse,
+      apiKey: llmgatewayConfig.apiKey,
       prompt,
       temperature,
     });

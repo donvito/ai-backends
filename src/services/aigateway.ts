@@ -1,17 +1,18 @@
 import { z } from 'zod';
 import { aigatewayConfig } from '../config/services';
-import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
-import { generateText, streamText, generateObject } from 'ai';
+import { createOpenAICompatibleModel, generateText, streamText, generateObject } from './pi-ai';
 import type { AIProvider } from './interfaces';
 
 const normalizedBase = (aigatewayConfig.baseURL || '').replace(/\/$/, '');
 const AIGATEWAY_BASE_URL = `${normalizedBase}`;
 
-const aigateway = createOpenAICompatible({
-  name: 'aigateway',
-  baseURL: `${aigatewayConfig.baseURL}`,
-  apiKey: `${aigatewayConfig.apiKey}`
-});
+function aigateway(modelId: string) {
+  return createOpenAICompatibleModel({
+    provider: 'vercel-ai-gateway',
+    modelId,
+    baseUrl: AIGATEWAY_BASE_URL,
+  });
+}
 
 class AIGatewayProvider implements AIProvider {
   name = 'aigateway' as const;
@@ -25,6 +26,7 @@ class AIGatewayProvider implements AIProvider {
     try {
       const result = await generateObject({
         model: aigateway(model || aigatewayConfig.model),
+        apiKey: aigatewayConfig.apiKey,
         schema,
         prompt,
         temperature,
@@ -38,7 +40,6 @@ class AIGatewayProvider implements AIProvider {
           completionTokens: result.usage?.completionTokens || 0,
           totalTokens: result.usage?.totalTokens || 0,
         },
-        warnings: result.warnings,
       };
     } catch (error) {
       throw new Error(`AI Gateway structured response error: ${error}`);
@@ -55,9 +56,9 @@ class AIGatewayProvider implements AIProvider {
 
     const result = await generateText({
       model: modelToUse,
+      apiKey: aigatewayConfig.apiKey,
       prompt,
       temperature,
-      toolChoice: 'none',
     });
 
       return result;
@@ -75,11 +76,11 @@ class AIGatewayProvider implements AIProvider {
     try {
     const modelToUse = aigateway(model || aigatewayConfig.chatModel);
 
-    const result = await streamText({
+    const result = streamText({
       model: modelToUse,
+      apiKey: aigatewayConfig.apiKey,
       prompt,
       temperature,
-      toolChoice: 'none',
     });
 
     return result;

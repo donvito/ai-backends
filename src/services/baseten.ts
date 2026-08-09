@@ -1,19 +1,23 @@
 import { z } from 'zod';
-import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
-import { generateText, streamText, generateObject } from 'ai';
+import { createOpenAICompatibleModel, generateText, streamText, generateObject } from './pi-ai';
 import type { AIProvider } from './interfaces';
 import { basetenConfig } from '../config/services';
 
 const normalizedBase = (basetenConfig.baseURL || 'https://inference.baseten.co/v1').replace(/\/$/, '');
 const BASETEN_BASE_URL = normalizedBase;
 
-const baseten = createOpenAICompatible({
-  name: 'baseten',
-  baseURL: `${BASETEN_BASE_URL}`,
-  headers: {
-    'Authorization': `Api-Key ${basetenConfig.apiKey}`,
-  },
-});
+function baseten(modelId: string) {
+  return createOpenAICompatibleModel({
+    provider: 'baseten',
+    modelId,
+    baseUrl: BASETEN_BASE_URL,
+    // Baseten uses the Api-Key authorization scheme; this header overrides the
+    // default Bearer authorization set from the apiKey.
+    headers: {
+      'Authorization': `Api-Key ${basetenConfig.apiKey}`,
+    },
+  });
+}
 
 class BasetenProvider implements AIProvider {
   name = 'baseten' as const;
@@ -29,6 +33,7 @@ class BasetenProvider implements AIProvider {
       
       const result = await generateObject({
         model: baseten(modelToUse),
+        apiKey: basetenConfig.apiKey || 'baseten',
         schema,
         prompt,
         temperature,
@@ -42,7 +47,6 @@ class BasetenProvider implements AIProvider {
           completionTokens: result.usage?.completionTokens || 0,
           totalTokens: result.usage?.totalTokens || 0,
         },
-        warnings: result.warnings,
       };
     } catch (error) {
       throw new Error(`Baseten structured response error: ${error}`);
@@ -60,6 +64,7 @@ class BasetenProvider implements AIProvider {
 
     const result = await generateText({
       model: modelToUse,
+      apiKey: basetenConfig.apiKey || 'baseten',
       prompt,
       temperature,
     });
@@ -79,8 +84,9 @@ class BasetenProvider implements AIProvider {
     try {
     const modelToUse = baseten(model || basetenConfig.model);
 
-    const result = await streamText({
+    const result = streamText({
       model: modelToUse,
+      apiKey: basetenConfig.apiKey || 'baseten',
       prompt,
       temperature,
     });
