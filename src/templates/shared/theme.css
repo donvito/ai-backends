@@ -52,35 +52,42 @@
 html.dark {
   color-scheme: dark;
 
+  /* Accent stays warm terracotta against near-black (aibackends.com) */
   --c-accent: #D97757;
   --c-accent-strong: #E28963;
   --c-accent-deep: #E89F7E;
-  --c-accent-soft: #4A3226;
-  --c-accent-softer: #3B2C23;
-  --c-accent-border: #6B4433;
+  --c-accent-soft: #2A1C16;
+  --c-accent-softer: #1C1410;
+  --c-accent-border: #5A3A2A;
   --c-gradient: linear-gradient(135deg, #D97757, #B85434);
 
-  --c-surface: #30302E;
-  --c-surface-80: rgba(48, 48, 46, 0.85);
-  --c-bg-subtle: #2B2B29;
-  --c-bg-muted: #3A3A37;
-  --c-bg-strong: #45453F;
+  /* Near-black charcoal surfaces */
+  --c-surface: #141414;
+  --c-surface-80: rgba(20, 20, 20, 0.9);
+  --c-bg-subtle: #0A0A0A;
+  --c-bg-muted: #161616;
+  --c-bg-strong: #1E1E1E;
 
-  --c-border-faint: #3A3A37;
-  --c-border: #45453F;
-  --c-border-strong: #57574F;
+  /* Subtle borders that read on black */
+  --c-border-faint: #1A1A1A;
+  --c-border: #242424;
+  --c-border-strong: #333333;
 
-  --c-text: #EEECE6;
-  --c-text-strong: #E3E1D8;
-  --c-text-body: #D6D3C8;
-  --c-text-muted: #B0AC9F;
-  --c-text-faint: #8A8677;
+  /* High-contrast text */
+  --c-text: #F5F5F5;
+  --c-text-strong: #EAEAEA;
+  --c-text-body: #C8C8C8;
+  --c-text-muted: #9A9A9A;
+  --c-text-faint: #6E6E6E;
 
-  --c-dark-surface: #1B1B19;
-  --c-dark-surface-2: #232321;
-  --c-dark-surface-3: #2B2B29;
-  --c-dark-surface-4: #3A3A37;
-  --c-dark-border: #3E3E3A;
+  /* Nested dark panels / code blocks — a shade above page bg */
+  --c-dark-surface: #050505;
+  --c-dark-surface-2: #0F0F0F;
+  --c-dark-surface-3: #161616;
+  --c-dark-surface-4: #1E1E1E;
+  --c-dark-border: #2A2A2A;
+  --c-text-on-dark: #C8C8C8;
+  --c-text-on-dark-strong: #F5F5F5;
 }
 
 /* ---------------------------------------------------------------- base */
