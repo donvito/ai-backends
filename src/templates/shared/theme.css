@@ -127,7 +127,7 @@ html .bg-black { background-color: var(--c-dark-surface); }
 html .bg-gray-900 { background-color: var(--c-dark-surface-2); }
 html .bg-gray-800, html .hover\:bg-gray-800:hover { background-color: var(--c-dark-surface-3); }
 html .bg-gray-700 { background-color: var(--c-dark-surface-4); }
-html .bg-gray-600, html .hover\:bg-gray-600:hover { background-color: #4A4A44; }
+html .bg-gray-600, html .hover\:bg-gray-600:hover { background-color: var(--c-bg-strong); }
 html .border-gray-700 { border-color: var(--c-dark-border); }
 html .text-gray-300 { color: var(--c-text-on-dark); }
 html .text-gray-100 { color: var(--c-text-on-dark-strong); }
