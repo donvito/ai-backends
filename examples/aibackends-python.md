@@ -1,12 +1,12 @@
-# Python Sidecar (`aibackends`) Example
+# aibackends-python Example
 
-Use the FastAPI sidecar (or the TypeScript same-origin proxy) to run local tasks from the [`aibackends`](https://github.com/donvito/aibackends) Python library.
+Use the aibackends-python HTTP API (or the TypeScript same-origin proxy) to run local tasks from the [`aibackends`](https://github.com/donvito/aibackends) Python library.
 
 ## Prerequisites
 
 ```bash
 # Run locally (recommended for the interactive demo)
-cd python-sidecar
+cd aibackends-python
 pip install -r requirements.txt
 pip install "aibackends[llamacpp]"
 
@@ -22,12 +22,12 @@ export AIBACKENDS_MODEL_PATH=$PWD/models/google_gemma-3-270m-it-Q4_K_M.gguf
 uvicorn app.main:app --port 8000
 
 # Or via Docker (mount models/ and set AIBACKENDS_MODEL_PATH=/models/...)
-# docker compose up python-sidecar --build
+# docker compose up aibackends-python --build
 ```
 
-Interactive demo page: [http://localhost:3000/api/v1/python-sidecar-demo](http://localhost:3000/api/v1/python-sidecar-demo)
+Interactive demo page: [http://localhost:3000/api/v1/aibackends-python-demo](http://localhost:3000/api/v1/aibackends-python-demo)
 
-## Option A — Direct sidecar
+## Option A — Direct aibackends-python API
 
 - **Base URL**: `http://localhost:8000`
 - **Auth**: `Authorization: Bearer <AIBACKENDS_ACCESS_TOKEN>`
@@ -96,7 +96,7 @@ When the main AI Backends server is running, call:
 - `POST /api/v1/local/embed`
 - `POST /api/v1/local/extract-invoice`
 
-Proxy target: `AIBACKENDS_SIDECAR_URL` (default `http://localhost:8000`).
+Proxy target: `AIBACKENDS_PYTHON_URL` (default `http://localhost:8000`).
 
 ```bash
 curl -s http://localhost:3000/api/v1/local/summarize \
@@ -105,7 +105,7 @@ curl -s http://localhost:3000/api/v1/local/summarize \
   -d '{
     "text": "Payments failed after the checkout deploy.",
     "runtime": "llamacpp",
-    "model": "gemma4-e2b"
+    "model": "gemma3-270m-it"
   }'
 ```
 
@@ -138,6 +138,7 @@ async function summarizeLocal(text, token) {
 
 ## Notes
 
-- The TypeScript API (port 3000) and Python sidecar (port 8000) are separate services.
+- The TypeScript API (port 3000) and aibackends-python (port 8000) are separate services.
 - Install the matching `aibackends` extras (`llamacpp`, `transformers`, `pii`) before expecting inference to succeed.
-- See [`python-sidecar/README.md`](../python-sidecar/README.md) for sidecar configuration.
+- Structured tasks (classify / extract-invoice) work more reliably with larger GGUFs than gemma3-270m-it.
+- See [`aibackends-python/README.md`](../aibackends-python/README.md) for service configuration.

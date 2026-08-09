@@ -16,8 +16,8 @@ DEFAULT_MODEL = env("AIBACKENDS_MODEL", "gemma3-270m-it")
 # Optional local GGUF / weights path. When set, llamacpp uses this file
 # instead of downloading a Hugging Face repo for the model ref.
 DEFAULT_MODEL_PATH = env("AIBACKENDS_MODEL_PATH")
-HOST = env("AIBACKENDS_SIDECAR_HOST", "0.0.0.0") or "0.0.0.0"
-PORT = int(env("AIBACKENDS_SIDECAR_PORT", "8000") or "8000")
+HOST = env("AIBACKENDS_PYTHON_HOST") or env("AIBACKENDS_SIDECAR_HOST", "0.0.0.0") or "0.0.0.0"
+PORT = int(env("AIBACKENDS_PYTHON_PORT") or env("AIBACKENDS_SIDECAR_PORT", "8000") or "8000")
 SKIP_AUTH = (env("AIBACKENDS_SKIP_AUTH", "false") or "false").lower() in {
     "1",
     "true",

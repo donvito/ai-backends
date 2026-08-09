@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI Backends - Python Sidecar Demo</title>
+  <title>AI Backends - aibackends-python Demo</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -52,18 +52,18 @@
         <li><span>/</span></li>
         <li><a href="/api/demos" class="hover:text-gray-700">Demos</a></li>
         <li><span>/</span></li>
-        <li class="text-gray-900 font-medium">Python Sidecar</li>
+        <li class="text-gray-900 font-medium">aibackends-python</li>
       </ol>
     </nav>
 
     <div class="text-center mb-8">
-      <h1 class="text-3xl font-bold text-gray-900 mb-3">Python Sidecar Demo</h1>
+      <h1 class="text-3xl font-bold text-gray-900 mb-3">aibackends-python Demo</h1>
       <p class="text-lg text-gray-600 max-w-2xl mx-auto">
         Call local <a class="text-brand-purple underline" href="https://github.com/donvito/aibackends" target="_blank">aibackends</a>
-        library tasks through the FastAPI sidecar (via same-origin proxy).
+        library tasks through the aibackends-python HTTP API (via same-origin proxy).
       </p>
-      <div id="sidecarStatus" class="mt-4 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700">
-        Checking sidecar…
+      <div id="serviceStatus" class="mt-4 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700">
+        Checking aibackends-python…
       </div>
     </div>
 
@@ -111,7 +111,7 @@
           </div>
         </div>
         <p class="mt-2 text-xs text-gray-500">
-          Demo default uses a small local GGUF via sidecar <code class="mono">AIBACKENDS_MODEL_PATH</code>
+          Demo default uses a small local GGUF via <code class="mono">AIBACKENDS_MODEL_PATH</code>
           (gemma3-270m-it). Install <code class="mono">aibackends[llamacpp]</code> first.
         </p>
 
@@ -130,8 +130,8 @@
           <pre id="jsonPreview" class="mt-2 bg-gray-900 text-green-400 p-3 rounded-lg text-xs mono overflow-auto"></pre>
         </details>
         <p class="mt-3 text-xs text-gray-500">
-          Proxied through <code class="mono">/api/v1/local/&lt;task&gt;</code> → Python sidecar
-          (<code class="mono">AIBACKENDS_SIDECAR_URL</code>, default <code class="mono">http://localhost:8000</code>).
+          Proxied through <code class="mono">/api/v1/local/&lt;task&gt;</code> → aibackends-python
+          (<code class="mono">AIBACKENDS_PYTHON_URL</code>, default <code class="mono">http://localhost:8000</code>).
         </p>
       </section>
 
@@ -171,7 +171,7 @@
     const classifyFields = document.getElementById('classifyFields');
     const piiFields = document.getElementById('piiFields');
     const runtimeFields = document.getElementById('runtimeFields');
-    const sidecarStatus = document.getElementById('sidecarStatus');
+    const serviceStatus = document.getElementById('serviceStatus');
 
     function setActiveTab(task) {
       currentTask = task;
@@ -233,11 +233,11 @@
         const res = await fetch('/api/v1/local/health');
         const data = await res.json();
         if (!res.ok) throw new Error(data.detail || 'Sidecar unavailable');
-        sidecarStatus.textContent = 'Sidecar online · ' + (data.library || 'aibackends') + ' ' + (data.library_version || '') + ' · ' + (data.sidecarUrl || '');
-        sidecarStatus.className = 'mt-4 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-50 text-green-700';
+        serviceStatus.textContent = 'aibackends-python online · ' + (data.library || 'aibackends') + ' ' + (data.library_version || '') + ' · ' + (data.serviceUrl || data.sidecarUrl || '');
+        serviceStatus.className = 'mt-4 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-50 text-green-700';
       } catch (e) {
-        sidecarStatus.textContent = 'Sidecar offline — start with docker compose up python-sidecar';
-        sidecarStatus.className = 'mt-4 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-amber-50 text-amber-800';
+        serviceStatus.textContent = 'aibackends-python offline — start with docker compose up aibackends-python';
+        serviceStatus.className = 'mt-4 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-amber-50 text-amber-800';
       }
     }
 

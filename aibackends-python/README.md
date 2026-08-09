@@ -1,6 +1,6 @@
-# aibackends Python sidecar
+# aibackends-python
 
-HTTP wrapper around the [`aibackends`](https://github.com/donvito/aibackends) Python library.
+HTTP API for the [`aibackends`](https://github.com/donvito/aibackends) Python library.
 
 This service sits beside the TypeScript AI Backends API in this repo. Use it when you want **local GPU/CPU model tasks** (llamacpp / transformers / PII) exposed over REST.
 
@@ -8,7 +8,7 @@ This service sits beside the TypeScript AI Backends API in this repo. Use it whe
 Client / TypeScript API
         │  HTTP + Bearer
         ▼
-python-sidecar (:8000)  →  aibackends library  →  local models
+aibackends-python (:8000)  →  aibackends library  →  local models
 ```
 
 ## Endpoints
@@ -24,14 +24,14 @@ python-sidecar (:8000)  →  aibackends library  →  local models
 
 Interactive docs: `http://localhost:8000/docs`
 
-Browser demo (via TypeScript proxy): `http://localhost:3000/api/v1/python-sidecar-demo`
+Browser demo (via TypeScript proxy): `http://localhost:3000/api/v1/aibackends-python-demo`
 
-Usage examples: [`examples/python-sidecar.md`](../examples/python-sidecar.md)
+Usage examples: [`examples/aibackends-python.md`](../examples/aibackends-python.md)
 
 ## Local run
 
 ```bash
-cd python-sidecar
+cd aibackends-python
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
@@ -71,7 +71,7 @@ curl -s http://localhost:8000/v1/summarize \
 From the repo root:
 
 ```bash
-docker compose up python-sidecar
+docker compose up aibackends-python
 ```
 
 The service listens on **port 8000**. Set `DEFAULT_ACCESS_TOKEN` (or `AIBACKENDS_ACCESS_TOKEN`) in `.env`.
@@ -87,4 +87,4 @@ For GPU clouds, build/run the CUDA image from the Python library repo and mount 
 | `AIBACKENDS_RUNTIME` | `llamacpp` | Default runtime |
 | `AIBACKENDS_MODEL` | `gemma3-270m-it` | Default model ref |
 | `AIBACKENDS_MODEL_PATH` | — | Local GGUF/weights path (skips HF download) |
-| `AIBACKENDS_SIDECAR_PORT` | `8000` | Listen port |
+| `AIBACKENDS_PYTHON_PORT` | `8000` | Listen port |

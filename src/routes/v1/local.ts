@@ -3,15 +3,19 @@ import type { Context } from 'hono'
 
 const router = new OpenAPIHono()
 
-const SIDECAR_URL = (process.env.AIBACKENDS_SIDECAR_URL || 'http://localhost:8000').replace(/\/$/, '')
+const PYTHON_URL = (
+  process.env.AIBACKENDS_PYTHON_URL ||
+  process.env.AIBACKENDS_SIDECAR_URL ||
+  'http://localhost:8000'
+).replace(/\/$/, '')
 
 const errorSchema = z.object({
   detail: z.string(),
-  sidecarUrl: z.string().optional(),
+  serviceUrl: z.string().optional(),
 })
 
-async function proxyToSidecar(path: string, init: RequestInit): Promise<Response> {
-  const url = `${SIDECAR_URL}${path}`
+async function proxyToPython(path: string, init: RequestInit): Promise<Response> {
+  const url = `${PYTHON_URL}${path}`
   try {
     return await fetch(url, {
       ...init,
@@ -21,8 +25,8 @@ async function proxyToSidecar(path: string, init: RequestInit): Promise<Response
     const message = error instanceof Error ? error.message : 'Unknown proxy error'
     return new Response(
       JSON.stringify({
-        detail: `Python sidecar unreachable at ${SIDECAR_URL}: ${message}. Start it with: docker compose up python-sidecar`,
-        sidecarUrl: SIDECAR_URL,
+        detail: `aibackends-python unreachable at ${PYTHON_URL}: ${message}. Start it with: docker compose up aibackends-python`,
+        serviceUrl: PYTHON_URL,
       }),
       {
         status: 503,
@@ -42,11 +46,11 @@ function forwardAuthHeaders(c: Context): HeadersInit {
 }
 
 async function jsonFromUpstream(upstream: Response): Promise<Record<string, unknown>> {
-  const body = await upstream.json().catch(() => ({ detail: 'Invalid sidecar response' }))
+  const body = await upstream.json().catch(() => ({ detail: 'Invalid aibackends-python response' }))
   if (body && typeof body === 'object') {
     return body as Record<string, unknown>
   }
-  return { detail: 'Invalid sidecar response' }
+  return { detail: 'Invalid aibackends-python response' }
 }
 
 const healthRoute = createRoute({
@@ -54,7 +58,7 @@ const healthRoute = createRoute({
   path: '/health',
   responses: {
     200: {
-      description: 'Python sidecar health status',
+      description: 'aibackends-python health status',
       content: {
         'application/json': {
           schema: z.object({
@@ -63,31 +67,34 @@ const healthRoute = createRoute({
             library_version: z.string().optional(),
             default_runtime: z.string().optional(),
             default_model: z.string().optional(),
-            sidecarUrl: z.string(),
+            serviceUrl: z.string(),
             detail: z.string().optional(),
           }),
         },
       },
     },
     503: {
-      description: 'Sidecar unavailable',
+      description: 'aibackends-python unavailable',
       content: { 'application/json': { schema: errorSchema } },
     },
   },
-  tags: ['Local Python Sidecar'],
+  tags: ['aibackends-python'],
 })
 
 router.openapi(healthRoute, async (c) => {
-  const upstream = await proxyToSidecar('/health', { method: 'GET' })
+  const upstream = await proxyToPython('/health', { method: 'GET' })
   const body = await jsonFromUpstream(upstream)
   if (!upstream.ok) {
-    return c.json({ detail: String(body.detail || 'Sidecar unavailable'), sidecarUrl: SIDECAR_URL }, 503)
+    return c.json(
+      { detail: String(body.detail || 'aibackends-python unavailable'), serviceUrl: PYTHON_URL },
+      503
+    )
   }
-  return c.json({ ...body, sidecarUrl: SIDECAR_URL }, 200)
+  return c.json({ ...body, serviceUrl: PYTHON_URL }, 200)
 })
 
-const taskBodySchema = z.record(z.any()).openapi('LocalSidecarTaskBody')
-const taskResponseSchema = z.record(z.any()).openapi('LocalSidecarTaskResponse')
+const taskBodySchema = z.record(z.any()).openapi('AibackendsPythonTaskBody')
+const taskResponseSchema = z.record(z.any()).openapi('AibackendsPythonTaskResponse')
 
 function createTaskProxyRoute(taskPath: string, description: string) {
   return createRoute({
@@ -121,11 +128,11 @@ function createTaskProxyRoute(taskPath: string, description: string) {
         content: { 'application/json': { schema: errorSchema } },
       },
       503: {
-        description: 'Sidecar unavailable',
+        description: 'aibackends-python unavailable',
         content: { 'application/json': { schema: errorSchema } },
       },
     },
-    tags: ['Local Python Sidecar'],
+    tags: ['aibackends-python'],
   })
 }
 
@@ -141,7 +148,7 @@ for (const task of taskPaths) {
   const route = createTaskProxyRoute(task.path, task.description)
   router.openapi(route, async (c) => {
     const payload = await c.req.json()
-    const upstream = await proxyToSidecar(`/v1/${task.path}`, {
+    const upstream = await proxyToPython(`/v1/${task.path}`, {
       method: 'POST',
       headers: forwardAuthHeaders(c),
       body: JSON.stringify(payload),

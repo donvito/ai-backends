@@ -193,27 +193,27 @@ Notes
 - With Docker Compose, the app container can reach the Ollama service over the compose network (service name: ollama, port: 11434).
 - You can customize which models are pulled by editing the ollama service command in docker-compose.yml.
 
-### Python library sidecar (`aibackends`)
+### aibackends-python
 
-This repo also includes an optional FastAPI sidecar that wraps the local Python library [`donvito/aibackends`](https://github.com/donvito/aibackends) (GPU/CPU tasks via `llamacpp` / `transformers`).
+This repo also includes an optional FastAPI service that wraps the local Python library [`donvito/aibackends`](https://github.com/donvito/aibackends) (GPU/CPU tasks via `llamacpp` / `transformers`).
 
-- Code: [`python-sidecar/`](./python-sidecar)
-- Docs: [`python-sidecar/README.md`](./python-sidecar/README.md)
+- Code: [`aibackends-python/`](./aibackends-python)
+- Docs: [`aibackends-python/README.md`](./aibackends-python/README.md)
 - Default URL: `http://localhost:8000` (OpenAPI at `/docs`)
 
 ```bash
-# Sidecar only
-docker compose up python-sidecar --build
+# aibackends-python only
+docker compose up aibackends-python --build
 
 # Or locally
-cd python-sidecar && pip install -r requirements.txt && uvicorn app.main:app --port 8000
+cd aibackends-python && pip install -r requirements.txt && uvicorn app.main:app --port 8000
 ```
 
-The TypeScript API (port 3000) and the Python sidecar (port 8000) are separate services. Use the sidecar for library tasks such as local summarize/classify/embed/PII/invoice extraction; keep the TypeScript API for the existing multi-provider HTTP endpoints.
+The TypeScript API (port 3000) and aibackends-python (port 8000) are separate services. Use aibackends-python for library tasks such as local summarize/classify/embed/PII/invoice extraction; keep the TypeScript API for the existing multi-provider HTTP endpoints.
 
-- Interactive demo: [http://localhost:3000/api/v1/python-sidecar-demo](http://localhost:3000/api/v1/python-sidecar-demo)
-- Same-origin proxy: `/api/v1/local/*` → sidecar
-- Curl / JS examples: [`examples/python-sidecar.md`](./examples/python-sidecar.md)
+- Interactive demo: [http://localhost:3000/api/v1/aibackends-python-demo](http://localhost:3000/api/v1/aibackends-python-demo)
+- Same-origin proxy: `/api/v1/local/*` → aibackends-python
+- Curl / JS examples: [`examples/aibackends-python.md`](./examples/aibackends-python.md)
 
 ## Available APIs
 

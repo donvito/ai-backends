@@ -9,7 +9,7 @@ const demoRoute = createRoute({
   path: '/',
   responses: {
     200: {
-      description: 'Returns the Python aibackends sidecar demo page.',
+      description: 'Returns the aibackends-python demo page.',
       content: {
         'text/html': {
           schema: { type: 'string' },
@@ -20,14 +20,14 @@ const demoRoute = createRoute({
   tags: ['Demos'],
 })
 
-function getPythonSidecarDemoHtml() {
-  const templatePath = join(process.cwd(), 'src', 'templates', 'pythonSidecarDemo.html')
+function getAibackendsPythonDemoHtml() {
+  const templatePath = join(process.cwd(), 'src', 'templates', 'aibackendsPythonDemo.html')
   return readFileSync(templatePath, 'utf-8')
 }
 
-router.openapi(demoRoute, (c) => c.html(getPythonSidecarDemoHtml()))
+router.openapi(demoRoute, (c) => c.html(getAibackendsPythonDemoHtml()))
 
 export default {
   handler: router,
-  mountPath: 'python-sidecar-demo',
+  mountPath: 'aibackends-python-demo',
 }

@@ -1,4 +1,4 @@
-# CPU-oriented sidecar image wrapping https://github.com/donvito/aibackends
+# CPU-oriented aibackends-python image wrapping https://github.com/donvito/aibackends
 # For CUDA GPU clouds, prefer the Dockerfile in the aibackends Python repo
 # and point this service at that image, or extend it with the FastAPI app.
 FROM python:3.12-slim

@@ -41,11 +41,11 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(
-    title="aibackends sidecar",
+    title="aibackends-python",
     description=(
         "HTTP wrapper around the aibackends Python library "
         "(https://github.com/donvito/aibackends). "
-        "Runs local GPU/CPU model tasks; complements the TypeScript AI Backends API."
+        "Local Python HTTP API for aibackends; complements the TypeScript AI Backends server."
     ),
     version="0.1.0",
     lifespan=lifespan,
@@ -65,7 +65,7 @@ def _runtime_kwargs(
     model: str | None,
     model_path: str | None = None,
 ) -> dict[str, Any]:
-    """Resolve request overrides, falling back to sidecar defaults."""
+    """Resolve request overrides, falling back to service defaults."""
     kwargs: dict[str, Any] = {}
     runtime_name = runtime or DEFAULT_RUNTIME
     resolved_runtime = resolve_runtime(runtime_name)

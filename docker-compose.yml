@@ -9,19 +9,19 @@ services:
       - OLLAMA_BASE_URL=http://ollama:11434
       - NODE_ENV=development
       - OLLAMA_ENABLED=true
-      - AIBACKENDS_SIDECAR_URL=http://python-sidecar:8000
+      - AIBACKENDS_PYTHON_URL=http://aibackends-python:8000
     depends_on:
       ollama:
         condition: service_healthy
     networks:
       - ollama-net
 
-  # HTTP wrapper for https://github.com/donvito/aibackends (local Python library).
+  # HTTP API for https://github.com/donvito/aibackends (local Python library).
   # Installs the API layer by default; pass build args for model extras, e.g.:
-  #   docker compose build --build-arg AIBACKENDS_EXTRAS=api,llamacpp,pii python-sidecar
-  python-sidecar:
+  #   docker compose build --build-arg AIBACKENDS_EXTRAS=api,llamacpp,pii aibackends-python
+  aibackends-python:
     build:
-      context: ./python-sidecar
+      context: ./aibackends-python
       args:
         AIBACKENDS_EXTRAS: api
     env_file:
@@ -37,7 +37,7 @@ services:
       - AIBACKENDS_SKIP_AUTH=${AIBACKENDS_SKIP_AUTH:-false}
     volumes:
       # Optional: mount a local GGUF so summarize/classify work without HF download
-      - ./python-sidecar/models:/models:ro
+      - ./aibackends-python/models:/models:ro
     networks:
       - ollama-net
 
@@ -63,4 +63,4 @@ volumes:
 
 networks:
   ollama-net:
-    driver: bridge 
+    driver: bridge
