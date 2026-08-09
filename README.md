@@ -211,6 +211,10 @@ cd python-sidecar && pip install -r requirements.txt && uvicorn app.main:app --p
 
 The TypeScript API (port 3000) and the Python sidecar (port 8000) are separate services. Use the sidecar for library tasks such as local summarize/classify/embed/PII/invoice extraction; keep the TypeScript API for the existing multi-provider HTTP endpoints.
 
+- Interactive demo: [http://localhost:3000/api/v1/python-sidecar-demo](http://localhost:3000/api/v1/python-sidecar-demo)
+- Same-origin proxy: `/api/v1/local/*` → sidecar
+- Curl / JS examples: [`examples/python-sidecar.md`](./examples/python-sidecar.md)
+
 ## Available APIs
 
 ### Text Processing

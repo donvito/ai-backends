@@ -1,0 +1,137 @@
+# Python Sidecar (`aibackends`) Example
+
+Use the FastAPI sidecar (or the TypeScript same-origin proxy) to run local tasks from the [`aibackends`](https://github.com/donvito/aibackends) Python library.
+
+## Prerequisites
+
+```bash
+# Start the Python sidecar (API layer)
+docker compose up python-sidecar --build
+
+# For real inference, rebuild with a runtime extra, e.g.:
+# docker compose build --build-arg AIBACKENDS_EXTRAS=api,llamacpp,pii python-sidecar
+
+# Or run locally
+cd python-sidecar
+pip install -r requirements.txt
+pip install "aibackends[llamacpp]"
+export AIBACKENDS_ACCESS_TOKEN=your-secret-api-key
+uvicorn app.main:app --port 8000
+```
+
+Interactive demo page: [http://localhost:3000/api/v1/python-sidecar-demo](http://localhost:3000/api/v1/python-sidecar-demo)
+
+## Option A — Direct sidecar
+
+- **Base URL**: `http://localhost:8000`
+- **Auth**: `Authorization: Bearer <AIBACKENDS_ACCESS_TOKEN>`
+
+### Summarize
+
+```bash
+curl -s http://localhost:8000/v1/summarize \
+  -H "Authorization: Bearer your-secret-api-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "Payments failed after the checkout deploy. Cart totals looked correct, but the payment webhook returned 500 for Visa cards.",
+    "runtime": "llamacpp",
+    "model": "gemma4-e2b"
+  }'
+```
+
+### Classify
+
+```bash
+curl -s http://localhost:8000/v1/classify \
+  -H "Authorization: Bearer your-secret-api-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "Please find attached invoice #1042 for March hosting fees.",
+    "labels": ["invoice", "contract", "receipt", "support"],
+    "runtime": "llamacpp",
+    "model": "gemma4-e2b"
+  }'
+```
+
+### Redact PII
+
+```bash
+curl -s http://localhost:8000/v1/redact-pii \
+  -H "Authorization: Bearer your-secret-api-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "Contact Jane Doe at jane.doe@example.com or +1 555 0100.",
+    "backend": "gliner",
+    "labels": ["email", "phone_number"]
+  }'
+```
+
+### Embed
+
+```bash
+curl -s http://localhost:8000/v1/embed \
+  -H "Authorization: Bearer your-secret-api-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "Payments failed after checkout deploy.",
+    "runtime": "transformers",
+    "model": "minilm-l6"
+  }'
+```
+
+## Option B — TypeScript proxy (same origin)
+
+When the main AI Backends server is running, call:
+
+- `GET /api/v1/local/health`
+- `POST /api/v1/local/summarize`
+- `POST /api/v1/local/classify`
+- `POST /api/v1/local/redact-pii`
+- `POST /api/v1/local/embed`
+- `POST /api/v1/local/extract-invoice`
+
+Proxy target: `AIBACKENDS_SIDECAR_URL` (default `http://localhost:8000`).
+
+```bash
+curl -s http://localhost:3000/api/v1/local/summarize \
+  -H "Authorization: Bearer your-secret-api-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "Payments failed after the checkout deploy.",
+    "runtime": "llamacpp",
+    "model": "gemma4-e2b"
+  }'
+```
+
+## JavaScript example (via proxy)
+
+```javascript
+async function summarizeLocal(text, token) {
+  const response = await fetch('http://localhost:3000/api/v1/local/summarize', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      text,
+      runtime: 'llamacpp',
+      model: 'gemma4-e2b',
+    }),
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.detail || `HTTP ${response.status}`);
+  }
+
+  const data = await response.json();
+  return data.summary;
+}
+```
+
+## Notes
+
+- The TypeScript API (port 3000) and Python sidecar (port 8000) are separate services.
+- Install the matching `aibackends` extras (`llamacpp`, `transformers`, `pii`) before expecting inference to succeed.
+- See [`python-sidecar/README.md`](../python-sidecar/README.md) for sidecar configuration.

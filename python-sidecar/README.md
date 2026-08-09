@@ -24,6 +24,10 @@ python-sidecar (:8000)  →  aibackends library  →  local models
 
 Interactive docs: `http://localhost:8000/docs`
 
+Browser demo (via TypeScript proxy): `http://localhost:3000/api/v1/python-sidecar-demo`
+
+Usage examples: [`examples/python-sidecar.md`](../examples/python-sidecar.md)
+
 ## Local run
 
 ```bash

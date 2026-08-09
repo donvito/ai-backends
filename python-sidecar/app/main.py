@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from aibackends import __version__ as library_version
@@ -50,6 +51,14 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 def _runtime_kwargs(runtime: str | None, model: str | None) -> dict[str, Any]:
     """Resolve request overrides, falling back to sidecar defaults."""
@@ -69,12 +78,16 @@ def _http_error(exc: Exception) -> HTTPException:
         "Install 'aibackends[" in message and "]' to use" in message
     )
     if missing_extra:
+        detail = message
+        if "Install the matching aibackends extra" not in detail:
+            detail = (
+                f"{message.rstrip('.')}."
+                " Install the matching aibackends extra "
+                "(llamacpp, transformers, and/or pii)."
+            )
         return HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=(
-                f"{message}. Install the matching aibackends extra "
-                "(llamacpp, transformers, and/or pii)."
-            ),
+            detail=detail,
         )
     return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=message)
 

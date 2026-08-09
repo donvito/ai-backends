@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Backends - Python Sidecar Demo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'brand-purple': '#B341F9',
+            'brand-pink': '#E453C0',
+          },
+          backgroundImage: {
+            'gradient-brand': 'linear-gradient(135deg, #B341F9, #E453C0)',
+          }
+        }
+      }
+    }
+  </script>
+  <script src="/api/shared/safedom.js"></script>
+  <style>
+    .tab-active { background: linear-gradient(135deg, #B341F9, #E453C0); color: white; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+  </style>
+</head>
+<body class="bg-white min-h-screen">
+  <nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100">
+    <div class="container mx-auto px-6 py-4">
+      <div class="flex justify-between items-center">
+        <a href="/" class="flex items-center space-x-2">
+          <div class="w-10 h-10 rounded-xl bg-[#B341F9] flex items-center justify-center">
+            <span class="text-white font-bold text-xl">AI</span>
+          </div>
+          <span class="text-2xl font-bold text-gray-900">Backends</span>
+        </a>
+        <div class="flex items-center space-x-6">
+          <a href="/api/ui" target="_blank" class="text-gray-700 hover:text-brand-purple">API Docs</a>
+          <a href="/api/demos" class="text-gray-700 hover:text-brand-purple">Demos</a>
+          <a href="https://github.com/donvito/aibackends" target="_blank" class="text-gray-700 hover:text-brand-purple">Python Lib</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container mx-auto px-6 py-12">
+    <nav class="mb-6 text-sm">
+      <ol class="flex items-center space-x-2 text-gray-500">
+        <li><a href="/" class="hover:text-gray-700">Home</a></li>
+        <li><span>/</span></li>
+        <li><a href="/api/demos" class="hover:text-gray-700">Demos</a></li>
+        <li><span>/</span></li>
+        <li class="text-gray-900 font-medium">Python Sidecar</li>
+      </ol>
+    </nav>
+
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-bold text-gray-900 mb-3">Python Sidecar Demo</h1>
+      <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+        Call local <a class="text-brand-purple underline" href="https://github.com/donvito/aibackends" target="_blank">aibackends</a>
+        library tasks through the FastAPI sidecar (via same-origin proxy).
+      </p>
+      <div id="sidecarStatus" class="mt-4 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700">
+        Checking sidecar…
+      </div>
+    </div>
+
+    <div class="flex flex-wrap gap-2 justify-center mb-6" id="taskTabs">
+      <button data-task="summarize" class="tab-btn tab-active px-4 py-2 rounded-lg text-sm font-medium">Summarize</button>
+      <button data-task="classify" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-800">Classify</button>
+      <button data-task="redact-pii" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-800">Redact PII</button>
+      <button data-task="embed" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-800">Embed</button>
+      <button data-task="extract-invoice" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-800">Extract Invoice</button>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
+      <section class="bg-white p-6 rounded-2xl border border-gray-100 shadow-lg">
+        <h2 class="text-lg font-semibold mb-3">Input</h2>
+
+        <label class="block text-sm font-medium text-gray-700 mb-1">Text</label>
+        <textarea id="inputText" class="w-full h-44 p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple" placeholder="Enter text…"></textarea>
+
+        <div id="classifyFields" class="hidden mt-3">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Labels (comma-separated)</label>
+          <input id="labels" type="text" value="invoice, contract, receipt, support" class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple" />
+        </div>
+
+        <div id="piiFields" class="hidden mt-3">
+          <label class="block text-sm font-medium text-gray-700 mb-1">PII backend</label>
+          <select id="piiBackend" class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple">
+            <option value="gliner">gliner</option>
+            <option value="openai-privacy">openai-privacy</option>
+          </select>
+          <label class="block text-sm font-medium text-gray-700 mb-1 mt-3">Entity labels (optional, comma-separated)</label>
+          <input id="piiLabels" type="text" value="email, phone_number" class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple" />
+        </div>
+
+        <div id="runtimeFields" class="grid grid-cols-2 gap-3 mt-3">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Runtime</label>
+            <select id="runtime" class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple">
+              <option value="llamacpp">llamacpp</option>
+              <option value="transformers">transformers</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Model</label>
+            <input id="model" type="text" value="gemma4-e2b" class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple" />
+          </div>
+        </div>
+
+        <div class="mt-3">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Bearer Token (optional in development)</label>
+          <input id="token" type="password" placeholder="DEFAULT_ACCESS_TOKEN / AIBACKENDS_ACCESS_TOKEN" class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple" />
+        </div>
+
+        <div class="mt-4 flex flex-wrap items-center gap-2">
+          <button id="runBtn" class="px-4 py-2 rounded-lg bg-brand-purple text-white hover:bg-[#9935D9]">Run</button>
+          <button id="loadSample" class="px-4 py-2 rounded-lg bg-gray-100 text-gray-800 hover:bg-gray-200">Load Sample</button>
+        </div>
+
+        <details class="mt-4">
+          <summary class="text-sm text-gray-600 cursor-pointer">View JSON request</summary>
+          <pre id="jsonPreview" class="mt-2 bg-gray-900 text-green-400 p-3 rounded-lg text-xs mono overflow-auto"></pre>
+        </details>
+        <p class="mt-3 text-xs text-gray-500">
+          Proxied through <code class="mono">/api/v1/local/&lt;task&gt;</code> → Python sidecar
+          (<code class="mono">AIBACKENDS_SIDECAR_URL</code>, default <code class="mono">http://localhost:8000</code>).
+        </p>
+      </section>
+
+      <section class="bg-white p-6 rounded-2xl border border-gray-100 shadow-lg">
+        <h2 class="text-lg font-semibold mb-3">Output</h2>
+        <div id="loadingIndicator" class="hidden mb-3 text-sm text-gray-600">Running local task…</div>
+        <div id="errorBox" class="hidden mb-3 p-3 rounded-lg bg-red-50 text-red-700 text-sm"></div>
+        <pre id="output" class="bg-gray-50 border border-gray-100 p-4 rounded-lg text-sm mono whitespace-pre-wrap min-h-[16rem]"></pre>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const samples = {
+      summarize: 'Payments failed after the checkout deploy. Cart totals looked correct, but the payment webhook returned 500 for Visa cards. Support volume spiked within 20 minutes.',
+      classify: 'Please find attached invoice #1042 for March hosting fees. Net 30 payment terms apply.',
+      'redact-pii': 'Contact Jane Doe at jane.doe@example.com or +1 555 0100 about the renewal.',
+      embed: 'Payments failed after checkout deploy.',
+      'extract-invoice': 'Invoice from Acme Cloud\nItem: API hosting x1 — $120.00\nItem: Support plan x1 — $40.00\nSubtotal: $160.00\nTax: $12.80\nTotal: $172.80\nDue date: 2026-04-15\nPayment terms: Net 30'
+    };
+
+    let currentTask = 'summarize';
+
+    const inputText = document.getElementById('inputText');
+    const labelsEl = document.getElementById('labels');
+    const piiBackend = document.getElementById('piiBackend');
+    const piiLabels = document.getElementById('piiLabels');
+    const runtimeEl = document.getElementById('runtime');
+    const modelEl = document.getElementById('model');
+    const tokenEl = document.getElementById('token');
+    const runBtn = document.getElementById('runBtn');
+    const loadSampleBtn = document.getElementById('loadSample');
+    const jsonPreview = document.getElementById('jsonPreview');
+    const outputEl = document.getElementById('output');
+    const errorBox = document.getElementById('errorBox');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const classifyFields = document.getElementById('classifyFields');
+    const piiFields = document.getElementById('piiFields');
+    const runtimeFields = document.getElementById('runtimeFields');
+    const sidecarStatus = document.getElementById('sidecarStatus');
+
+    function setActiveTab(task) {
+      currentTask = task;
+      document.querySelectorAll('.tab-btn').forEach((btn) => {
+        const active = btn.getAttribute('data-task') === task;
+        btn.className = active
+          ? 'tab-btn tab-active px-4 py-2 rounded-lg text-sm font-medium'
+          : 'tab-btn px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-800';
+      });
+      classifyFields.classList.toggle('hidden', task !== 'classify');
+      piiFields.classList.toggle('hidden', task !== 'redact-pii');
+      runtimeFields.classList.toggle('hidden', task === 'redact-pii');
+      if (task === 'embed') modelEl.value = 'minilm-l6';
+      if (task !== 'embed' && modelEl.value === 'minilm-l6') modelEl.value = 'gemma4-e2b';
+      updatePreview();
+    }
+
+    function parseLabels(value) {
+      return value.split(',').map((s) => s.trim()).filter(Boolean);
+    }
+
+    function buildRequest() {
+      if (currentTask === 'redact-pii') {
+        const body = {
+          text: inputText.value.trim(),
+          backend: piiBackend.value
+        };
+        const labels = parseLabels(piiLabels.value);
+        if (labels.length) body.labels = labels;
+        return body;
+      }
+      const body = {
+        text: inputText.value.trim(),
+        runtime: runtimeEl.value,
+        model: modelEl.value.trim()
+      };
+      if (currentTask === 'classify') {
+        body.labels = parseLabels(labelsEl.value);
+      }
+      return body;
+    }
+
+    function updatePreview() {
+      jsonPreview.textContent = JSON.stringify(buildRequest(), null, 2);
+    }
+
+    function showError(message) {
+      errorBox.classList.remove('hidden');
+      errorBox.textContent = message;
+    }
+
+    function clearError() {
+      errorBox.classList.add('hidden');
+      errorBox.textContent = '';
+    }
+
+    async function checkSidecar() {
+      try {
+        const res = await fetch('/api/v1/local/health');
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Sidecar unavailable');
+        sidecarStatus.textContent = 'Sidecar online · ' + (data.library || 'aibackends') + ' ' + (data.library_version || '') + ' · ' + (data.sidecarUrl || '');
+        sidecarStatus.className = 'mt-4 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-50 text-green-700';
+      } catch (e) {
+        sidecarStatus.textContent = 'Sidecar offline — start with docker compose up python-sidecar';
+        sidecarStatus.className = 'mt-4 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-amber-50 text-amber-800';
+      }
+    }
+
+    async function runTask() {
+      clearError();
+      outputEl.textContent = '';
+      const body = buildRequest();
+      if (!body.text) {
+        showError('Enter some text first.');
+        return;
+      }
+      if (currentTask === 'classify' && (!body.labels || !body.labels.length)) {
+        showError('Classify requires at least one label.');
+        return;
+      }
+
+      loadingIndicator.classList.remove('hidden');
+      runBtn.disabled = true;
+      try {
+        const headers = { 'Content-Type': 'application/json' };
+        const token = tokenEl.value.trim();
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+        const res = await fetch('/api/v1/local/' + currentTask, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(body)
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          throw new Error(data.detail || ('Request failed with status ' + res.status));
+        }
+        if (currentTask === 'summarize') {
+          outputEl.textContent = data.summary || JSON.stringify(data, null, 2);
+        } else if (currentTask === 'embed') {
+          const dims = data.dimensions || (data.embedding ? data.embedding.length : 0);
+          const preview = (data.embedding || []).slice(0, 8).map((n) => Number(n).toFixed(4)).join(', ');
+          outputEl.textContent = 'dimensions: ' + dims + '\npreview: [' + preview + (dims > 8 ? ', …' : '') + ']';
+        } else {
+          outputEl.textContent = JSON.stringify(data, null, 2);
+        }
+      } catch (e) {
+        showError(e.message || String(e));
+      } finally {
+        loadingIndicator.classList.add('hidden');
+        runBtn.disabled = false;
+      }
+    }
+
+    document.querySelectorAll('.tab-btn').forEach((btn) => {
+      btn.addEventListener('click', () => setActiveTab(btn.getAttribute('data-task')));
+    });
+    inputText.addEventListener('input', updatePreview);
+    labelsEl.addEventListener('input', updatePreview);
+    piiBackend.addEventListener('change', updatePreview);
+    piiLabels.addEventListener('input', updatePreview);
+    runtimeEl.addEventListener('change', updatePreview);
+    modelEl.addEventListener('input', updatePreview);
+    loadSampleBtn.addEventListener('click', () => {
+      inputText.value = samples[currentTask] || '';
+      updatePreview();
+    });
+    runBtn.addEventListener('click', runTask);
+
+    setActiveTab('summarize');
+    inputText.value = samples.summarize;
+    updatePreview();
+    checkSidecar();
+  </script>
+</body>
+</html>
