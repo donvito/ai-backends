@@ -193,6 +193,28 @@ Notes
 - With Docker Compose, the app container can reach the Ollama service over the compose network (service name: ollama, port: 11434).
 - You can customize which models are pulled by editing the ollama service command in docker-compose.yml.
 
+### aibackends-python
+
+This repo also includes an optional FastAPI service that wraps the local Python library [`donvito/aibackends`](https://github.com/donvito/aibackends) (GPU/CPU tasks via `llamacpp` / `transformers`).
+
+- Code: [`aibackends-python/`](./aibackends-python)
+- Docs: [`aibackends-python/README.md`](./aibackends-python/README.md)
+- Default URL: `http://localhost:8000` (OpenAPI at `/docs`)
+
+```bash
+# aibackends-python only
+docker compose up aibackends-python --build
+
+# Or locally
+cd aibackends-python && pip install -r requirements.txt && uvicorn app.main:app --port 8000
+```
+
+The TypeScript API (port 3000) and aibackends-python (port 8000) are separate services. Use aibackends-python for library tasks such as local summarize/classify/embed/PII/invoice extraction; keep the TypeScript API for the existing multi-provider HTTP endpoints.
+
+- Interactive demo: [http://localhost:3000/api/v1/aibackends-python-demo](http://localhost:3000/api/v1/aibackends-python-demo)
+- Same-origin proxy: `/api/v1/local/*` → aibackends-python
+- Curl / JS examples: [`examples/aibackends-python.md`](./examples/aibackends-python.md)
+
 ## Available APIs
 
 ### Text Processing

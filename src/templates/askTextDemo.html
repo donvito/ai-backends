@@ -10,13 +10,13 @@
       theme: {
         extend: {
           colors: {
-            'brand-purple': '#B341F9',
-            'brand-pink': '#E453C0',
-            'terminal-bg': '#1C2128',
-            'terminal-text': '#A7B5C4'
+            'brand-purple': '#D97757',
+            'brand-pink': '#BD5D3A',
+            'terminal-bg': '#262624',
+            'terminal-text': '#C2C0B6'
           },
           backgroundImage: {
-            'gradient-brand': 'linear-gradient(135deg, #B341F9, #E453C0)',
+            'gradient-brand': 'linear-gradient(135deg, #D97757, #BD5D3A)',
           }
         }
       }
@@ -24,13 +24,13 @@
   </script>
   <style>
     .metrics-container {
-      background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+      background: linear-gradient(135deg, var(--c-bg-muted) 0%, var(--c-border) 100%);
       border-radius: 12px;
       padding: 12px;
-      border: 1px solid #e5e7eb;
+      border: 1px solid var(--c-border);
     }
     .metric-item {
-      background: white;
+      background: var(--c-surface);
       padding: 8px 12px;
       border-radius: 8px;
       display: flex;
@@ -47,7 +47,7 @@
     }
     .metric-label {
       font-size: 12px;
-      color: #6b7280;
+      color: var(--c-text-muted);
       font-weight: 500;
     }
     .metric-value {
@@ -62,28 +62,30 @@
       border-spacing: 0;
       margin: 1rem 0;
       overflow: hidden;
-      border: 1px solid #e5e7eb;
+      border: 1px solid var(--c-border);
       border-radius: 12px;
-      background: white;
+      background: var(--c-surface);
     }
     .md-table thead th {
-      background: #f9fafb;
-      color: #374151;
+      background: var(--c-bg-subtle);
+      color: var(--c-text-body);
       font-weight: 600;
       padding: 0.75rem 0.875rem;
-      border-bottom: 1px solid #e5e7eb;
+      border-bottom: 1px solid var(--c-border);
       white-space: nowrap;
     }
     .md-table td {
       padding: 0.75rem 0.875rem;
-      border-bottom: 1px solid #f3f4f6;
-      color: #1f2937;
+      border-bottom: 1px solid var(--c-bg-muted);
+      color: var(--c-text-strong);
       vertical-align: top;
     }
-    .md-table tbody tr:nth-child(odd) td { background: #fafafa; }
+    .md-table tbody tr:nth-child(odd) td { background: var(--c-bg-subtle); }
     .md-table tbody tr:last-child td { border-bottom: none; }
   </style>
   <script src="/api/shared/safedom.js"></script>
+  <link rel="stylesheet" href="/api/shared/theme.css" />
+  <script src="/api/shared/theme.js"></script>
 </head>
 <body class="bg-white min-h-screen">
   <!-- Navigation -->
@@ -91,7 +93,7 @@
     <div class="container mx-auto px-6 py-4">
       <div class="flex justify-between items-center">
         <a href="/" class="flex items-center space-x-2">
-          <div class="w-10 h-10 rounded-xl bg-[#B341F9] flex items-center justify-center">
+          <div class="w-10 h-10 rounded-xl bg-[#D97757] flex items-center justify-center">
             <span class="text-white font-bold text-xl">AI</span>
           </div>
           <span class="text-2xl font-bold text-gray-900">Backends</span>
@@ -197,7 +199,7 @@
         </div>
 
         <div class="mt-4 flex items-center gap-2">
-          <button id="runBtn" class="px-4 py-2 rounded-lg bg-brand-purple text-white hover:bg-[#9935D9]">Ask Question</button>
+          <button id="runBtn" class="px-4 py-2 rounded-lg bg-brand-purple text-white hover:bg-[#C15F3C]">Ask Question</button>
           <button id="cancelBtn" class="hidden px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700">Cancel</button>
         </div>
 

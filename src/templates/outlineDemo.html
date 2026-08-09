@@ -10,13 +10,13 @@
       theme: {
         extend: {
           colors: {
-            'brand-purple': '#B341F9',
-            'brand-pink': '#E453C0',
-            'terminal-bg': '#1C2128',
-            'terminal-text': '#A7B5C4'
+            'brand-purple': '#D97757',
+            'brand-pink': '#BD5D3A',
+            'terminal-bg': '#262624',
+            'terminal-text': '#C2C0B6'
           },
           backgroundImage: {
-            'gradient-brand': 'linear-gradient(135deg, #B341F9, #E453C0)',
+            'gradient-brand': 'linear-gradient(135deg, #D97757, #BD5D3A)',
           }
         }
       }
@@ -24,8 +24,8 @@
   </script>
   <style>
     .outline-preview {
-      background: #f9fafb;
-      border: 1px solid #e5e7eb;
+      background: var(--c-bg-subtle);
+      border: 1px solid var(--c-border);
       border-radius: 8px;
       padding: 24px;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -38,32 +38,32 @@
     .outline-preview h1 {
       font-size: 1.875rem;
       font-weight: 700;
-      color: #1f2937;
+      color: var(--c-text-strong);
       margin: 1.5rem 0 1rem;
       padding-bottom: 0.5rem;
-      border-bottom: 2px solid #e5e7eb;
+      border-bottom: 2px solid var(--c-border);
     }
 
     .outline-preview h2 {
       font-size: 1.5rem;
       font-weight: 600;
-      color: #374151;
+      color: var(--c-text-body);
       margin: 1.25rem 0 0.75rem;
       padding-bottom: 0.25rem;
-      border-bottom: 1px solid #e5e7eb;
+      border-bottom: 1px solid var(--c-border);
     }
 
     .outline-preview h3 {
       font-size: 1.25rem;
       font-weight: 600;
-      color: #4b5563;
+      color: var(--c-text-muted);
       margin: 1rem 0 0.5rem;
     }
 
     .outline-preview h4 {
       font-size: 1.125rem;
       font-weight: 600;
-      color: #6b7280;
+      color: var(--c-text-muted);
       margin: 0.75rem 0 0.25rem;
     }
 
@@ -72,7 +72,7 @@
       margin-top: 1.5em;
       margin-bottom: 0.5em;
       font-weight: 700;
-      color: #111827;
+      color: var(--c-text);
       font-size: 2em;
       line-height: 1.2;
     }
@@ -81,7 +81,7 @@
       margin-top: 1.5em;
       margin-bottom: 0.5em;
       font-weight: 600;
-      color: #1f2937;
+      color: var(--c-text-strong);
       font-size: 1.5em;
       line-height: 1.3;
     }
@@ -90,7 +90,7 @@
       margin-top: 1.5em;
       margin-bottom: 0.5em;
       font-weight: 600;
-      color: #374151;
+      color: var(--c-text-body);
       font-size: 1.25em;
       line-height: 1.4;
     }
@@ -99,7 +99,7 @@
       margin-top: 1.5em;
       margin-bottom: 0.5em;
       font-weight: 600;
-      color: #4b5563;
+      color: var(--c-text-muted);
       font-size: 1.125em;
       line-height: 1.4;
     }
@@ -108,7 +108,7 @@
       margin-top: 1.5em;
       margin-bottom: 0.5em;
       font-weight: 500;
-      color: #6b7280;
+      color: var(--c-text-muted);
       font-size: 1em;
       line-height: 1.5;
     }
@@ -117,7 +117,7 @@
       margin-top: 1.5em;
       margin-bottom: 0.5em;
       font-weight: 500;
-      color: #6b7280;
+      color: var(--c-text-muted);
       font-size: 0.875em;
       line-height: 1.5;
     }
@@ -137,7 +137,7 @@
     }
 
     .prose code {
-      background-color: #f3f4f6;
+      background-color: var(--c-bg-muted);
       padding: 0.125em 0.25em;
       border-radius: 0.25rem;
       font-size: 0.875em;
@@ -145,8 +145,8 @@
     }
 
     .prose pre {
-      background-color: #1f2937;
-      color: #f9fafb;
+      background-color: var(--c-text-strong);
+      color: var(--c-bg-subtle);
       padding: 1em;
       border-radius: 0.5rem;
       overflow-x: auto;
@@ -166,20 +166,20 @@
     }
 
     .prose th, .prose td {
-      border: 1px solid #e5e7eb;
+      border: 1px solid var(--c-border);
       padding: 0.5em;
       text-align: left;
     }
 
     .prose th {
-      background-color: #f9fafb;
+      background-color: var(--c-bg-subtle);
       font-weight: 600;
     }
 
     .outline-preview h5, .outline-preview h6 {
       font-size: 1rem;
       font-weight: 600;
-      color: #6b7280;
+      color: var(--c-text-muted);
       margin: 0.5rem 0 0.25rem;
     }
 
@@ -224,27 +224,27 @@
     }
 
     .outline-preview li::marker {
-      color: #6b7280;
+      color: var(--c-text-muted);
     }
 
     /* Paragraphs and text */
     .outline-preview p {
       margin: 1rem 0;
-      color: #374151;
+      color: var(--c-text-body);
     }
 
     .outline-preview strong {
       font-weight: 600;
-      color: #1f2937;
+      color: var(--c-text-strong);
     }
 
     .outline-preview em {
       font-style: italic;
-      color: #4b5563;
+      color: var(--c-text-muted);
     }
 
     .outline-preview code {
-      background: #f3f4f6;
+      background: var(--c-bg-muted);
       color: #dc2626;
       padding: 0.125rem 0.25rem;
       border-radius: 0.25rem;
@@ -253,8 +253,8 @@
     }
 
     .outline-preview pre {
-      background: #1f2937;
-      color: #f9fafb;
+      background: var(--c-text-strong);
+      color: var(--c-bg-subtle);
       padding: 1rem;
       border-radius: 0.5rem;
       overflow-x: auto;
@@ -268,27 +268,27 @@
     }
 
     .outline-preview blockquote {
-      border-left: 4px solid #d1d5db;
+      border-left: 4px solid var(--c-border-strong);
       margin: 1rem 0;
       padding-left: 1rem;
-      color: #6b7280;
+      color: var(--c-text-muted);
       font-style: italic;
     }
 
     /* Links */
     .outline-preview a {
-      color: #7c3aed;
+      color: var(--c-accent);
       text-decoration: underline;
     }
 
     .outline-preview a:hover {
-      color: #6d28d9;
+      color: var(--c-accent-strong);
     }
 
     /* Horizontal rules */
     .outline-preview hr {
       border: none;
-      border-top: 1px solid #e5e7eb;
+      border-top: 1px solid var(--c-border);
       margin: 2rem 0;
     }
 
@@ -300,19 +300,19 @@
     }
 
     .outline-preview th, .outline-preview td {
-      border: 1px solid #e5e7eb;
+      border: 1px solid var(--c-border);
       padding: 0.5rem 1rem;
       text-align: left;
     }
 
     .outline-preview th {
-      background: #f9fafb;
+      background: var(--c-bg-subtle);
       font-weight: 600;
-      color: #374151;
+      color: var(--c-text-body);
     }
 
     .outline-preview tr:nth-child(even) {
-      background: #f9fafb;
+      background: var(--c-bg-subtle);
     }
 
     /* Fullscreen styles for maximize mode */
@@ -334,8 +334,8 @@
       max-height: 96vh;
       overflow: hidden;
       box-shadow: 0 20px 50px rgba(0,0,0,0.25);
-      background: white;
-      border: 1px solid #e5e7eb;
+      background: var(--c-surface);
+      border: 1px solid var(--c-border);
       border-radius: 12px;
     }
     .fullscreen-output .fullscreen-inner {
@@ -345,7 +345,7 @@
     }
     .fullscreen-output .fullscreen-header {
       padding: 16px 16px 8px 16px;
-      border-bottom: 1px solid #e5e7eb;
+      border-bottom: 1px solid var(--c-border);
       margin-bottom: 8px;
     }
     .fullscreen-output .fullscreen-actions {
@@ -420,21 +420,23 @@
       border-color: #b91c1c;
     }
     .close-button:hover {
-      background: #f3f4f6;
+      background: var(--c-bg-muted);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-      border-color: #d1d5db;
+      border-color: var(--c-border-strong);
     }
     /* Hide maximize button when in fullscreen; exit with X button */
     .fullscreen-output #fullscreenButton { display: none !important; }
   </style>
-  </head>
+    <link rel="stylesheet" href="/api/shared/theme.css" />
+  <script src="/api/shared/theme.js"></script>
+</head>
 <body class="bg-white min-h-screen">
   <!-- Navigation -->
   <nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100">
     <div class="container mx-auto px-6 py-4">
       <div class="flex justify-between items-center">
         <a href="/" class="flex items-center space-x-2">
-          <div class="w-10 h-10 rounded-xl bg-[#B341F9] flex items-center justify-center">
+          <div class="w-10 h-10 rounded-xl bg-[#D97757] flex items-center justify-center">
             <span class="text-white font-bold text-xl">AI</span>
           </div>
           <span class="text-2xl font-bold text-gray-900">Backends</span>
@@ -595,7 +597,7 @@ Beyond Mars lies the asteroid belt, a region filled with rocky debris left over 
         <div class="flex items-center gap-3">
           <button
             id="generate-btn"
-            class="px-4 py-2 rounded-lg bg-brand-purple text-white hover:bg-[#9935D9] flex items-center space-x-2"
+            class="px-4 py-2 rounded-lg bg-brand-purple text-white hover:bg-[#C15F3C] flex items-center space-x-2"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>

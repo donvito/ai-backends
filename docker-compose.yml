@@ -9,9 +9,35 @@ services:
       - OLLAMA_BASE_URL=http://ollama:11434
       - NODE_ENV=development
       - OLLAMA_ENABLED=true
+      - AIBACKENDS_PYTHON_URL=http://aibackends-python:8000
     depends_on:
       ollama:
         condition: service_healthy
+    networks:
+      - ollama-net
+
+  # HTTP API for https://github.com/donvito/aibackends (local Python library).
+  # Installs the API layer by default; pass build args for model extras, e.g.:
+  #   docker compose build --build-arg AIBACKENDS_EXTRAS=api,llamacpp,pii aibackends-python
+  aibackends-python:
+    build:
+      context: ./aibackends-python
+      args:
+        AIBACKENDS_EXTRAS: api
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    environment:
+      - DEFAULT_ACCESS_TOKEN=${DEFAULT_ACCESS_TOKEN:-}
+      - AIBACKENDS_ACCESS_TOKEN=${AIBACKENDS_ACCESS_TOKEN:-${DEFAULT_ACCESS_TOKEN:-}}
+      - AIBACKENDS_RUNTIME=${AIBACKENDS_RUNTIME:-llamacpp}
+      - AIBACKENDS_MODEL=${AIBACKENDS_MODEL:-lfm2.5-2.6b}
+      - AIBACKENDS_MODEL_PATH=${AIBACKENDS_MODEL_PATH:-}
+      - AIBACKENDS_SKIP_AUTH=${AIBACKENDS_SKIP_AUTH:-false}
+    volumes:
+      # Optional: mount a local GGUF so summarize/classify work without HF download
+      - ./aibackends-python/models:/models:ro
     networks:
       - ollama-net
 
@@ -37,4 +63,4 @@ volumes:
 
 networks:
   ollama-net:
-    driver: bridge 
+    driver: bridge

@@ -41,6 +41,7 @@ function configureApiSecurity(app: OpenAPIHono, tokenConfig: string) {
                 path === '/api/asktext-demo' ||
                 path === '/api/project-planner-demo' ||
                 path === '/api/outline-demo' ||
+                path === '/api/aibackends-python-demo' ||
                 // Versioned demo pages (v1)
                 path === '/api/v1/demos' ||
                 path === '/api/v1/highlighter-demo' ||
@@ -62,10 +63,14 @@ function configureApiSecurity(app: OpenAPIHono, tokenConfig: string) {
                 path === '/api/v1/vision-demo' ||
                 path === '/api/v1/text-doc-review-demo' ||
                 path === '/api/v1/pdf-legal-doc-review-demo' ||
+                path === '/api/v1/aibackends-python-demo' ||
                 path === '/api/models' ||
                 path === '/api/jsoneditor' ||
                 // Public read-only service catalog for demos
                 path === '/api/v1/services/models' ||
+                // Public aibackends-python health for demo status badge
+                path === '/api/v1/local/health' ||
+                path === '/api/local/health' ||
                 // Public shared resources
                 path.startsWith('/api/shared/')
             ) {

@@ -1,0 +1,13 @@
+# Thin HTTP wrapper around the aibackends Python library.
+# Install from git until LFM2.5 lands on PyPI:
+#   pip install -r requirements.txt
+#   pip install "aibackends[llamacpp,pii,transformers] @ git+https://github.com/donvito/aibackends.git"
+# Then download the demo GGUF:
+#   hf download LiquidAI/LFM2.5-2.6B-GGUF \
+#     --include 'LFM2.5-2.6B-Q4_K_M.gguf' \
+#     --local-dir models
+#   export AIBACKENDS_MODEL=lfm2.5-2.6b
+#   export AIBACKENDS_MODEL_PATH=$PWD/models/LFM2.5-2.6B-Q4_K_M.gguf
+aibackends[api] @ git+https://github.com/donvito/aibackends.git
+pydantic>=2.0
+python-multipart>=0.0.9

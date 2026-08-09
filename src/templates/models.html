@@ -13,36 +13,36 @@
     .fade-in { animation: fadeIn 0.3s ease-out; }
     .model-card {
       transition: all 0.2s ease;
-      background: linear-gradient(to bottom right, #ffffff, #fafafa);
+      background: linear-gradient(to bottom right, #ffffff, var(--c-bg-subtle));
     }
     .model-card:hover {
       transform: translateY(-2px);
       box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
     }
     .gradient-text {
-      background: linear-gradient(135deg, #B341F9, #E453C0);
+      background: linear-gradient(135deg, #D97757, #BD5D3A);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
     .gradient-border {
       position: relative;
-      background: linear-gradient(135deg, #B341F9, #E453C0);
+      background: linear-gradient(135deg, #D97757, #BD5D3A);
       padding: 1px;
       border-radius: 0.5rem;
     }
     .gradient-border > * {
-      background: white;
+      background: var(--c-surface);
       border-radius: 0.5rem;
     }
     .table-row:hover {
-      background-color: #f9fafb;
+      background-color: var(--c-bg-subtle);
     }
     .view-option {
       transition: all 0.2s ease;
     }
     .view-option.active {
-      background: linear-gradient(135deg, #B341F9, #E453C0);
+      background: linear-gradient(135deg, #D97757, #BD5D3A);
       color: white;
     }
     .filter-chip {
@@ -52,7 +52,7 @@
       transform: translateY(-1px);
     }
     .filter-chip.active {
-      background: linear-gradient(135deg, #B341F9, #E453C0);
+      background: linear-gradient(135deg, #D97757, #BD5D3A);
       color: white;
       border-color: transparent;
     }
@@ -91,15 +91,15 @@
       height: 8px;
     }
     .cap-section::-webkit-scrollbar-track {
-      background: #f1f1f1;
+      background: var(--c-bg-muted);
       border-radius: 4px;
     }
     .cap-section::-webkit-scrollbar-thumb {
-      background: #888;
+      background: var(--c-text-faint);
       border-radius: 4px;
     }
     .cap-section::-webkit-scrollbar-thumb:hover {
-      background: #555;
+      background: var(--c-text-muted);
     }
     /* Shimmer effect for headers */
     @keyframes shimmer {
@@ -117,20 +117,22 @@
     }
   </style>
   <script src="/api/shared/safedom.js"></script>
+  <link rel="stylesheet" href="/api/shared/theme.css" />
+  <script src="/api/shared/theme.js"></script>
 </head>
 <body class="bg-gray-50 min-h-screen">
   <nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100">
     <div class="container mx-auto px-6 py-4">
       <div class="flex justify-between items-center">
         <a href="/" class="flex items-center space-x-2">
-          <div class="w-10 h-10 rounded-xl bg-[#B341F9] flex items-center justify-center">
+          <div class="w-10 h-10 rounded-xl bg-[#D97757] flex items-center justify-center">
             <span class="text-white font-bold text-xl">AI</span>
           </div>
           <span class="text-2xl font-bold text-gray-900">Backends</span>
         </a>
         <div class="flex items-center space-x-6">
-          <a href="/api/ui" class="text-gray-700 hover:text-[#B341F9]">API Docs</a>
-          <a href="/api/jsoneditor" class="text-gray-700 hover:text-[#B341F9]">JSON Editor</a>
+          <a href="/api/ui" class="text-gray-700 hover:text-[#D97757]">API Docs</a>
+          <a href="/api/jsoneditor" class="text-gray-700 hover:text-[#D97757]">JSON Editor</a>
         </div>
       </div>
     </div>
@@ -146,7 +148,7 @@
           <p class="text-sm text-gray-600 mt-1">All configured models from models.json</p>
         </div>
         <div class="flex items-center gap-2">
-          <button id="refreshBtn" class="group px-4 py-2 bg-gradient-to-r from-[#B341F9] to-[#E453C0] text-white text-sm rounded-lg hover:shadow-lg transition-all duration-300">
+          <button id="refreshBtn" class="group px-4 py-2 bg-gradient-to-r from-[#D97757] to-[#BD5D3A] text-white text-sm rounded-lg hover:shadow-lg transition-all duration-300">
             <span class="flex items-center">
               <svg class="w-4 h-4 mr-1.5 group-hover:rotate-180 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -241,7 +243,7 @@
       <div class="flex items-center justify-between">
         <!-- Tabs -->
         <div class="inline-flex rounded-md shadow-sm">
-          <button id="tabProvider" class="px-4 py-2 text-xs font-medium text-white bg-gradient-to-r from-[#B341F9] to-[#E453C0] rounded-l-md transition-all duration-300">
+          <button id="tabProvider" class="px-4 py-2 text-xs font-medium text-white bg-gradient-to-r from-[#D97757] to-[#BD5D3A] rounded-l-md transition-all duration-300">
             <span class="flex items-center">
               <svg class="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
@@ -410,16 +412,16 @@
       function setActive(view) {
         state.activeView = view
         if (view === 'provider') {
-          tabProvider.classList.add('bg-gradient-to-r', 'from-[#B341F9]', 'to-[#E453C0]', 'text-white')
+          tabProvider.classList.add('bg-gradient-to-r', 'from-[#D97757]', 'to-[#BD5D3A]', 'text-white')
           tabProvider.classList.remove('bg-white', 'text-gray-700', 'border-t', 'border-b', 'border-r')
-          tabCapability.classList.remove('bg-gradient-to-r', 'from-[#B341F9]', 'to-[#E453C0]', 'text-white')
+          tabCapability.classList.remove('bg-gradient-to-r', 'from-[#D97757]', 'to-[#BD5D3A]', 'text-white')
           tabCapability.classList.add('bg-white', 'text-gray-700', 'border-t', 'border-b', 'border-r')
           providerView.classList.remove('hidden')
           capabilityView.classList.add('hidden')
         } else {
-          tabCapability.classList.add('bg-gradient-to-r', 'from-[#B341F9]', 'to-[#E453C0]', 'text-white')
+          tabCapability.classList.add('bg-gradient-to-r', 'from-[#D97757]', 'to-[#BD5D3A]', 'text-white')
           tabCapability.classList.remove('bg-white', 'text-gray-700', 'border-t', 'border-b', 'border-r')
-          tabProvider.classList.remove('bg-gradient-to-r', 'from-[#B341F9]', 'to-[#E453C0]', 'text-white')
+          tabProvider.classList.remove('bg-gradient-to-r', 'from-[#D97757]', 'to-[#BD5D3A]', 'text-white')
           tabProvider.classList.add('bg-white', 'text-gray-700', 'border-t', 'border-b', 'border-r')
           capabilityView.classList.remove('hidden')
           providerView.classList.add('hidden')

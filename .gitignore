@@ -142,3 +142,10 @@ out
 *env
 
 test_scripts/
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+aibackends-python/models/*.gguf
+aibackends-python/models/**/*.gguf
