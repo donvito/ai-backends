@@ -21,6 +21,8 @@ aibackends-python (:8000)  →  aibackends library  →  local models
 | `POST` | `/v1/redact-pii` | `redact_pii` |
 | `POST` | `/v1/embed` | `embed` |
 | `POST` | `/v1/extract-invoice` | `extract_invoice` |
+| `POST` | `/v1/chat` | chat completion (+ optional tools) |
+| `POST` | `/v1/tool-call-demo` | LFM2.5 tool-calling demo |
 
 Interactive docs: `http://localhost:8000/docs`
 
@@ -82,6 +84,6 @@ For GPU clouds, build/run the CUDA image from the Python library repo and mount 
 | `AIBACKENDS_ACCESS_TOKEN` / `DEFAULT_ACCESS_TOKEN` | — | Bearer token |
 | `AIBACKENDS_SKIP_AUTH` | `false` | Skip auth (dev only) |
 | `AIBACKENDS_RUNTIME` | `llamacpp` | Default runtime |
-| `AIBACKENDS_MODEL` | `gemma3-270m-it` | Default model ref |
+| `AIBACKENDS_MODEL` | `lfm2.5-2.6b` | Default model ref |
 | `AIBACKENDS_MODEL_PATH` | — | Local GGUF/weights path (skips HF download) |
 | `AIBACKENDS_PYTHON_PORT` | `8000` | Listen port |
