@@ -142,3 +142,8 @@ out
 *env
 
 test_scripts/
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]

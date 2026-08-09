@@ -193,6 +193,24 @@ Notes
 - With Docker Compose, the app container can reach the Ollama service over the compose network (service name: ollama, port: 11434).
 - You can customize which models are pulled by editing the ollama service command in docker-compose.yml.
 
+### Python library sidecar (`aibackends`)
+
+This repo also includes an optional FastAPI sidecar that wraps the local Python library [`donvito/aibackends`](https://github.com/donvito/aibackends) (GPU/CPU tasks via `llamacpp` / `transformers`).
+
+- Code: [`python-sidecar/`](./python-sidecar)
+- Docs: [`python-sidecar/README.md`](./python-sidecar/README.md)
+- Default URL: `http://localhost:8000` (OpenAPI at `/docs`)
+
+```bash
+# Sidecar only
+docker compose up python-sidecar --build
+
+# Or locally
+cd python-sidecar && pip install -r requirements.txt && uvicorn app.main:app --port 8000
+```
+
+The TypeScript API (port 3000) and the Python sidecar (port 8000) are separate services. Use the sidecar for library tasks such as local summarize/classify/embed/PII/invoice extraction; keep the TypeScript API for the existing multi-provider HTTP endpoints.
+
 ## Available APIs
 
 ### Text Processing

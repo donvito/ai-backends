@@ -1,0 +1,9 @@
+# Thin HTTP wrapper around the aibackends Python library.
+# Install a runtime extra to actually run models, e.g.:
+#   pip install -r requirements.txt
+#   pip install "aibackends[llamacpp]"
+#   pip install "aibackends[transformers]"
+#   pip install "aibackends[pii]"
+aibackends[api]==0.3.0
+pydantic>=2.0
+python-multipart>=0.0.9
