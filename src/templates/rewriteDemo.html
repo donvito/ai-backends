@@ -10,11 +10,11 @@
       theme: {
         extend: {
           colors: {
-            'brand-purple': '#B341F9',
-            'brand-pink': '#E453C0'
+            'brand-purple': '#D97757',
+            'brand-pink': '#BD5D3A'
           },
           backgroundImage: {
-            'gradient-brand': 'linear-gradient(135deg, #B341F9, #E453C0)',
+            'gradient-brand': 'linear-gradient(135deg, #D97757, #BD5D3A)',
           }
         }
       }
@@ -28,25 +28,25 @@
       border-spacing: 0;
       margin: 1rem 0;
       overflow: hidden;
-      border: 1px solid #e5e7eb;
+      border: 1px solid var(--c-border);
       border-radius: 12px;
-      background: white;
+      background: var(--c-surface);
     }
     .md-table thead th {
-      background: #f9fafb;
-      color: #374151;
+      background: var(--c-bg-subtle);
+      color: var(--c-text-body);
       font-weight: 600;
       padding: 0.75rem 0.875rem;
-      border-bottom: 1px solid #e5e7eb;
+      border-bottom: 1px solid var(--c-border);
       white-space: nowrap;
     }
     .md-table td {
       padding: 0.75rem 0.875rem;
-      border-bottom: 1px solid #f3f4f6;
-      color: #1f2937;
+      border-bottom: 1px solid var(--c-bg-muted);
+      color: var(--c-text-strong);
       vertical-align: top;
     }
-    .md-table tbody tr:nth-child(odd) td { background: #fafafa; }
+    .md-table tbody tr:nth-child(odd) td { background: var(--c-bg-subtle); }
     .md-table tbody tr:last-child td { border-bottom: none; }
 
     /* Fullscreen (maximize) styles */
@@ -71,18 +71,20 @@
     }
     .fullscreen-output .fullscreen-inner { display: flex; flex-direction: column; height: 100%; }
     .fullscreen-output .fullscreen-body { flex: 1 1 auto; overflow: auto; height: auto; padding-right: 4px; }
-    .close-button { position: absolute; top: 10px; right: 10px; background: white; border: 1px solid #e5e7eb; color: #374151; padding: 6px 8px; border-radius: 8px; }
-    .close-button:hover { background: #f9fafb; }
+    .close-button { position: absolute; top: 10px; right: 10px; background: var(--c-surface); border: 1px solid var(--c-border); color: var(--c-text-body); padding: 6px 8px; border-radius: 8px; }
+    .close-button:hover { background: var(--c-bg-subtle); }
     .fullscreen-output #fullscreenButton { display: none !important; }
   </style>
   <script src="/api/shared/safedom.js"></script>
+  <link rel="stylesheet" href="/api/shared/theme.css" />
+  <script src="/api/shared/theme.js"></script>
 </head>
 <body class="bg-white min-h-screen">
   <nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100">
     <div class="container mx-auto px-6 py-4">
       <div class="flex justify-between items-center">
         <a href="/" class="flex items-center space-x-2">
-          <div class="w-10 h-10 rounded-xl bg-[#B341F9] flex items-center justify-center">
+          <div class="w-10 h-10 rounded-xl bg-[#D97757] flex items-center justify-center">
             <span class="text-white font-bold text-xl">AI</span>
           </div>
           <span class="text-2xl font-bold text-gray-900">Backends</span>
@@ -188,7 +190,7 @@
         </div>
 
         <div class="mt-4 flex items-center gap-2">
-          <button id="runBtn" class="px-4 py-2 rounded-lg bg-brand-purple text-white hover:bg-[#9935D9]">Rewrite</button>
+          <button id="runBtn" class="px-4 py-2 rounded-lg bg-brand-purple text-white hover:bg-[#C15F3C]">Rewrite</button>
           <button id="cancelBtn" class="hidden px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700">Cancel</button>
           <button id="loadSample" class="px-4 py-2 rounded-lg bg-gray-100 text-gray-800 hover:bg-gray-200">Load Sample</button>
         </div>

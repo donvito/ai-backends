@@ -1,0 +1,283 @@
+/*
+ * AI Backends shared theme — Claude-inspired warm palette with light/dark mode.
+ *
+ * How it works:
+ * - CSS custom properties define the palette; `html.dark` flips them.
+ * - Common Tailwind utility classes used across the demo templates are
+ *   re-pointed at the variables (selectors are prefixed with `html` so they
+ *   win over the CDN-generated utilities on specificity, regardless of
+ *   stylesheet order).
+ * - Template <style> blocks reference the same variables directly.
+ */
+
+:root {
+  /* Accent (Claude terracotta) */
+  --c-accent: #D97757;
+  --c-accent-strong: #C15F3C;
+  --c-accent-deep: #9C4221;
+  --c-accent-soft: #F6E3DA;
+  --c-accent-softer: #FBF0EA;
+  --c-accent-border: #ECC5B2;
+  --c-gradient: linear-gradient(135deg, #D97757, #BD5D3A);
+
+  /* Surfaces (warm ivory) */
+  --c-surface: #FFFFFF;
+  --c-surface-80: rgba(255, 255, 255, 0.8);
+  --c-bg-subtle: #FAF9F5;
+  --c-bg-muted: #F0EEE6;
+  --c-bg-strong: #E8E5DB;
+
+  /* Borders */
+  --c-border-faint: #EEECE4;
+  --c-border: #E3E1D7;
+  --c-border-strong: #D1CEC2;
+
+  /* Text (warm gray) */
+  --c-text: #29261B;
+  --c-text-strong: #3D3929;
+  --c-text-body: #4C4738;
+  --c-text-muted: #6E6A5E;
+  --c-text-faint: #9C988A;
+
+  /* Always-dark surfaces (code/terminal blocks) */
+  --c-dark-surface: #1F1E1B;
+  --c-dark-surface-2: #262624;
+  --c-dark-surface-3: #30302E;
+  --c-dark-surface-4: #3A3A37;
+  --c-dark-border: #3E3E3A;
+  --c-text-on-dark: #C2C0B6;
+  --c-text-on-dark-strong: #EEECE6;
+}
+
+html.dark {
+  color-scheme: dark;
+
+  --c-accent: #D97757;
+  --c-accent-strong: #E28963;
+  --c-accent-deep: #E89F7E;
+  --c-accent-soft: #4A3226;
+  --c-accent-softer: #3B2C23;
+  --c-accent-border: #6B4433;
+  --c-gradient: linear-gradient(135deg, #D97757, #B85434);
+
+  --c-surface: #30302E;
+  --c-surface-80: rgba(48, 48, 46, 0.85);
+  --c-bg-subtle: #2B2B29;
+  --c-bg-muted: #3A3A37;
+  --c-bg-strong: #45453F;
+
+  --c-border-faint: #3A3A37;
+  --c-border: #45453F;
+  --c-border-strong: #57574F;
+
+  --c-text: #EEECE6;
+  --c-text-strong: #E3E1D8;
+  --c-text-body: #D6D3C8;
+  --c-text-muted: #B0AC9F;
+  --c-text-faint: #8A8677;
+
+  --c-dark-surface: #1B1B19;
+  --c-dark-surface-2: #232321;
+  --c-dark-surface-3: #2B2B29;
+  --c-dark-surface-4: #3A3A37;
+  --c-dark-border: #3E3E3A;
+}
+
+/* ---------------------------------------------------------------- base */
+
+body {
+  background-color: var(--c-bg-subtle);
+  color: var(--c-text);
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+h1, h2 {
+  font-family: Georgia, 'Times New Roman', 'Songti SC', serif;
+  letter-spacing: -0.01em;
+}
+
+input, select, textarea {
+  background-color: var(--c-surface);
+  color: var(--c-text);
+}
+
+::placeholder {
+  color: var(--c-text-faint);
+  opacity: 1;
+}
+
+/* --------------------------------------------------- gray -> warm gray */
+
+html .bg-white { background-color: var(--c-surface); }
+html .bg-white\/80 { background-color: var(--c-surface-80); }
+html .bg-gray-50, html .hover\:bg-gray-50:hover, html .focus\:bg-white:focus { background-color: var(--c-bg-subtle); }
+html .bg-gray-100, html .hover\:bg-gray-100:hover { background-color: var(--c-bg-muted); }
+html .bg-gray-200, html .hover\:bg-gray-200:hover { background-color: var(--c-bg-strong); }
+html .bg-slate-100 { background-color: var(--c-bg-muted); }
+
+/* Always-dark blocks (terminals, code snippets) */
+html .bg-black { background-color: var(--c-dark-surface); }
+html .bg-gray-900 { background-color: var(--c-dark-surface-2); }
+html .bg-gray-800, html .hover\:bg-gray-800:hover { background-color: var(--c-dark-surface-3); }
+html .bg-gray-700 { background-color: var(--c-dark-surface-4); }
+html .bg-gray-600, html .hover\:bg-gray-600:hover { background-color: #4A4A44; }
+html .border-gray-700 { border-color: var(--c-dark-border); }
+html .text-gray-300 { color: var(--c-text-on-dark); }
+html .text-gray-100 { color: var(--c-text-on-dark-strong); }
+
+html .text-gray-900, html .hover\:text-gray-900:hover { color: var(--c-text); }
+html .text-gray-800 { color: var(--c-text-strong); }
+html .text-gray-700, html .hover\:text-gray-700:hover { color: var(--c-text-body); }
+html .text-gray-600, html .hover\:text-gray-600:hover { color: var(--c-text-muted); }
+html .text-gray-500 { color: var(--c-text-muted); }
+html .text-gray-400 { color: var(--c-text-faint); }
+html .text-slate-600 { color: var(--c-text-muted); }
+
+html .border-gray-100 { border-color: var(--c-border-faint); }
+html .border-gray-200 { border-color: var(--c-border); }
+html .border-gray-300, html .hover\:border-gray-300:hover, html .border-slate-300, html .hover\:border-slate-300:hover { border-color: var(--c-border-strong); }
+html .divide-gray-200 > :not([hidden]) ~ :not([hidden]) { border-color: var(--c-border); }
+
+html .from-gray-50 { --tw-gradient-from: var(--c-bg-subtle); --tw-gradient-to: rgb(250 249 245 / 0); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+html .to-gray-100 { --tw-gradient-to: var(--c-bg-muted); }
+html .to-slate-50 { --tw-gradient-to: var(--c-bg-subtle); }
+
+/* --------------------------------------- purple/indigo family -> accent */
+
+html .text-purple-500, html .text-purple-600, html .text-indigo-600, html .text-violet-600 { color: var(--c-accent); }
+html .text-purple-700, html .text-purple-800, html .text-purple-900,
+html .text-indigo-700, html .text-indigo-800,
+html .text-violet-800, html .text-fuchsia-800, html .text-fuchsia-900, html .text-pink-800,
+html .hover\:text-purple-700:hover, html .hover\:text-purple-800:hover, html .hover\:text-indigo-800:hover { color: var(--c-accent-deep); }
+
+html .bg-purple-50, html .bg-indigo-50 { background-color: var(--c-accent-softer); }
+html .bg-purple-100, html .bg-purple-200, html .bg-indigo-100, html .bg-violet-100,
+html .bg-fuchsia-100, html .bg-fuchsia-200, html .bg-pink-100,
+html .hover\:bg-purple-100:hover { background-color: var(--c-accent-soft); }
+html .bg-purple-500, html .bg-indigo-500 { background-color: var(--c-accent); }
+
+html .border-purple-200, html .border-purple-300, html .border-purple-400,
+html .border-indigo-200, html .border-indigo-300, html .border-indigo-400, html .border-fuchsia-200,
+html .hover\:border-purple-300:hover, html .hover\:border-purple-400:hover,
+html .hover\:border-indigo-300:hover, html .hover\:border-indigo-400:hover { border-color: var(--c-accent-border); }
+
+html .ring-purple-500, html .focus\:ring-purple-500:focus { --tw-ring-color: var(--c-accent); }
+
+html .from-purple-50, html .from-indigo-50 { --tw-gradient-from: var(--c-accent-softer); --tw-gradient-to: rgb(251 240 234 / 0); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+html .from-purple-500, html .from-indigo-500 { --tw-gradient-from: var(--c-accent); --tw-gradient-to: rgb(217 119 87 / 0); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+html .to-purple-600, html .to-purple-700, html .to-indigo-600, html .to-pink-600, html .to-slate-600,
+html .hover\:to-purple-700:hover { --tw-gradient-to: var(--c-accent-strong); }
+html .to-pink-50, html .to-indigo-50 { --tw-gradient-to: var(--c-accent-softer); }
+html .to-pink-100, html .to-indigo-100 { --tw-gradient-to: var(--c-accent-soft); }
+
+/* Gradient/tab helpers defined in template <style> blocks */
+html .tab-active { background: var(--c-gradient); color: #fff; }
+
+/* ------------------------------------ semantic tints in dark mode */
+
+html.dark .bg-red-50, html.dark .bg-red-100, html.dark .hover\:bg-red-50:hover { background-color: rgba(239, 68, 68, 0.16); }
+html.dark .bg-red-200 { background-color: rgba(239, 68, 68, 0.3); }
+html.dark .text-red-600, html.dark .text-red-700 { color: #f87171; }
+html.dark .text-red-800, html.dark .text-red-900 { color: #fca5a5; }
+html.dark .border-red-200, html.dark .border-red-300, html.dark .hover\:border-red-300:hover { border-color: rgba(239, 68, 68, 0.4); }
+
+html.dark .bg-green-50, html.dark .bg-green-100 { background-color: rgba(34, 197, 94, 0.16); }
+html.dark .bg-green-200 { background-color: rgba(34, 197, 94, 0.3); }
+html.dark .text-green-600, html.dark .text-green-700 { color: #4ade80; }
+html.dark .text-green-800, html.dark .text-green-900, html.dark .hover\:text-green-800:hover { color: #86efac; }
+html.dark .border-green-200, html.dark .border-green-300, html.dark .border-green-400,
+html.dark .hover\:border-green-300:hover, html.dark .hover\:border-green-400:hover { border-color: rgba(34, 197, 94, 0.4); }
+
+html.dark .bg-blue-50, html.dark .bg-blue-100, html.dark .hover\:bg-blue-100:hover { background-color: rgba(59, 130, 246, 0.16); }
+html.dark .bg-blue-200 { background-color: rgba(59, 130, 246, 0.3); }
+html.dark .text-blue-600, html.dark .text-blue-700 { color: #60a5fa; }
+html.dark .text-blue-800, html.dark .text-blue-900, html.dark .hover\:text-blue-800:hover { color: #93c5fd; }
+html.dark .border-blue-200, html.dark .border-blue-300, html.dark .border-blue-400,
+html.dark .hover\:border-blue-300:hover, html.dark .hover\:border-blue-400:hover { border-color: rgba(59, 130, 246, 0.4); }
+
+html.dark .bg-orange-50, html.dark .bg-orange-100 { background-color: rgba(249, 115, 22, 0.16); }
+html.dark .bg-orange-200 { background-color: rgba(249, 115, 22, 0.3); }
+html.dark .text-orange-600, html.dark .text-orange-700 { color: #fb923c; }
+html.dark .text-orange-800, html.dark .text-orange-900, html.dark .hover\:text-orange-800:hover { color: #fdba74; }
+html.dark .border-orange-200, html.dark .border-orange-400, html.dark .hover\:border-orange-400:hover { border-color: rgba(249, 115, 22, 0.4); }
+
+html.dark .bg-amber-50, html.dark .bg-amber-100 { background-color: rgba(245, 158, 11, 0.16); }
+html.dark .bg-amber-200 { background-color: rgba(245, 158, 11, 0.3); }
+html.dark .text-amber-600, html.dark .text-amber-700 { color: #fbbf24; }
+html.dark .text-amber-800, html.dark .text-amber-900 { color: #fcd34d; }
+html.dark .border-amber-200, html.dark .border-amber-300, html.dark .hover\:border-amber-300:hover { border-color: rgba(245, 158, 11, 0.4); }
+
+html.dark .bg-yellow-50, html.dark .bg-yellow-100 { background-color: rgba(234, 179, 8, 0.16); }
+html.dark .text-yellow-600, html.dark .text-yellow-700 { color: #facc15; }
+html.dark .text-yellow-800 { color: #fde047; }
+html.dark .border-yellow-200 { border-color: rgba(234, 179, 8, 0.4); }
+
+html.dark .bg-teal-100, html.dark .bg-teal-200 { background-color: rgba(20, 184, 166, 0.18); }
+html.dark .text-teal-600 { color: #2dd4bf; }
+html.dark .text-teal-800, html.dark .text-teal-900 { color: #5eead4; }
+html.dark .border-teal-200, html.dark .border-teal-300, html.dark .hover\:border-teal-300:hover { border-color: rgba(20, 184, 166, 0.4); }
+
+html.dark .bg-cyan-50, html.dark .bg-cyan-100, html.dark .bg-cyan-200 { background-color: rgba(6, 182, 212, 0.18); }
+html.dark .text-cyan-600 { color: #22d3ee; }
+html.dark .text-cyan-800, html.dark .text-cyan-900 { color: #67e8f9; }
+html.dark .border-cyan-200, html.dark .border-cyan-300, html.dark .hover\:border-cyan-300:hover { border-color: rgba(6, 182, 212, 0.4); }
+
+html.dark .bg-sky-100, html.dark .bg-sky-200 { background-color: rgba(14, 165, 233, 0.18); }
+html.dark .text-sky-800, html.dark .text-sky-900 { color: #7dd3fc; }
+html.dark .border-sky-200 { border-color: rgba(14, 165, 233, 0.4); }
+
+html.dark .bg-rose-50, html.dark .bg-rose-100, html.dark .bg-rose-200 { background-color: rgba(244, 63, 94, 0.18); }
+html.dark .text-rose-600, html.dark .text-rose-700 { color: #fb7185; }
+html.dark .text-rose-800, html.dark .text-rose-900 { color: #fda4af; }
+html.dark .border-rose-200, html.dark .border-rose-300, html.dark .hover\:border-rose-300:hover { border-color: rgba(244, 63, 94, 0.4); }
+
+html.dark .bg-lime-100, html.dark .bg-lime-200 { background-color: rgba(132, 204, 22, 0.18); }
+html.dark .text-lime-800, html.dark .text-lime-900 { color: #bef264; }
+html.dark .border-lime-200 { border-color: rgba(132, 204, 22, 0.4); }
+
+html.dark .bg-emerald-50, html.dark .bg-emerald-100 { background-color: rgba(16, 185, 129, 0.16); }
+html.dark .text-emerald-600, html.dark .text-emerald-700 { color: #34d399; }
+html.dark .text-emerald-800 { color: #6ee7b7; }
+html.dark .border-emerald-200, html.dark .border-emerald-300, html.dark .hover\:border-emerald-300:hover { border-color: rgba(16, 185, 129, 0.4); }
+
+/* Softer default shadows on dark surfaces */
+html.dark .shadow-sm, html.dark .shadow, html.dark .shadow-md, html.dark .shadow-lg, html.dark .shadow-xl, html.dark .shadow-2xl {
+  --tw-shadow-color: rgba(0, 0, 0, 0.45);
+  --tw-shadow: var(--tw-shadow-colored);
+}
+
+/* ----------------------------------------------------- theme toggle */
+
+.theme-toggle {
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  z-index: 9999;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
+  border: 1px solid var(--c-border-strong);
+  background-color: var(--c-surface);
+  color: var(--c-text-muted);
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+
+.theme-toggle:hover {
+  color: var(--c-accent);
+  transform: scale(1.06);
+}
+
+.theme-toggle svg {
+  width: 20px;
+  height: 20px;
+}
+
+.theme-toggle .icon-sun { display: none; }
+.theme-toggle .icon-moon { display: block; }
+html.dark .theme-toggle .icon-sun { display: block; }
+html.dark .theme-toggle .icon-moon { display: none; }

@@ -10,11 +10,11 @@
       theme: {
         extend: {
           colors: {
-            'brand-purple': '#B341F9',
-            'brand-pink': '#E453C0',
+            'brand-purple': '#D97757',
+            'brand-pink': '#BD5D3A',
           },
           backgroundImage: {
-            'gradient-brand': 'linear-gradient(135deg, #B341F9, #E453C0)',
+            'gradient-brand': 'linear-gradient(135deg, #D97757, #BD5D3A)',
           }
         }
       }
@@ -22,16 +22,18 @@
   </script>
   <script src="/api/shared/safedom.js"></script>
   <style>
-    .tab-active { background: linear-gradient(135deg, #B341F9, #E453C0); color: white; }
+    .tab-active { background: linear-gradient(135deg, #D97757, #BD5D3A); color: white; }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
   </style>
+  <link rel="stylesheet" href="/api/shared/theme.css" />
+  <script src="/api/shared/theme.js"></script>
 </head>
 <body class="bg-white min-h-screen">
   <nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100">
     <div class="container mx-auto px-6 py-4">
       <div class="flex justify-between items-center">
         <a href="/" class="flex items-center space-x-2">
-          <div class="w-10 h-10 rounded-xl bg-[#B341F9] flex items-center justify-center">
+          <div class="w-10 h-10 rounded-xl bg-[#D97757] flex items-center justify-center">
             <span class="text-white font-bold text-xl">AI</span>
           </div>
           <span class="text-2xl font-bold text-gray-900">Backends</span>
@@ -122,7 +124,7 @@
         </div>
 
         <div class="mt-4 flex flex-wrap items-center gap-2">
-          <button id="runBtn" class="px-4 py-2 rounded-lg bg-brand-purple text-white hover:bg-[#9935D9]">Run</button>
+          <button id="runBtn" class="px-4 py-2 rounded-lg bg-brand-purple text-white hover:bg-[#C15F3C]">Run</button>
           <button id="loadSample" class="px-4 py-2 rounded-lg bg-gray-100 text-gray-800 hover:bg-gray-200">Load Sample</button>
         </div>
 

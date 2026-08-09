@@ -10,13 +10,13 @@
       theme: {
         extend: {
           colors: {
-            'brand-purple': '#B341F9',
-            'brand-pink': '#E453C0',
-            'terminal-bg': '#1C2128',
-            'terminal-text': '#A7B5C4'
+            'brand-purple': '#D97757',
+            'brand-pink': '#BD5D3A',
+            'terminal-bg': '#262624',
+            'terminal-text': '#C2C0B6'
           },
           backgroundImage: {
-            'gradient-brand': 'linear-gradient(135deg, #B341F9, #E453C0)',
+            'gradient-brand': 'linear-gradient(135deg, #D97757, #BD5D3A)',
           }
         }
       }
@@ -24,13 +24,13 @@
   </script>
   <style>
     .metrics-container {
-      background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+      background: linear-gradient(135deg, var(--c-bg-muted) 0%, var(--c-border) 100%);
       border-radius: 12px;
       padding: 12px;
-      border: 1px solid #e5e7eb;
+      border: 1px solid var(--c-border);
     }
     .metric-item {
-      background: white;
+      background: var(--c-surface);
       padding: 8px 12px;
       border-radius: 8px;
       display: flex;
@@ -47,7 +47,7 @@
     }
     .metric-label {
       font-size: 12px;
-      color: #6b7280;
+      color: var(--c-text-muted);
       font-weight: 500;
     }
     .metric-value {
@@ -55,8 +55,8 @@
       font-weight: 600;
     }
     .json-output {
-      background: #1a1a1a;
-      color: #e5e5e5;
+      background: var(--c-dark-surface);
+      color: var(--c-border);
       font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
       font-size: 13px;
       line-height: 1.5;
@@ -89,7 +89,7 @@
     .copy-button.streaming {
       opacity: 0.6;
       cursor: wait;
-      background: #6b7280 !important;
+      background: var(--c-text-muted) !important;
     }
     .schema-editor-wrapper {
       position: relative;
@@ -101,12 +101,12 @@
       min-height: 128px;
       max-height: 300px;
       padding: 12px;
-      border: 1px solid #d1d5db;
+      border: 1px solid var(--c-border-strong);
       border-radius: 8px;
       font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
       font-size: 13px;
       line-height: 1.5;
-      background: #fafafa;
+      background: var(--c-bg-subtle);
       overflow-y: auto;
       overflow-x: hidden;
       white-space: pre-wrap;
@@ -117,38 +117,38 @@
       width: 8px;
     }
     .schema-editor::-webkit-scrollbar-track {
-      background: #f1f1f1;
+      background: var(--c-bg-muted);
       border-radius: 4px;
     }
     .schema-editor::-webkit-scrollbar-thumb {
-      background: #B341F9;
+      background: #D97757;
       border-radius: 4px;
     }
     .schema-editor::-webkit-scrollbar-thumb:hover {
-      background: #9935D9;
+      background: #C15F3C;
     }
     /* Custom scrollbar for sections */
     section::-webkit-scrollbar {
       width: 10px;
     }
     section::-webkit-scrollbar-track {
-      background: #f9fafb;
+      background: var(--c-bg-subtle);
     }
     section::-webkit-scrollbar-thumb {
-      background: #d1d5db;
+      background: var(--c-border-strong);
       border-radius: 5px;
     }
     section::-webkit-scrollbar-thumb:hover {
-      background: #9ca3af;
+      background: var(--c-text-faint);
     }
     .schema-editor:focus {
-      border-color: #B341F9;
+      border-color: #D97757;
       box-shadow: 0 0 0 2px rgba(179, 65, 249, 0.2);
-      background: #ffffff;
+      background: var(--c-surface);
     }
     .schema-editor:empty:before {
       content: attr(data-placeholder);
-      color: #9ca3af;
+      color: var(--c-text-faint);
     }
     .schema-editor.error-border {
       border-color: #ef4444;
@@ -176,6 +176,8 @@
     }
   </style>
   <script src="/api/shared/safedom.js"></script>
+  <link rel="stylesheet" href="/api/shared/theme.css" />
+  <script src="/api/shared/theme.js"></script>
 </head>
 <body class="bg-white min-h-screen">
   <!-- Navigation -->
@@ -183,7 +185,7 @@
     <div class="container mx-auto px-6 py-4">
       <div class="flex justify-between items-center">
         <a href="/" class="flex items-center space-x-2">
-          <div class="w-10 h-10 rounded-xl bg-[#B341F9] flex items-center justify-center">
+          <div class="w-10 h-10 rounded-xl bg-[#D97757] flex items-center justify-center">
             <span class="text-white font-bold text-xl">AI</span>
           </div>
           <span class="text-2xl font-bold text-gray-900">Backends</span>
@@ -318,7 +320,7 @@
             </div>
             
             <div class="flex items-center gap-2">
-              <button id="runBtn" class="px-4 py-2 rounded-lg bg-brand-purple text-white hover:bg-[#9935D9]">Generate Data</button>
+              <button id="runBtn" class="px-4 py-2 rounded-lg bg-brand-purple text-white hover:bg-[#C15F3C]">Generate Data</button>
               <button id="cancelBtn" class="hidden px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700">Cancel</button>
               <button id="loadSample" class="px-4 py-2 rounded-lg bg-gray-100 text-gray-800 hover:bg-gray-200">Load Selected Example</button>
             </div>
