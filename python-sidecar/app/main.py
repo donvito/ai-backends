@@ -67,13 +67,18 @@ def _runtime_kwargs(
 ) -> dict[str, Any]:
     """Resolve request overrides, falling back to sidecar defaults."""
     kwargs: dict[str, Any] = {}
-    resolved_runtime = resolve_runtime(runtime or DEFAULT_RUNTIME)
+    runtime_name = runtime or DEFAULT_RUNTIME
+    resolved_runtime = resolve_runtime(runtime_name)
     resolved_model = resolve_model(model or DEFAULT_MODEL)
     if resolved_runtime is not None:
         kwargs["runtime"] = resolved_runtime
     if resolved_model is not None:
         kwargs["model"] = resolved_model
-    path = model_path or DEFAULT_MODEL_PATH
+    # Local GGUF path only applies to llamacpp. Applying it to transformers
+    # makes Hugging Face loaders try to parse the .gguf as JSON config.
+    path = model_path
+    if path is None and runtime_name == "llamacpp":
+        path = DEFAULT_MODEL_PATH
     if path:
         kwargs["model_path"] = path
     return kwargs

@@ -20,6 +20,9 @@ def resolve_model(name: str | None) -> ModelRef | None:
 
 
 def apply_defaults() -> None:
+    # Do not set model_path globally — it would leak into transformers/embed
+    # calls via config merge. Pass AIBACKENDS_MODEL_PATH only for llamacpp
+    # requests in _runtime_kwargs.
     runtime = resolve_runtime(DEFAULT_RUNTIME)
     model = resolve_model(DEFAULT_MODEL)
     kwargs: dict = {}
@@ -27,7 +30,5 @@ def apply_defaults() -> None:
         kwargs["runtime"] = runtime
     if model is not None:
         kwargs["model"] = model
-    if DEFAULT_MODEL_PATH:
-        kwargs["model_path"] = DEFAULT_MODEL_PATH
     if kwargs:
         configure(**kwargs)
