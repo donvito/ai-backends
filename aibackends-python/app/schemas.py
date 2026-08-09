@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 
@@ -10,12 +12,14 @@ class RuntimeOptions(BaseModel):
     )
     model: str | None = Field(
         default=None,
-        description="Model ref name, e.g. gemma3-270m-it or minilm-l6",
+        description="Model ref name, e.g. lfm2.5-2.6b or minilm-l6",
     )
     model_path: str | None = Field(
         default=None,
         description="Optional local GGUF/weights path (overrides HF download)",
     )
+    max_tokens: int | None = Field(default=None, ge=1, le=8192)
+    temperature: float | None = Field(default=None, ge=0, le=2)
 
 
 class TextRequest(RuntimeOptions):
@@ -100,3 +104,43 @@ class ExtractInvoiceResponse(BaseModel):
 
 class ErrorResponse(BaseModel):
     detail: str
+
+
+class ChatMessage(BaseModel):
+    role: str = Field(..., description="system | user | assistant | tool")
+    content: str = Field(..., min_length=1)
+
+
+class ChatRequest(RuntimeOptions):
+    messages: list[ChatMessage] = Field(..., min_length=1)
+    tools: list[dict] | None = Field(
+        default=None,
+        description="Optional OpenAI-style tool schemas for native tool calling",
+    )
+
+
+class ToolCallResponse(BaseModel):
+    name: str
+    arguments: dict[str, Any]
+
+
+class ChatResponse(BaseModel):
+    content: str
+    tool_calls: list[ToolCallResponse] = Field(default_factory=list)
+    raw_content: str | None = None
+
+
+class DemoToolCallRequest(RuntimeOptions):
+    question: str = Field(
+        default="What is the weather in Paris right now?",
+        min_length=1,
+        description="Question that should trigger a tool call (LFM2.5 demo)",
+    )
+
+
+class DemoToolCallResponse(BaseModel):
+    question: str
+    tool_calls: list[ToolCallResponse]
+    tool_results: list[dict[str, Any]]
+    final_answer: str
+    raw_model_content: str | None = None

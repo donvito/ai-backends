@@ -12,7 +12,7 @@ def env(name: str, default: str | None = None) -> str | None:
 
 ACCESS_TOKEN = env("AIBACKENDS_ACCESS_TOKEN") or env("DEFAULT_ACCESS_TOKEN")
 DEFAULT_RUNTIME = env("AIBACKENDS_RUNTIME", "llamacpp")
-DEFAULT_MODEL = env("AIBACKENDS_MODEL", "gemma3-270m-it")
+DEFAULT_MODEL = env("AIBACKENDS_MODEL", "lfm2.5-2.6b")
 # Optional local GGUF / weights path. When set, llamacpp uses this file
 # instead of downloading a Hugging Face repo for the model ref.
 DEFAULT_MODEL_PATH = env("AIBACKENDS_MODEL_PATH")

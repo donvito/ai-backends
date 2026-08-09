@@ -142,6 +142,8 @@ const taskPaths = [
   { path: 'redact-pii', description: 'Redact PII via aibackends Python library' },
   { path: 'embed', description: 'Embed text via aibackends Python library' },
   { path: 'extract-invoice', description: 'Extract invoice fields via aibackends Python library' },
+  { path: 'chat', description: 'Chat completion via aibackends Python library' },
+  { path: 'tool-call-demo', description: 'LFM2.5 tool-calling demo via aibackends Python library' },
 ] as const
 
 for (const task of taskPaths) {

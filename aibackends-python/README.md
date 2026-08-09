@@ -36,21 +36,18 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 
-# Required for summarize/classify demo:
-pip install "aibackends[llamacpp]"
-# Optional extras:
-# pip install "aibackends[transformers]"
-# pip install "aibackends[pii]"
+# Runtime extras (install aibackends from git until LFM2.5 is on PyPI)
+pip install "aibackends[llamacpp,pii,transformers] @ git+https://github.com/donvito/aibackends.git"
 
-# Small CPU-friendly GGUF (~253MB) for the demo defaults
-hf download bartowski/google_gemma-3-270m-it-GGUF \
-  --include 'google_gemma-3-270m-it-Q4_K_M.gguf' \
+# LiquidAI LFM2.5-2.6B GGUF (~1.6GB) — default demo model
+hf download LiquidAI/LFM2.5-2.6B-GGUF \
+  --include 'LFM2.5-2.6B-Q4_K_M.gguf' \
   --local-dir models
 
 export AIBACKENDS_ACCESS_TOKEN=your-secret-api-key
 export AIBACKENDS_RUNTIME=llamacpp
-export AIBACKENDS_MODEL=gemma3-270m-it
-export AIBACKENDS_MODEL_PATH=$PWD/models/google_gemma-3-270m-it-Q4_K_M.gguf
+export AIBACKENDS_MODEL=lfm2.5-2.6b
+export AIBACKENDS_MODEL_PATH=$PWD/models/LFM2.5-2.6B-Q4_K_M.gguf
 # For local smoke tests without auth:
 # export AIBACKENDS_SKIP_AUTH=true
 
@@ -63,7 +60,7 @@ Example:
 curl -s http://localhost:8000/v1/summarize \
   -H "Authorization: Bearer your-secret-api-key" \
   -H "Content-Type: application/json" \
-  -d '{"text":"Payments failed after checkout deploy."}'
+  -d '{"text":"Payments failed after checkout deploy.","model":"lfm2.5-2.6b"}'
 ```
 
 ## Docker Compose

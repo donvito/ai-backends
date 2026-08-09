@@ -2,77 +2,72 @@
 
 Use the aibackends-python HTTP API (or the TypeScript same-origin proxy) to run local tasks from the [`aibackends`](https://github.com/donvito/aibackends) Python library.
 
+These examples default to LiquidAI **`lfm2.5-2.6b`** (chat completion + native tool calling).
+
 ## Prerequisites
 
 ```bash
-# Run locally (recommended for the interactive demo)
 cd aibackends-python
+python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-pip install "aibackends[llamacpp]"
+pip install "aibackends[llamacpp,pii,transformers] @ git+https://github.com/donvito/aibackends.git"
 
-# Small CPU GGUF used by the demo defaults (~253MB)
-hf download bartowski/google_gemma-3-270m-it-GGUF \
-  --include 'google_gemma-3-270m-it-Q4_K_M.gguf' \
+# LFM2.5 GGUF (~1.6GB)
+hf download LiquidAI/LFM2.5-2.6B-GGUF \
+  --include 'LFM2.5-2.6B-Q4_K_M.gguf' \
   --local-dir models
 
 export AIBACKENDS_ACCESS_TOKEN=your-secret-api-key
 export AIBACKENDS_RUNTIME=llamacpp
-export AIBACKENDS_MODEL=gemma3-270m-it
-export AIBACKENDS_MODEL_PATH=$PWD/models/google_gemma-3-270m-it-Q4_K_M.gguf
+export AIBACKENDS_MODEL=lfm2.5-2.6b
+export AIBACKENDS_MODEL_PATH=$PWD/models/LFM2.5-2.6B-Q4_K_M.gguf
+# export AIBACKENDS_SKIP_AUTH=true
 uvicorn app.main:app --port 8000
-
-# Or via Docker (mount models/ and set AIBACKENDS_MODEL_PATH=/models/...)
-# docker compose up aibackends-python --build
 ```
 
-Interactive demo page: [http://localhost:3000/api/v1/aibackends-python-demo](http://localhost:3000/api/v1/aibackends-python-demo)
+Interactive demo: [http://localhost:3000/api/v1/aibackends-python-demo](http://localhost:3000/api/v1/aibackends-python-demo)
 
-## Option A — Direct aibackends-python API
-
-- **Base URL**: `http://localhost:8000`
-- **Auth**: `Authorization: Bearer <AIBACKENDS_ACCESS_TOKEN>`
-
-### Summarize
+## Summarize
 
 ```bash
 curl -s http://localhost:8000/v1/summarize \
   -H "Authorization: Bearer your-secret-api-key" \
   -H "Content-Type: application/json" \
   -d '{
-    "text": "Payments failed after the checkout deploy. Cart totals looked correct, but the payment webhook returned 500 for Visa cards.",
+    "text": "Payments failed after the checkout deploy. Cart totals looked correct, but the payment webhook returned 500 for Visa cards. Support volume spiked within 20 minutes.",
     "runtime": "llamacpp",
-    "model": "gemma3-270m-it"
+    "model": "lfm2.5-2.6b"
   }'
 ```
 
-### Classify
+## Classify
 
 ```bash
 curl -s http://localhost:8000/v1/classify \
   -H "Authorization: Bearer your-secret-api-key" \
   -H "Content-Type: application/json" \
   -d '{
-    "text": "Please find attached invoice #1042 for March hosting fees.",
+    "text": "Please find attached invoice #1042 for March hosting fees. Net 30 payment terms apply.",
     "labels": ["invoice", "contract", "receipt", "support"],
     "runtime": "llamacpp",
-    "model": "gemma3-270m-it"
+    "model": "lfm2.5-2.6b"
   }'
 ```
 
-### Redact PII
+## Redact PII
 
 ```bash
 curl -s http://localhost:8000/v1/redact-pii \
   -H "Authorization: Bearer your-secret-api-key" \
   -H "Content-Type: application/json" \
   -d '{
-    "text": "Contact Jane Doe at jane.doe@example.com or +1 555 0100.",
+    "text": "Contact Jane Doe at jane.doe@example.com or +1 555 0100 about the renewal.",
     "backend": "gliner",
     "labels": ["email", "phone_number"]
   }'
 ```
 
-### Embed
+## Embed
 
 ```bash
 curl -s http://localhost:8000/v1/embed \
@@ -85,60 +80,76 @@ curl -s http://localhost:8000/v1/embed \
   }'
 ```
 
-## Option B — TypeScript proxy (same origin)
-
-When the main AI Backends server is running, call:
-
-- `GET /api/v1/local/health`
-- `POST /api/v1/local/summarize`
-- `POST /api/v1/local/classify`
-- `POST /api/v1/local/redact-pii`
-- `POST /api/v1/local/embed`
-- `POST /api/v1/local/extract-invoice`
-
-Proxy target: `AIBACKENDS_PYTHON_URL` (default `http://localhost:8000`).
+## Extract invoice
 
 ```bash
-curl -s http://localhost:3000/api/v1/local/summarize \
+curl -s http://localhost:8000/v1/extract-invoice \
   -H "Authorization: Bearer your-secret-api-key" \
   -H "Content-Type: application/json" \
   -d '{
-    "text": "Payments failed after the checkout deploy.",
+    "text": "Invoice from Acme Cloud\nItem: API hosting x1 — $120.00\nItem: Support plan x1 — $40.00\nSubtotal: $160.00\nTax: $12.80\nTotal: $172.80\nDue date: 2026-04-15\nPayment terms: Net 30",
     "runtime": "llamacpp",
-    "model": "gemma3-270m-it"
+    "model": "lfm2.5-2.6b"
   }'
 ```
 
-## JavaScript example (via proxy)
+## Chat completion
 
-```javascript
-async function summarizeLocal(text, token) {
-  const response = await fetch('http://localhost:3000/api/v1/local/summarize', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      text,
-      runtime: 'llamacpp',
-      model: 'gemma3-270m-it',
-    }),
-  });
-
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    throw new Error(err.detail || `HTTP ${response.status}`);
-  }
-
-  const data = await response.json();
-  return data.summary;
-}
+```bash
+curl -s http://localhost:8000/v1/chat \
+  -H "Authorization: Bearer your-secret-api-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "messages": [
+      {"role": "user", "content": "In one sentence, what is Liquid AI LFM2.5?"}
+    ],
+    "runtime": "llamacpp",
+    "model": "lfm2.5-2.6b",
+    "max_tokens": 256
+  }'
 ```
 
-## Notes
+## Tool calling demo (LFM2.5)
 
-- The TypeScript API (port 3000) and aibackends-python (port 8000) are separate services.
-- Install the matching `aibackends` extras (`llamacpp`, `transformers`, `pii`) before expecting inference to succeed.
-- Structured tasks (classify / extract-invoice) work more reliably with larger GGUFs than gemma3-270m-it.
-- See [`aibackends-python/README.md`](../aibackends-python/README.md) for service configuration.
+```bash
+curl -s http://localhost:8000/v1/tool-call-demo \
+  -H "Authorization: Bearer your-secret-api-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "question": "What is the weather in Paris right now?",
+    "runtime": "llamacpp",
+    "model": "lfm2.5-2.6b"
+  }'
+```
+
+Or chat with explicit tool schemas:
+
+```bash
+curl -s http://localhost:8000/v1/chat \
+  -H "Authorization: Bearer your-secret-api-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "messages": [
+      {"role": "user", "content": "What is the weather in Paris right now?"}
+    ],
+    "tools": [
+      {
+        "name": "get_weather",
+        "description": "Get the current weather for a city.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "city": {"type": "string"}
+          },
+          "required": ["city"]
+        }
+      }
+    ],
+    "runtime": "llamacpp",
+    "model": "lfm2.5-2.6b"
+  }'
+```
+
+## TypeScript proxy
+
+Same payloads work through `/api/v1/local/<task>` when the main server is running (`AIBACKENDS_PYTHON_URL`, default `http://localhost:8000`).

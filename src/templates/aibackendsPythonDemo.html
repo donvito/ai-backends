@@ -107,12 +107,13 @@
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Model</label>
-            <input id="model" type="text" value="gemma3-270m-it" class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple" />
+            <input id="model" type="text" value="lfm2.5-2.6b" class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple" />
           </div>
         </div>
         <p class="mt-2 text-xs text-gray-500">
-          Demo default uses a small local GGUF via <code class="mono">AIBACKENDS_MODEL_PATH</code>
-          (gemma3-270m-it). Install <code class="mono">aibackends[llamacpp]</code> first.
+          Demo default uses LiquidAI <code class="mono">lfm2.5-2.6b</code> via
+          <code class="mono">AIBACKENDS_MODEL_PATH</code>. Install latest
+          <code class="mono">aibackends[llamacpp]</code> from git for this model.
         </p>
 
         <div class="mt-3">
@@ -185,7 +186,7 @@
       piiFields.classList.toggle('hidden', task !== 'redact-pii');
       runtimeFields.classList.toggle('hidden', task === 'redact-pii');
       if (task === 'embed') modelEl.value = 'minilm-l6';
-      if (task !== 'embed' && modelEl.value === 'minilm-l6') modelEl.value = 'gemma3-270m-it';
+      if (task !== 'embed' && modelEl.value === 'minilm-l6') modelEl.value = 'lfm2.5-2.6b';
       updatePreview();
     }
 
