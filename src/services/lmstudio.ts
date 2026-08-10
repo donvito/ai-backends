@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { lmstudioConfig } from '../config/services';
-import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
-import { generateText, streamText, generateObject } from 'ai';
+import { createOpenAICompatibleModel, generateText, streamText } from './pi-ai';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import OpenAI from 'openai';
 import type { AIProvider } from './interfaces';
@@ -9,15 +8,19 @@ import type { AIProvider } from './interfaces';
 // Build base URL ensuring single trailing /v1
 const normalizedBase = (lmstudioConfig.baseURL || 'http://localhost:1234').replace(/\/$/, '');
 const LMSTUDIO_BASE_URL = `${normalizedBase}`;
+const LMSTUDIO_API_KEY = process.env.LMSTUDIO_API_KEY || 'lm-studio';
 
-const lmstudio = createOpenAICompatible({
-  name: 'lmstudio',
-  baseURL: `${LMSTUDIO_BASE_URL}/v1`,
-});
+function lmstudio(modelId: string) {
+  return createOpenAICompatibleModel({
+    provider: 'lmstudio',
+    modelId,
+    baseUrl: `${LMSTUDIO_BASE_URL}/v1`,
+  });
+}
 
 const openAIClient = new OpenAI({
   baseURL: `${LMSTUDIO_BASE_URL}/v1`,
-  apiKey: process.env.LMSTUDIO_API_KEY || 'lm-studio',
+  apiKey: LMSTUDIO_API_KEY,
 });
 
 
@@ -99,9 +102,9 @@ class LmStudioProvider implements AIProvider {
 
     const result = await generateText({
       model: modelToUse,
+      apiKey: LMSTUDIO_API_KEY,
       prompt,
       temperature,
-      toolChoice: 'none',
     });
 
     return result;
@@ -119,11 +122,11 @@ class LmStudioProvider implements AIProvider {
     try {
     const modelToUse = lmstudio(model || lmstudioConfig.chatModel);
 
-    const result = await streamText({
+    const result = streamText({
       model: modelToUse,
+      apiKey: LMSTUDIO_API_KEY,
       prompt,
       temperature,
-      toolChoice: 'none',
     });
 
       return result;

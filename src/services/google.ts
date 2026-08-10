@@ -1,21 +1,24 @@
 import {z} from "zod";
-import {createOpenAICompatible} from '@ai-sdk/openai-compatible';
-import {generateObject, generateText, streamText} from "ai";
+import { createOpenAICompatibleModel, generateObject, generateText, streamText } from './pi-ai';
 import type {AIProvider} from './interfaces';
 
 const GEMINI_MODEL = 'gemini-2.5-flash-lite';
+const GEMINI_OPENAI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/openai';
 
-export function getGoogleProvider() {
+export function getGoogleModel(modelId: string) {
   const apiKey = process.env.GOOGLE_AI_API_KEY;
   if (!apiKey) {
     throw new Error('Google AI API key is not configured. Set GOOGLE_AI_API_KEY or use another provider.');
   }
-  
-  return createOpenAICompatible({
-    name: 'google',
-    apiKey: apiKey,
-    baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai/',
-  });
+
+  return {
+    model: createOpenAICompatibleModel({
+      provider: 'google',
+      modelId,
+      baseUrl: GEMINI_OPENAI_BASE_URL,
+    }),
+    apiKey,
+  };
 }
 
 class GoogleProvider implements AIProvider {
@@ -28,9 +31,10 @@ class GoogleProvider implements AIProvider {
     temperature: number = 0
   ): Promise<any> {
     try {
-        const gemini = getGoogleProvider();
+        const { model: gemini, apiKey } = getGoogleModel(model || GEMINI_MODEL);
         return await generateObject({
-          model: gemini(model || GEMINI_MODEL),
+          model: gemini,
+          apiKey,
           schema,
           prompt,
           temperature
@@ -47,9 +51,10 @@ class GoogleProvider implements AIProvider {
     temperature: number = 0
   ): Promise<any> {
     try {
-        const gemini = getGoogleProvider();
+        const { model: gemini, apiKey } = getGoogleModel(model || GEMINI_MODEL);
         return await generateText({
-          model: gemini(model || GEMINI_MODEL),
+          model: gemini,
+          apiKey,
           prompt,
           temperature
       });
@@ -65,9 +70,10 @@ class GoogleProvider implements AIProvider {
     temperature: number = 0
   ): Promise<any> {
     try {
-        const gemini = getGoogleProvider();
+        const { model: gemini, apiKey } = getGoogleModel(model || GEMINI_MODEL);
         return streamText({
-          model: gemini(model || GEMINI_MODEL),
+          model: gemini,
+          apiKey,
           prompt,
           temperature
       });

@@ -8,12 +8,18 @@ const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'qwen3:4b';
 const OLLAMA_CHAT_MODEL = process.env.OLLAMA_CHAT_MODEL || 'qwen3:4b';
 const OLLAMA_VISION_MODEL = process.env.OLLAMA_VISION_MODEL || 'llama3.2-vision:11b';
 
-import { createOllama } from 'ollama-ai-provider';
-import { generateObject, generateText, streamText } from "ai";
+import { createOpenAICompatibleModel, generateObject, generateText, streamText } from './pi-ai';
 
-const ollama = createOllama({
-  baseURL: OLLAMA_BASE_URL + '/api',
-});
+// Ollama exposes an OpenAI-compatible API under /v1; no real API key is needed.
+const OLLAMA_API_KEY = process.env.OLLAMA_API_KEY || 'ollama';
+
+function ollama(modelId: string) {
+  return createOpenAICompatibleModel({
+    provider: 'ollama',
+    modelId,
+    baseUrl: `${OLLAMA_BASE_URL}/v1`,
+  });
+}
 
 interface OllamaChatResponse {
   model: string;
@@ -150,6 +156,7 @@ class OllamaProvider implements AIProvider {
 
       const result = await generateObject({
         model: modelToUse,
+        apiKey: OLLAMA_API_KEY,
         prompt: prompt,
         schema: schema,
         temperature: temperature,
@@ -171,6 +178,7 @@ class OllamaProvider implements AIProvider {
     console.log('OLLAMA_BASE_URL', OLLAMA_BASE_URL);
     const result = await generateText({
       model: modelToUse,
+      apiKey: OLLAMA_API_KEY,
       prompt: prompt
       });
       return result;
@@ -187,8 +195,9 @@ class OllamaProvider implements AIProvider {
     try {
     const modelToUse = ollama(model || OLLAMA_CHAT_MODEL);
     console.log('OLLAMA STREAMING - BASE_URL', OLLAMA_BASE_URL);
-    const result = await streamText({
+    const result = streamText({
       model: modelToUse,
+      apiKey: OLLAMA_API_KEY,
       prompt: prompt
     });
       return result;

@@ -1,7 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
-import { generateObject, generateText, streamText } from "ai";
-import { anthropic } from '@ai-sdk/anthropic';
+import { createAnthropicModel, generateObject, generateText, streamText } from './pi-ai';
 import type { AIProvider } from './interfaces';
 
 //fallback to cheapest model
@@ -18,6 +17,17 @@ export function getAnthropicClient() {
   });
 }
 
+function getModel(model?: string) {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    throw new Error('Anthropic API key is not configured. Set ANTHROPIC_API_KEY or use another provider.');
+  }
+  return {
+    model: createAnthropicModel(model || ANTHROPIC_MODEL, process.env.ANTHROPIC_BASE_URL),
+    apiKey,
+  };
+}
+
 class AnthropicProvider implements AIProvider {
   name = 'anthropic' as const;
 
@@ -28,9 +38,10 @@ class AnthropicProvider implements AIProvider {
     temperature: number = 0
   ): Promise<any> {
     try {
-      const modelToUse = anthropic(model || ANTHROPIC_MODEL);
+      const { model: modelToUse, apiKey } = getModel(model);
       const result = await generateObject({
         model: modelToUse,
+        apiKey,
         schema,
         prompt,
         temperature
@@ -46,10 +57,11 @@ class AnthropicProvider implements AIProvider {
     prompt: string,
     model?: string,
   ): Promise<any> {
-    try {      
-      const modelToUse = anthropic(model || ANTHROPIC_MODEL);
+    try {
+      const { model: modelToUse, apiKey } = getModel(model);
       const result = await generateText({
         model: modelToUse,
+        apiKey,
         prompt
       });
       console.log('ANTHROPIC RESULT', result);
@@ -65,9 +77,10 @@ class AnthropicProvider implements AIProvider {
     model?: string,
   ): Promise<any> {
     try {
-      const modelToUse = anthropic(model || ANTHROPIC_MODEL);
-      const result = await streamText({
+      const { model: modelToUse, apiKey } = getModel(model);
+      const result = streamText({
         model: modelToUse,
+        apiKey,
         prompt
       });
       return result;

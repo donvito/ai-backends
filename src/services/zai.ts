@@ -1,19 +1,18 @@
 import { z } from 'zod';
-import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
-import { generateText, streamText, generateObject } from 'ai';
+import { createOpenAICompatibleModel, generateText, streamText, generateObject } from './pi-ai';
 import type { AIProvider } from './interfaces';
 import { zaiConfig } from '../config/services';
 
 const normalizedBase = (zaiConfig.baseURL || 'https://api.z.ai/api/paas/v4').replace(/\/$/, '');
 const ZAI_BASE_URL = normalizedBase;
 
-const zai = createOpenAICompatible({
-  name: 'zai',
-  baseURL: `${ZAI_BASE_URL}`,
-  headers: {
-    'Authorization': `Bearer ${zaiConfig.apiKey}`,
-  },
-});
+function zai(modelId: string) {
+  return createOpenAICompatibleModel({
+    provider: 'zai',
+    modelId,
+    baseUrl: ZAI_BASE_URL,
+  });
+}
 
 class ZAIProvider implements AIProvider {
   name = 'zai' as const;
@@ -27,16 +26,11 @@ class ZAIProvider implements AIProvider {
     try {
       const modelToUse = model || zaiConfig.chatModel;
 
-      // OpenAI-compatible APIs require the word "json" in the prompt when using response_format: json_object
-      // The generateObject function uses json_object format, so we need to ensure "json" is in the prompt
-      const promptWithJson = prompt.toLowerCase().includes('json')
-        ? prompt
-        : `${prompt}\n\nReturn the response as valid JSON.`;
-
       const result = await generateObject({
         model: zai(modelToUse),
+        apiKey: zaiConfig.apiKey,
         schema,
-        prompt: promptWithJson,
+        prompt,
         temperature,
       });
 
@@ -48,7 +42,6 @@ class ZAIProvider implements AIProvider {
           completionTokens: result.usage?.completionTokens || 0,
           totalTokens: result.usage?.totalTokens || 0,
         },
-        warnings: result.warnings,
       };
     } catch (error) {
       throw new Error(`ZAI structured response error: ${error}`);
@@ -65,6 +58,7 @@ class ZAIProvider implements AIProvider {
 
       const result = await generateText({
         model: modelToUse,
+        apiKey: zaiConfig.apiKey,
         prompt,
         temperature,
       });
@@ -84,8 +78,9 @@ class ZAIProvider implements AIProvider {
     try {
       const modelToUse = zai(model || zaiConfig.model);
 
-      const result = await streamText({
+      const result = streamText({
         model: modelToUse,
+        apiKey: zaiConfig.apiKey,
         prompt,
         temperature,
       });

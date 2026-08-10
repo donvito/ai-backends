@@ -1,7 +1,6 @@
 import OpenAI from "openai";
 import { z } from "zod";
-import { openai } from '@ai-sdk/openai';
-import { generateObject, generateText, streamText } from "ai";
+import { createOpenAIResponsesModel, generateObject, generateText, streamText } from './pi-ai';
 import type { AIProvider } from './interfaces';
 
 const OPENAI_MODEL = 'gpt-4.1-nano';
@@ -17,6 +16,17 @@ export function getOpenAIClient() {
   });
 }
 
+function getModel(model?: string) {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error('OpenAI API key is not configured. Set OPENAI_API_KEY or use another provider.');
+  }
+  return {
+    model: createOpenAIResponsesModel(model || OPENAI_MODEL, process.env.OPENAI_BASE_URL),
+    apiKey,
+  };
+}
+
 class OpenAIProvider implements AIProvider {
   name = 'openai' as const;
 
@@ -27,9 +37,10 @@ class OpenAIProvider implements AIProvider {
     temperature: number = 0
   ): Promise<any> {
     try {
-      const modelToUse = openai.responses(model || OPENAI_MODEL);
+      const { model: modelToUse, apiKey } = getModel(model);
       const result = await generateObject({
         model: modelToUse,
+        apiKey,
         schema,
         prompt,
         temperature
@@ -46,9 +57,10 @@ class OpenAIProvider implements AIProvider {
     model?: string,
   ): Promise<any> {
     try {
-      const modelToUse = openai.responses(model || OPENAI_MODEL);
+      const { model: modelToUse, apiKey } = getModel(model);
       const result = await generateText({
         model: modelToUse,
+        apiKey,
         prompt
       });
       return result;
@@ -63,9 +75,10 @@ class OpenAIProvider implements AIProvider {
     model?: string,
   ): Promise<any> {
     try {
-      const modelToUse = openai.responses(model || OPENAI_MODEL);
-      const result = await streamText({
+      const { model: modelToUse, apiKey } = getModel(model);
+      const result = streamText({
         model: modelToUse,
+        apiKey,
         prompt
       });
       return result;

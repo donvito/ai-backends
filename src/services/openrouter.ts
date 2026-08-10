@@ -1,8 +1,17 @@
-import { openrouter } from '@openrouter/ai-sdk-provider';
-import { generateObject, generateText, streamText } from 'ai';
 import { z } from 'zod';
 import { openrouterConfig } from '../config/services';
+import { createOpenAICompatibleModel, generateObject, generateText, streamText } from './pi-ai';
 import type { AIProvider } from './interfaces';
+
+const OPENROUTER_BASE_URL = openrouterConfig.baseURL || 'https://openrouter.ai/api/v1';
+
+function openrouter(modelId: string) {
+  return createOpenAICompatibleModel({
+    provider: 'openrouter',
+    modelId,
+    baseUrl: OPENROUTER_BASE_URL,
+  });
+}
 
 class OpenRouterProvider implements AIProvider {
   name = 'openrouter' as const;
@@ -19,6 +28,7 @@ class OpenRouterProvider implements AIProvider {
     try {
       const result = await generateObject({
         model: openrouter(model),
+        apiKey: openrouterConfig.apiKey,
         schema,
         prompt,
         temperature,
@@ -39,6 +49,7 @@ class OpenRouterProvider implements AIProvider {
     try {
       const result = await generateText({
         model: openrouter(model),
+        apiKey: openrouterConfig.apiKey,
         prompt,
       });
       return result;
@@ -55,8 +66,9 @@ class OpenRouterProvider implements AIProvider {
     model: string = openrouterConfig.model
   ): Promise<any> {
     try {
-      const result = await streamText({
+      const result = streamText({
         model: openrouter(model),
+        apiKey: openrouterConfig.apiKey,
         prompt,
       });
       return result;

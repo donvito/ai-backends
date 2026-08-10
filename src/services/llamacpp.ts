@@ -1,6 +1,5 @@
 import { z } from 'zod';
-import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
-import { generateText, streamText } from 'ai';
+import { createOpenAICompatibleModel, generateText, streamText } from './pi-ai';
 import type { AIProvider } from './interfaces';
 import OpenAI from 'openai';
 import { zodToJsonSchema } from 'zod-to-json-schema';
@@ -9,15 +8,19 @@ import { llamacppConfig } from '../config/services';
 // Build base URL ensuring single trailing /v1
 const normalizedBase = (llamacppConfig.baseURL || 'http://localhost:8080').replace(/\/$/, '');
 const LLAMACPP_BASE_URL = `${normalizedBase}`;
+const LLAMACPP_API_KEY = process.env.LLAMACPP_API_KEY || 'llama-cpp';
 
-const llamacpp = createOpenAICompatible({
-  name: 'llamacpp',
-  baseURL: `${LLAMACPP_BASE_URL}`,
-});
+function llamacpp(modelId: string) {
+  return createOpenAICompatibleModel({
+    provider: 'llamacpp',
+    modelId,
+    baseUrl: `${LLAMACPP_BASE_URL}/v1`,
+  });
+}
 
 const openAIClient = new OpenAI({
   baseURL: `${LLAMACPP_BASE_URL}/v1`,
-  apiKey: process.env.LLAMACPP_API_KEY || 'llama-cpp',
+  apiKey: LLAMACPP_API_KEY,
 });
 
 function parseLlamaCppStructuredResponse<T>(
@@ -99,6 +102,7 @@ class LlamaCppProvider implements AIProvider {
 
     const result = await generateText({
       model: modelToUse,
+      apiKey: LLAMACPP_API_KEY,
       prompt,
       temperature,
     });
@@ -118,8 +122,9 @@ class LlamaCppProvider implements AIProvider {
     try {
     const modelToUse = llamacpp(model || 'default');
 
-    const result = await streamText({
+    const result = streamText({
       model: modelToUse,
+      apiKey: LLAMACPP_API_KEY,
       prompt,
       temperature,
     });

@@ -295,7 +295,7 @@ More to come...check swagger docs for updated endpoints.
 - Hono for the API server
 - Typescript
 - Zod for request and response validation
-- Vercel AI SDK for AI integration
+- [pi-ai](https://github.com/earendil-works/pi) for AI integration
 - Docker for containerization
 
 ## Swagger Docs
