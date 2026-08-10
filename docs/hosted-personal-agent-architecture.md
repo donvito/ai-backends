@@ -101,6 +101,20 @@ Each customer's agent runs in its own Fly Machine / Firecracker microVM / gVisor
 
 Concretely: build the `WorkspaceFS` interface now and ship Option A behind it (one env var, one volume, fastest to market). The interface is deliberately object-storage-shaped (whole-file read/write, no seek/append), so migrating to Option B is a new adapter plus a data copy — no changes to tools, routes, or schemas. Option C becomes the "Pro" tier when we add shell/code tools; even then, B remains the durable store and the sandbox is hydrated from it.
 
+### Chat + file creation does NOT require sandboxes
+
+A common concern: "customers chat with the agent and it creates files — do we need always-on sandboxes for that?" No. When the agent "creates a file," nothing executes on customer-owned compute. The model emits a `write_file` tool call and the shared API process handles it as an ordinary library call: validate the path, write into the customer's jail (A) or object-storage prefix (B). Chat plus file CRUD is fully served by the shared, stateless API tier — one fleet of nodes serves every customer, and an idle customer costs nothing beyond stored bytes.
+
+Sandboxes are needed only when the agent must **execute** something (`run_shell`, Python, `npm install`). Even then, "always-on" is the last resort, not the default:
+
+| Pattern | How it works | When to use |
+|---|---|---|
+| **Just-in-time, scale-to-zero** | Sandbox is created/woken only while an exec tool call runs: hydrate workspace from `WorkspaceFS`, execute, sync results back, stop the machine. Fly Machines wake in well under a second; Firecracker microVMs cold-boot in ~150ms. | Default once exec tools exist — this is how hosted coding agents operate |
+| **Ephemeral per-task sandboxes** | No per-customer machine at all: take a blank sandbox from a warm pool, hydrate, run, write outputs back, destroy. | Same as above, with even less fleet management; requires Option B as source of truth |
+| **Always-on machine** | Dedicated, persistently running per-customer VM. | Only for persistent background workloads (cron-like agents, watchers) — a premium tier with a per-customer cost floor |
+
+The architectural move that makes this cheap is keeping **durable state out of the sandbox**: files live in `WorkspaceFS`, transcripts in the session store. The sandbox is pure scratch compute — safe to kill anytime, recreated on demand.
+
 ## Agent-facing file tools
 
 New module `src/services/agent-tools-workspace.ts`. Tools are constructed **per session**, closed over the authenticated customer's `WorkspaceFS` — the model never supplies a customer id:
