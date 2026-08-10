@@ -288,6 +288,23 @@ Vision Example
 
 OCR Example
 
+### Agents
+
+Autonomous, tool-using agents that plan across multiple turns. Pick a scenario to select the agent's toolset: `general` (calculator, date/time, weather), `customer-support` (account, subscription, billing, and ticket tools), or `real-estate` (search listings, property details, and viewing appointment booking).
+
+
+| Endpoint                          | Description                                                                                        |
+| --------------------------------- | -------------------------------------------------------------------------------------------------- |
+| **/api/agent/run**                | Run a one-off agent task and get the final answer plus every tool call it made                     |
+| **/api/agent/chat**               | Chat with an agent in a multi-turn session; the agent remembers the whole conversation             |
+| **/api/agent/sessions/{id}**      | Inspect (GET) or end (DELETE) a chat session                                                       |
+| **/api/agent/scenarios**          | List available scenarios with their tools and sample tasks                                         |
+| **/api/agent/tools**              | List the general-purpose toolset                                                                   |
+
+Both `run` and `chat` support streaming (SSE) so you can watch the agent's turns, tool calls, and reply in real time. Chat sessions are stored in memory with a 30-minute idle expiry. Supported providers: OpenRouter and OpenAI (tool-calling models required).
+
+See the full usage guide and API shapes in [docs/agents-api.md](docs/agents-api.md), or try the interactive demos: [Agent Chat](http://localhost:3000/api/v1/agent-chat-demo) and [Agent Tasks](http://localhost:3000/api/v1/agents-demo).
+
 More to come...check swagger docs for updated endpoints.
 
 ## Tech Stack

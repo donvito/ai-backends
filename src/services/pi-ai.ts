@@ -1,4 +1,4 @@
-import type { Api, AssistantMessage, Context, Model, ProviderStreams, StreamOptions } from '@earendil-works/pi-ai';
+import type { Api, AssistantMessage, AssistantMessageEventStream, Context, Model, ProviderStreams, SimpleStreamOptions, StreamOptions } from '@earendil-works/pi-ai';
 import { anthropicMessagesApi } from '@earendil-works/pi-ai/api/anthropic-messages.lazy';
 import { openAICompletionsApi } from '@earendil-works/pi-ai/api/openai-completions.lazy';
 import { openAIResponsesApi } from '@earendil-works/pi-ai/api/openai-responses.lazy';
@@ -19,6 +19,18 @@ function streamsFor(model: Model<Api>): ProviderStreams {
     throw new Error(`Unsupported pi-ai API: ${model.api}`);
   }
   return implementation;
+}
+
+/**
+ * Stream function compatible with @earendil-works/pi-agent-core's StreamFn
+ * contract. Dispatches to the API implementation that owns the model.
+ */
+export function agentStreamFn(
+  model: Model<Api>,
+  context: Context,
+  options?: SimpleStreamOptions
+): AssistantMessageEventStream {
+  return streamsFor(model).streamSimple(model, context, options);
 }
 
 /**
