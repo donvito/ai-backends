@@ -70,6 +70,9 @@ function configureApiSecurity(app: OpenAPIHono, tokenConfig: string) {
                 path === '/api/v1/agent-chat-demo' ||
                 path === '/api/models' ||
                 path === '/api/jsoneditor' ||
+                // Admin dashboard page (the Admin APIs it calls stay protected)
+                path === '/admin' ||
+                path === '/api/admin' ||
                 // Public read-only service catalog for demos
                 path === '/api/v1/services/models' ||
                 // Public read-only agent tool/scenario catalogs for the Agents demo
@@ -234,7 +237,10 @@ app.use('/*', cors({
 
 // Initialize authentication and security
 const initialize = async () => {
-    await configureAuth(app)    
+    await configureAuth(app)
+    // Old admin dashboard location; registered before routes so it takes
+    // precedence over the /api/admin back-compat API forwarder for this exact path
+    app.get('/api/admin', (c) => c.redirect('/admin', 301))
     await configureRoutes(app)
     await configureApiDocs(app)
     await checkProvidersAvailability()

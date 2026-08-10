@@ -13,7 +13,7 @@ const INITIAL_BACKOFF_MS = 500;
 /**
  * Fetch with exponential backoff for external API calls.
  */
-async function fetchWithBackoff(url: string, signal?: AbortSignal): Promise<Response> {
+export async function fetchWithBackoff(url: string, signal?: AbortSignal, init?: RequestInit): Promise<Response> {
   let lastError: unknown;
   for (let attempt = 0; attempt < MAX_FETCH_RETRIES; attempt++) {
     if (attempt > 0) {
@@ -21,7 +21,7 @@ async function fetchWithBackoff(url: string, signal?: AbortSignal): Promise<Resp
       await new Promise((resolve) => setTimeout(resolve, delay));
     }
     try {
-      const response = await fetch(url, { signal });
+      const response = await fetch(url, { ...init, signal });
       // Retry on rate limiting or transient server errors
       if (response.status === 429 || response.status >= 500) {
         lastError = new Error(`Request failed with status ${response.status}`);

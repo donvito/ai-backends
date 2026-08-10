@@ -45,9 +45,24 @@ curl --location 'http://localhost:3000/api/v1/agent/chat' \
 
 Requires OpenRouter (`OPENROUTER_API_KEY`) or OpenAI (`OPENAI_API_KEY`) with a tool-calling model.
 
+You can also **create your own agents and tools** — via the API or the admin dashboard — without touching code. Define a custom HTTP tool (one request per call, with a JSON Schema for its arguments), compose agents from built-in and custom tools, and they become immediately runnable as scenarios and selectable in the demos. See [Admin Dashboard](#admin-dashboard).
+
 - Full usage guide and API shapes: [docs/agents-api.md](docs/agents-api.md)
+- Custom agents, tools, and keys: [docs/admin-api.md](docs/admin-api.md)
 - Interactive demos: [Agent Chat](http://localhost:3000/api/v1/agent-chat-demo) (multi-turn) and [Agent Tasks](http://localhost:3000/api/v1/agents-demo) (one-off)
 - Endpoint reference: [Agents section](#agents) under Available APIs
+
+## Admin Dashboard
+
+The main admin dashboard — separate from the demos — lives at [http://localhost:3000/admin](http://localhost:3000/admin). Use it to:
+
+- **Create and edit agents**: system prompt, toolset, skills, and sample tasks; new agents are instantly runnable via the Agents API and listed in the demo pages.
+- **Define custom HTTP tools**: point a tool at any HTTP endpoint (with `{placeholder}` URL templating, query/body argument mapping, and custom headers), then test it right in the dashboard before agents use it.
+- **Create skills**: instruction packages (Agent Skills style) whose descriptions are always visible to agents while full content loads on demand via the `use_skill` tool.
+- **Connect MCP servers**: register Model Context Protocol servers (Streamable HTTP or SSE); their tools are auto-discovered as `mcp_<server>_<tool>` and can be attached to agents like any other tool. A demo MCP server ships in `examples/mcp-demo-server.ts`.
+- **Configure provider API keys** at runtime: set or replace keys for OpenAI, Anthropic, OpenRouter, Google, and more without restarting the server. Keys set here override environment variables and are masked in all responses.
+
+Configuration persists to `data/admin-config.json` (gitignored — it contains API keys, so protect it like a `.env` file). All admin APIs require the bearer token in production; enter it once in the dashboard header. Details in [docs/admin-api.md](docs/admin-api.md).
 
 ## Supported LLM Providers
 

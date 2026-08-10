@@ -31,7 +31,9 @@ A scenario selects the agent's toolset and default system prompt. Pass it as `pa
 | `customer-support` | `lookup_customer`, `get_subscription`, `get_billing_history`, `get_support_tickets`, `create_support_ticket` | In-memory CRM: `CUST-1001` (jane.cruz@example.com, active), `CUST-1002` (mark.reyes@example.com, past due), `CUST-1003` (aiko.tanaka@example.com, cancelled) |
 | `real-estate` | `search_properties`, `get_property_details`, `get_viewing_slots`, `book_viewing` | In-memory listings in Makati, Quezon City, and Taguig with bookable viewing slots |
 
-`GET /api/v1/agent/scenarios` returns this catalog programmatically (labels, descriptions, tools, and sample tasks).
+`GET /api/v1/agent/scenarios` returns this catalog programmatically (labels, descriptions, tools, and sample tasks), including any custom agents.
+
+**Custom agents**: beyond the built-in scenarios, you can create your own agents (system prompt + toolset + skills) via the [Admin API or the admin dashboard](admin-api.md). Agents can use custom HTTP tools, tools discovered from connected MCP servers, and skills (instruction packages loaded on demand). A custom agent's key works exactly like a scenario key on `/agent/run` and `/agent/chat`.
 
 ## Endpoints
 
