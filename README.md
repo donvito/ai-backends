@@ -4,6 +4,8 @@ AIBackends is an API server that you can use to integrate AI into your applicati
 
 The project supports running open models locally with Ollama, LM Studio or LlamaCpp. It also supports LLM Gateway, OpenRouter, OpenAI, Anthropic, Google AI Studio, Baseten and ZAI providers.
 
+Beyond ready-to-use endpoints for text, vision, and data tasks, AIBackends now ships **AI Agents**: autonomous, tool-using agents you can run as one-off tasks or chat with in multi-turn sessions that remember the whole conversation. See [Agents](#agents-new) below.
+
 ## Why AI Backends?
 
 The purpose of this project is to make common AI use cases easily accessible to non-coders who want to add AI features to their applications. AIBackends have been tested with popular AI app builder tools like [Bolt.new](https://bolt.new), [v0](https://v0.dev) and [Lovable](https://lovable.dev). You can also use it with [Warp](https://warp.dev), [Cursor](https://cursor.com/), [Claude Code](https://www.anthropic.com/claude-code), [Windsurf](https://windsurf.com/) or [AmpCode](https://ampcode.com/).
@@ -11,6 +13,41 @@ The purpose of this project is to make common AI use cases easily accessible to 
 Since APIs are ready to use, you don't need to understand prompt engineering. Just prompt the API documentation and you are good to go. For those who want use with online app builders, you need to host AIBackends on your own server. I have tested in Railway and it is a good option.
 
 AI Backends
+
+## Agents (New)
+
+AIBackends can now run **autonomous, tool-using agents**. Instead of a single prompt/response, an agent plans across multiple turns: it decides which tools to call, reads the results, and keeps going until the task is done.
+
+- **Multi-turn chat with sessions** — `POST /api/agent/chat` holds a conversation. The agent remembers everything said so far, so follow-ups like *"book the first one"* or *"did my last payment go through?"* just work. Sessions are kept in memory with a 30-minute idle expiry.
+- **One-off tasks** — `POST /api/agent/run` completes a task and returns the final answer plus every tool call the agent made.
+- **Scenarios** — pick a toolset per request: `general` (calculator, date/time, weather), `customer-support` (account, subscription, billing, and ticket tools), or `real-estate` (search listings, property details, and viewing appointment booking). Ships with demo data so you can try it immediately.
+- **Live streaming** — both endpoints support SSE so you can watch turns, tool calls, and the reply stream in real time.
+
+Start a chat, then continue it with the returned `sessionId`:
+
+```curl
+curl --location 'http://localhost:3000/api/v1/agent/chat' \
+--header 'Content-Type: application/json' \
+--data '{
+    "payload": {
+        "message": "Hi, I am jane.cruz@example.com. Is my subscription active?",
+        "scenario": "customer-support"
+    },
+    "config": {
+        "provider": "openrouter",
+        "model": "deepseek/deepseek-v4-flash"
+    }
+}'
+
+# Response includes "sessionId" — send it with the next message to continue the conversation:
+# { "payload": { "message": "Did my last payment go through?", "sessionId": "<sessionId>" }, ... }
+```
+
+Requires OpenRouter (`OPENROUTER_API_KEY`) or OpenAI (`OPENAI_API_KEY`) with a tool-calling model.
+
+- Full usage guide and API shapes: [docs/agents-api.md](docs/agents-api.md)
+- Interactive demos: [Agent Chat](http://localhost:3000/api/v1/agent-chat-demo) (multi-turn) and [Agent Tasks](http://localhost:3000/api/v1/agents-demo) (one-off)
+- Endpoint reference: [Agents section](#agents) under Available APIs
 
 ## Supported LLM Providers
 
