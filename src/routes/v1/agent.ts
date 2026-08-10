@@ -132,7 +132,7 @@ router.openapi(
     responses: {
       200: {
         description:
-          'Runs a tool-using agent (powered by pi core) to complete the task and returns the final answer with the tool calls it made. When config.stream is true, agent lifecycle events are streamed over SSE.',
+          'Runs a tool-using agent to complete the task and returns the final answer with the tool calls it made. When config.stream is true, agent lifecycle events are streamed over SSE.',
         content: {
           'application/json': {
             schema: agentResponseSchema,
@@ -152,7 +152,7 @@ router.openapi(
     },
     summary: 'Run an agent task',
     description:
-      'This endpoint runs an autonomous agent loop using pi core (@earendil-works/pi-agent-core). ' +
+      'This endpoint runs an autonomous agent loop. ' +
       'The agent calls tools across multiple turns to complete the task. Pick a scenario to select the toolset: ' +
       'general (calculator, date/time, weather), customer-support (account, subscription, billing, tickets), ' +
       'or real-estate (listing search, property details, viewing slots, appointment booking). ' +
@@ -348,7 +348,7 @@ router.openapi(
     },
     summary: 'Chat with an agent (multi-turn session)',
     description:
-      'This endpoint holds a multi-turn conversation with a tool-using agent powered by pi core. ' +
+      'This endpoint holds a multi-turn conversation with a tool-using agent. ' +
       'The agent keeps the full conversation transcript in an in-memory session, so follow-up messages have complete context. ' +
       'Sessions expire after 30 minutes of inactivity. Scenario, provider, and model are fixed when the session is created.',
     tags: ['Agents'],
