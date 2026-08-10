@@ -5,10 +5,12 @@ import { handleError } from '../../utils/errorHandler'
 import {
   agentRequestSchema,
   agentResponseSchema,
+  agentScenariosResponseSchema,
   agentToolsResponseSchema,
   createAgentResponse,
 } from '../../schemas/v1/agent'
 import { getAgentToolCatalog } from '../../services/agent-tools'
+import { getAgentScenarioCatalog } from '../../services/agent-scenarios'
 import { runAgent, type AgentProviderName } from '../../services/pi-agent'
 import { apiVersion } from './versionConfig'
 import { createFinalResponse } from './finalResponse'
@@ -28,6 +30,7 @@ async function handleAgentRunRequest(c: Context) {
       provider,
       model,
       task: payload.task,
+      scenario: payload.scenario,
       systemPrompt: payload.systemPrompt,
       maxTurns: payload.maxTurns,
     }
@@ -139,11 +142,36 @@ router.openapi(
     summary: 'Run an agent task',
     description:
       'This endpoint runs an autonomous agent loop using pi core (@earendil-works/pi-agent-core). ' +
-      'The agent can call built-in tools (calculator, current date/time, weather lookup) across multiple turns to complete the task. ' +
+      'The agent calls tools across multiple turns to complete the task. Pick a scenario to select the toolset: ' +
+      'general (calculator, date/time, weather), customer-support (account, subscription, billing, tickets), ' +
+      'or real-estate (listing search, property details, viewing slots, appointment booking). ' +
       'Supported providers: OpenRouter and the official OpenAI API.',
     tags: ['Agents'],
   }),
   handleAgentRunRequest as any
+)
+
+router.openapi(
+  createRoute({
+    path: '/scenarios',
+    method: 'get',
+    security: [{ BearerAuth: [] }],
+    responses: {
+      200: {
+        description: 'Returns the available agent scenarios with their tools and sample tasks.',
+        content: {
+          'application/json': {
+            schema: agentScenariosResponseSchema,
+          },
+        },
+      },
+    },
+    summary: 'List agent scenarios',
+    description:
+      'This endpoint lists the demo scenarios available for the agent (general, customer-support, real-estate), including each scenario\'s toolset and sample tasks.',
+    tags: ['Agents'],
+  }),
+  (c) => c.json({ scenarios: getAgentScenarioCatalog() }, 200)
 )
 
 router.openapi(

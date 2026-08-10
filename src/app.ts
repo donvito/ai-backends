@@ -70,9 +70,11 @@ function configureApiSecurity(app: OpenAPIHono, tokenConfig: string) {
                 path === '/api/jsoneditor' ||
                 // Public read-only service catalog for demos
                 path === '/api/v1/services/models' ||
-                // Public read-only agent tool catalog for the Agents demo
+                // Public read-only agent tool/scenario catalogs for the Agents demo
                 path === '/api/v1/agent/tools' ||
                 path === '/api/agent/tools' ||
+                path === '/api/v1/agent/scenarios' ||
+                path === '/api/agent/scenarios' ||
                 // Public aibackends-python health for demo status badge
                 path === '/api/v1/local/health' ||
                 path === '/api/local/health' ||

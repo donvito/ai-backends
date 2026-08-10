@@ -1,7 +1,7 @@
 import { Agent } from '@earendil-works/pi-agent-core';
 import type { Api, AssistantMessage, Model } from '@earendil-works/pi-ai';
 import { openaiConfig, openrouterConfig } from '../config/services';
-import { demoAgentTools } from './agent-tools';
+import { getAgentScenario, type AgentScenarioKey } from './agent-scenarios';
 import type { TokenUsage } from './pi-ai';
 import { agentStreamFn, createOpenAICompatibleModel, createOpenAIResponsesModel } from './pi-ai';
 
@@ -16,12 +16,6 @@ import { agentStreamFn, createOpenAICompatibleModel, createOpenAIResponsesModel 
 export type AgentProviderName = 'openrouter' | 'openai';
 
 const OPENROUTER_BASE_URL = openrouterConfig.baseURL || 'https://openrouter.ai/api/v1';
-
-export const DEFAULT_AGENT_SYSTEM_PROMPT = [
-  'You are a helpful assistant that completes tasks using the tools available to you.',
-  'Use tools whenever they can provide accurate data instead of guessing.',
-  'Think step by step, call tools as needed, and finish with a clear, concise answer to the task.',
-].join(' ');
 
 export const DEFAULT_MAX_TURNS = 6;
 export const MAX_TURNS_LIMIT = 10;
@@ -55,6 +49,8 @@ export interface RunAgentOptions {
   provider: AgentProviderName;
   model: string;
   task: string;
+  /** Scenario key selecting the toolset and default system prompt. Defaults to 'general'. */
+  scenario?: AgentScenarioKey;
   systemPrompt?: string;
   maxTurns?: number;
   /**
@@ -110,6 +106,7 @@ export async function runAgent(options: RunAgentOptions): Promise<AgentRunResult
   const apiKey = resolveApiKey(options.provider);
   const model = buildAgentModel(options.provider, options.model);
   const maxTurns = Math.min(options.maxTurns ?? DEFAULT_MAX_TURNS, MAX_TURNS_LIMIT);
+  const scenario = getAgentScenario(options.scenario ?? 'general');
 
   const steps: AgentStep[] = [];
   const pendingToolCalls = new Map<string, { toolName: string; args: unknown }>();
@@ -119,9 +116,9 @@ export async function runAgent(options: RunAgentOptions): Promise<AgentRunResult
 
   const agent = new Agent({
     initialState: {
-      systemPrompt: options.systemPrompt || DEFAULT_AGENT_SYSTEM_PROMPT,
+      systemPrompt: options.systemPrompt || scenario.systemPrompt,
       model,
-      tools: demoAgentTools,
+      tools: scenario.tools,
     },
     streamFn: agentStreamFn,
     getApiKey: () => apiKey,

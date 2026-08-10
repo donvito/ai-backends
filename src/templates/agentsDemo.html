@@ -151,7 +151,8 @@
       <p class="text-lg text-gray-600 max-w-2xl mx-auto">
         Run an autonomous, tool-using agent powered by
         <a href="https://github.com/earendil-works/pi" target="_blank" rel="noopener noreferrer" class="text-brand-purple underline">pi core</a>.
-        The agent plans across multiple turns and calls tools (calculator, date/time, weather) to complete your task.
+        Pick a scenario — general assistant, customer support, or real estate — and the agent plans across
+        multiple turns, calling that scenario's tools to complete your task.
       </p>
     </div>
 
@@ -159,6 +160,12 @@
       <!-- Controls -->
       <section class="bg-white p-6 rounded-2xl border border-gray-100 shadow-lg hover:shadow-xl transition-shadow duration-300">
         <h2 class="text-lg font-semibold mb-3">Task</h2>
+
+        <label class="block text-sm font-medium text-gray-700 mb-1">Scenario</label>
+        <select id="scenario" class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple"></select>
+        <p id="scenarioDescription" class="text-xs text-gray-500 mt-2 mb-3"></p>
+
+        <label class="block text-sm font-medium text-gray-700 mb-1">Task</label>
         <textarea id="task" rows="4" class="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple bg-white" placeholder="Describe the task for the agent..."></textarea>
 
         <div class="mt-3">
@@ -219,12 +226,57 @@
   </main>
 
   <script>
-    const sampleTasks = [
-      "What's the current weather in Manila, and what time is it there right now?",
-      "Calculate (1875 * 23.5) / 100 and then add 42 to the result.",
-      "Compare the current temperature in Tokyo and New York, and tell me the difference in degrees Celsius."
+    // Fallback scenario catalog if the /api/v1/agent/scenarios fetch fails
+    const fallbackScenarios = [
+      {
+        key: 'general',
+        label: 'General assistant',
+        description: 'A general-purpose assistant with a calculator, date/time, and weather lookup tools.',
+        sampleTasks: [
+          "What's the current weather in Manila, and what time is it there right now?",
+          "Calculate (1875 * 23.5) / 100 and then add 42 to the result."
+        ],
+        tools: [
+          { name: 'calculate', label: 'Calculator' },
+          { name: 'get_current_datetime', label: 'Current date & time' },
+          { name: 'get_weather', label: 'Weather lookup' }
+        ]
+      },
+      {
+        key: 'customer-support',
+        label: 'Customer support',
+        description: 'A support agent that can look up accounts, subscriptions, billing history, and open tickets.',
+        sampleTasks: [
+          "Hi, I'm jane.cruz@example.com. Can you check if my subscription is active and whether my last payment went through?"
+        ],
+        tools: [
+          { name: 'lookup_customer', label: 'Customer lookup' },
+          { name: 'get_subscription', label: 'Subscription status' },
+          { name: 'get_billing_history', label: 'Billing history' },
+          { name: 'get_support_tickets', label: 'Support tickets' },
+          { name: 'create_support_ticket', label: 'Create support ticket' }
+        ]
+      },
+      {
+        key: 'real-estate',
+        label: 'Real estate',
+        description: 'A real-estate assistant that can search listings, share details, and book viewing appointments.',
+        sampleTasks: [
+          "Tell me more about PROP-2001, and book me a viewing at the earliest available slot. My name is Alex Tan, email alex.tan@example.com."
+        ],
+        tools: [
+          { name: 'search_properties', label: 'Search listings' },
+          { name: 'get_property_details', label: 'Property details' },
+          { name: 'get_viewing_slots', label: 'Viewing slots' },
+          { name: 'book_viewing', label: 'Book a viewing' }
+        ]
+      }
     ];
 
+    let scenarios = fallbackScenarios;
+
+    const scenarioEl = document.getElementById('scenario');
+    const scenarioDescriptionEl = document.getElementById('scenarioDescription');
     const taskEl = document.getElementById('task');
     const providerEl = document.getElementById('provider');
     const modelEl = document.getElementById('model');
@@ -258,11 +310,9 @@
       ]
     };
 
-    const fallbackTools = [
-      { name: 'calculate', label: 'Calculator' },
-      { name: 'get_current_datetime', label: 'Current date & time' },
-      { name: 'get_weather', label: 'Weather lookup' }
-    ];
+    function currentScenario() {
+      return scenarios.find(s => s.key === scenarioEl.value) || scenarios[0];
+    }
 
     function updateModelOptions() {
       const provider = providerEl.value;
@@ -309,16 +359,10 @@
       updateModelOptions();
     }
 
-    async function initTools() {
-      let tools = fallbackTools;
-      try {
-        const res = await fetch('/api/v1/agent/tools');
-        if (res.ok) {
-          const data = await res.json();
-          if (Array.isArray(data.tools) && data.tools.length > 0) tools = data.tools;
-        }
-      } catch (e) { /* use fallback */ }
-      const badges = tools.map(tool =>
+    function renderScenario() {
+      const scenario = currentScenario();
+      scenarioDescriptionEl.textContent = scenario.description || '';
+      const badges = (scenario.tools || []).map(tool =>
         createElement('span', tool.label + ' (' + tool.name + ')', {
           className: 'px-2 py-1 rounded-full bg-orange-50 text-orange-700 border border-orange-200'
         })
@@ -326,10 +370,34 @@
       setContent(toolsListEl, badges);
     }
 
+    function onScenarioChange() {
+      sampleIndex = 0;
+      renderScenario();
+      loadSample();
+    }
+
+    async function initScenarios() {
+      try {
+        const res = await fetch('/api/v1/agent/scenarios');
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.scenarios) && data.scenarios.length > 0) scenarios = data.scenarios;
+        }
+      } catch (e) { /* use fallback */ }
+      const selected = scenarioEl.value;
+      setContent(scenarioEl, createOptions(scenarios.map(s => ({ value: s.key, label: s.label }))));
+      if (scenarios.some(s => s.key === selected)) {
+        scenarioEl.value = selected;
+      }
+      renderScenario();
+      updatePreview();
+    }
+
     function buildRequest() {
       return {
         payload: {
           task: taskEl.value.trim(),
+          scenario: scenarioEl.value || 'general',
           maxTurns: Math.max(1, Math.min(10, Number(maxTurnsEl.value) || 6))
         },
         config: {
@@ -345,7 +413,9 @@
     }
 
     function loadSample() {
-      taskEl.value = sampleTasks[sampleIndex % sampleTasks.length];
+      const samples = currentScenario().sampleTasks || [];
+      if (samples.length === 0) return;
+      taskEl.value = samples[sampleIndex % samples.length];
       sampleIndex++;
       updatePreview();
     }
@@ -550,6 +620,7 @@
     runBtn.addEventListener('click', run);
     cancelBtn.addEventListener('click', cancel);
     loadSampleBtn.addEventListener('click', loadSample);
+    scenarioEl.addEventListener('change', onScenarioChange);
     providerEl.addEventListener('change', updateModelOptions);
     modelEl.addEventListener('change', updatePreview);
     taskEl.addEventListener('input', updatePreview);
@@ -557,9 +628,15 @@
     streamingEl.addEventListener('change', updatePreview);
     tokenEl.addEventListener('change', () => { initModels(); });
 
+    setContent(scenarioEl, createOptions(fallbackScenarios.map(s => ({ value: s.key, label: s.label }))));
+    renderScenario();
     loadSample();
     initModels();
-    initTools();
+    initScenarios().then(loadSampleIfEmpty);
+
+    function loadSampleIfEmpty() {
+      if (!taskEl.value.trim()) loadSample();
+    }
   </script>
 </body>
 </html>
