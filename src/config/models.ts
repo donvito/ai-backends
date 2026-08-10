@@ -19,6 +19,7 @@ export type ModelCapability =
   | 'meetingNotes'
   | 'outline'
   | 'textDocReview'
+  | 'agent'
 
 export interface ProviderModelConfigItem {
   name: string

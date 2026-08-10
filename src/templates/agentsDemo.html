@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Backends - Agents Demo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'brand-purple': '#D97757',
+            'brand-pink': '#BD5D3A',
+            'terminal-bg': '#262624',
+            'terminal-text': '#C2C0B6'
+          },
+          backgroundImage: {
+            'gradient-brand': 'linear-gradient(135deg, #D97757, #BD5D3A)',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .metrics-container {
+      background: linear-gradient(135deg, var(--c-bg-muted) 0%, var(--c-border) 100%);
+      border-radius: 12px;
+      padding: 12px;
+      border: 1px solid var(--c-border);
+    }
+    .metric-item {
+      background: var(--c-surface);
+      padding: 8px 12px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    .metric-icon {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .metric-label {
+      font-size: 12px;
+      color: var(--c-text-muted);
+      font-weight: 500;
+    }
+    .metric-value {
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .markdown-content {
+      font-size: 15px;
+      line-height: 1.6;
+      color: var(--c-text-strong);
+    }
+    .markdown-content p { margin-bottom: 1rem; }
+    .markdown-content ul, .markdown-content ol { margin-left: 1.5rem; margin-bottom: 1rem; }
+    .markdown-content li { margin-bottom: 0.5rem; }
+    .markdown-content code {
+      background: var(--c-bg-muted);
+      padding: 0.125rem 0.4rem;
+      border-radius: 0.25rem;
+      font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+      font-size: 13px;
+    }
+    .markdown-content pre {
+      background: var(--c-text-strong);
+      color: var(--c-bg-muted);
+      padding: 1rem;
+      border-radius: 0.5rem;
+      overflow-x: auto;
+      margin-bottom: 1rem;
+    }
+    .timeline-entry {
+      border-left: 2px solid var(--c-border);
+      padding: 0 0 12px 16px;
+      margin-left: 8px;
+      position: relative;
+    }
+    .timeline-entry::before {
+      content: '';
+      position: absolute;
+      left: -7px;
+      top: 2px;
+      width: 12px;
+      height: 12px;
+      border-radius: 9999px;
+      background: var(--c-surface);
+      border: 2px solid #D97757;
+    }
+    .timeline-entry.tool::before { background: #D97757; }
+    .timeline-entry.error::before { border-color: #dc2626; background: #dc2626; }
+    .mono { font-family: 'Monaco', 'Menlo', 'Courier New', monospace; }
+  </style>
+  <script src="/api/shared/safedom.js"></script>
+  <link rel="stylesheet" href="/api/shared/theme.css" />
+  <script src="/api/shared/theme.js"></script>
+</head>
+<body class="bg-white min-h-screen">
+  <!-- Navigation -->
+  <nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100">
+    <div class="container mx-auto px-6 py-4">
+      <div class="flex justify-between items-center">
+        <a href="/" class="flex items-center space-x-2">
+          <div class="w-10 h-10 rounded-xl bg-[#D97757] flex items-center justify-center">
+            <span class="text-white font-bold text-xl">AI</span>
+          </div>
+          <span class="text-2xl font-bold text-gray-900">Backends</span>
+          <span class="ml-2 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-50 text-orange-700">
+            Agents
+          </span>
+        </a>
+        <div class="flex items-center space-x-6">
+          <a href="/api/ui" target="_blank" class="text-gray-700 hover:text-brand-purple transition-colors duration-300">API Docs</a>
+          <a href="/api/demos" class="text-gray-700 hover:text-brand-purple transition-colors duration-300">Demos</a>
+          <a href="/api/models" class="text-gray-700 hover:text-brand-purple transition-colors duration-300">Models Guide</a>
+          <a href="https://github.com/donvito/ai-backend" class="inline-flex items-center px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors duration-300">
+            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 0C4.477 0 0 4.484 0 10.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0020 10.017C20 4.484 15.522 0 10 0z" clip-rule="evenodd"/>
+            </svg>
+            GitHub
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container mx-auto px-6 py-12">
+    <!-- Breadcrumb -->
+    <nav class="mb-6 text-sm">
+      <ol class="flex items-center space-x-2 text-gray-500">
+        <li><a href="/" class="hover:text-gray-700">Home</a></li>
+        <li><span>/</span></li>
+        <li><a href="/api/demos" class="hover:text-gray-700">Demos</a></li>
+        <li><span>/</span></li>
+        <li class="text-gray-900 font-medium">Agents</li>
+      </ol>
+    </nav>
+
+    <!-- Demo Title and Description -->
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-bold text-gray-900 mb-3">Agents Demo</h1>
+      <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+        Run an autonomous, tool-using agent powered by
+        <a href="https://github.com/earendil-works/pi" target="_blank" rel="noopener noreferrer" class="text-brand-purple underline">pi core</a>.
+        The agent plans across multiple turns and calls tools (calculator, date/time, weather) to complete your task.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
+      <!-- Controls -->
+      <section class="bg-white p-6 rounded-2xl border border-gray-100 shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <h2 class="text-lg font-semibold mb-3">Task</h2>
+        <textarea id="task" rows="4" class="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple bg-white" placeholder="Describe the task for the agent..."></textarea>
+
+        <div class="mt-3">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Available tools</label>
+          <div id="toolsList" class="flex flex-wrap gap-2 text-xs text-gray-600"></div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 mt-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Provider</label>
+            <select id="provider" class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple">
+              <option value="openrouter">openrouter</option>
+              <option value="openai">openai</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Model</label>
+            <select id="model" class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple"></select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Max Turns</label>
+            <input id="maxTurns" type="number" min="1" max="10" value="6" class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple" />
+          </div>
+          <div class="flex items-end pb-2">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input id="streaming" type="checkbox" class="w-4 h-4 text-brand-purple rounded focus:ring-2 focus:ring-brand-purple" checked />
+              <span class="text-sm font-medium text-gray-700">Enable Streaming</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="mt-3">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Bearer Token (optional)</label>
+          <input id="token" type="password" placeholder="Only needed in production deployments" class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple" />
+        </div>
+
+        <div class="mt-4 flex items-center gap-2">
+          <button id="runBtn" class="px-4 py-2 rounded-lg bg-brand-purple text-white hover:bg-[#C15F3C]">Run Agent</button>
+          <button id="cancelBtn" class="hidden px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700">Cancel</button>
+          <button id="loadSample" class="px-4 py-2 rounded-lg bg-gray-100 text-gray-800 hover:bg-gray-200">Load Sample</button>
+        </div>
+
+        <details class="mt-4">
+          <summary class="text-sm text-gray-600 cursor-pointer">View JSON request</summary>
+          <pre id="jsonPreview" class="mt-2 bg-gray-900 text-green-400 p-3 rounded-lg text-xs mono overflow-auto"></pre>
+        </details>
+      </section>
+
+      <!-- Output -->
+      <section class="bg-white p-6 rounded-2xl border border-gray-100 shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <h2 class="text-lg font-semibold mb-3">Agent Activity</h2>
+        <div id="usageInfo" class="hidden mb-3 text-sm"></div>
+        <div id="timeline" class="mb-4 text-sm"></div>
+        <h3 class="text-md font-semibold mb-2">Final Answer</h3>
+        <div id="finalAnswer" class="p-4 rounded-lg bg-gray-50 border border-gray-200 markdown-content"></div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const sampleTasks = [
+      "What's the current weather in Manila, and what time is it there right now?",
+      "Calculate (1875 * 23.5) / 100 and then add 42 to the result.",
+      "Compare the current temperature in Tokyo and New York, and tell me the difference in degrees Celsius."
+    ];
+
+    const taskEl = document.getElementById('task');
+    const providerEl = document.getElementById('provider');
+    const modelEl = document.getElementById('model');
+    const maxTurnsEl = document.getElementById('maxTurns');
+    const streamingEl = document.getElementById('streaming');
+    const tokenEl = document.getElementById('token');
+    const runBtn = document.getElementById('runBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const loadSampleBtn = document.getElementById('loadSample');
+    const timelineEl = document.getElementById('timeline');
+    const finalAnswerEl = document.getElementById('finalAnswer');
+    const usageInfo = document.getElementById('usageInfo');
+    const jsonPreview = document.getElementById('jsonPreview');
+    const toolsListEl = document.getElementById('toolsList');
+
+    let abortController = null;
+    let sampleIndex = 0;
+
+    // Dynamic model options fetched from backend
+    let modelOptions = null;
+
+    // Fallback options if fetch fails. Agents need tool-calling models.
+    const fallbackModelOptions = {
+      openrouter: [
+        { value: 'deepseek/deepseek-v4-flash', label: 'deepseek/deepseek-v4-flash' },
+        { value: 'qwen/qwen3.6-35b-a3b', label: 'qwen/qwen3.6-35b-a3b' }
+      ],
+      openai: [
+        { value: 'gpt-4o-mini', label: 'gpt-4o-mini' },
+        { value: 'gpt-4.1-nano', label: 'gpt-4.1-nano' }
+      ]
+    };
+
+    const fallbackTools = [
+      { name: 'calculate', label: 'Calculator' },
+      { name: 'get_current_datetime', label: 'Current date & time' },
+      { name: 'get_weather', label: 'Weather lookup' }
+    ];
+
+    function updateModelOptions() {
+      const provider = providerEl.value;
+      const source = modelOptions || fallbackModelOptions;
+      const models = (source && source[provider]) ? source[provider] : [];
+      setContent(modelEl, createOptions(models));
+      updatePreview();
+    }
+
+    async function fetchAgentModels() {
+      const headers = {};
+      const token = tokenEl.value.trim();
+      if (token) headers['Authorization'] = 'Bearer ' + token;
+      const res = await fetch('/api/v1/services/models?source=config&view=capability', { headers });
+      if (!res.ok) throw new Error('Failed to load models: ' + res.status);
+      const data = await res.json();
+      const agentModels = data && data.byCapability && data.byCapability.agent;
+      if (!agentModels || typeof agentModels !== 'object') throw new Error('Invalid models response');
+      const mapped = {};
+      for (const provider in agentModels) {
+        // Agents only support providers with tool calling enabled in this API
+        if (provider !== 'openrouter' && provider !== 'openai') continue;
+        const list = Array.isArray(agentModels[provider]) ? agentModels[provider] : [];
+        if (list.length > 0) {
+          mapped[provider] = list.map(name => ({ value: name, label: name }));
+        }
+      }
+      if (Object.keys(mapped).length === 0) throw new Error('No agent models configured');
+      return mapped;
+    }
+
+    async function initModels() {
+      try {
+        modelOptions = await fetchAgentModels();
+      } catch (e) {
+        modelOptions = null;
+      }
+      const source = modelOptions || fallbackModelOptions;
+      const providers = Object.keys(source);
+      setContent(providerEl, createOptions(providers.map(p => ({ value: p, label: p }))));
+      if (!providers.includes(providerEl.value)) {
+        providerEl.value = providers[0] || '';
+      }
+      updateModelOptions();
+    }
+
+    async function initTools() {
+      let tools = fallbackTools;
+      try {
+        const res = await fetch('/api/v1/agent/tools');
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.tools) && data.tools.length > 0) tools = data.tools;
+        }
+      } catch (e) { /* use fallback */ }
+      const badges = tools.map(tool =>
+        createElement('span', tool.label + ' (' + tool.name + ')', {
+          className: 'px-2 py-1 rounded-full bg-orange-50 text-orange-700 border border-orange-200'
+        })
+      );
+      setContent(toolsListEl, badges);
+    }
+
+    function buildRequest() {
+      return {
+        payload: {
+          task: taskEl.value.trim(),
+          maxTurns: Math.max(1, Math.min(10, Number(maxTurnsEl.value) || 6))
+        },
+        config: {
+          provider: providerEl.value,
+          model: modelEl.value,
+          stream: streamingEl.checked
+        }
+      };
+    }
+
+    function updatePreview() {
+      jsonPreview.textContent = JSON.stringify(buildRequest(), null, 2);
+    }
+
+    function loadSample() {
+      taskEl.value = sampleTasks[sampleIndex % sampleTasks.length];
+      sampleIndex++;
+      updatePreview();
+    }
+
+    function renderMarkdown(markdown) {
+      const rawHtml = marked.parse(markdown);
+      return DOMPurify.sanitize(rawHtml);
+    }
+
+    function addTimelineEntry(kind, title, body) {
+      const entry = document.createElement('div');
+      entry.className = 'timeline-entry' + (kind === 'tool' ? ' tool' : '') + (kind === 'error' ? ' error' : '');
+      const titleEl = createElement('div', title, { className: 'font-medium text-gray-800' });
+      entry.appendChild(titleEl);
+      if (body) {
+        const bodyEl = createElement('pre', body, { className: 'mono text-xs text-gray-600 whitespace-pre-wrap break-words mt-1' });
+        entry.appendChild(bodyEl);
+      }
+      timelineEl.appendChild(entry);
+      entry.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      return entry;
+    }
+
+    function truncate(text, max) {
+      if (typeof text !== 'string') text = JSON.stringify(text);
+      return text.length > max ? text.slice(0, max) + '…' : text;
+    }
+
+    function renderSteps(steps) {
+      for (const step of steps || []) {
+        addTimelineEntry('tool', 'Tool: ' + step.toolName, 'args: ' + truncate(JSON.stringify(step.args), 300));
+        addTimelineEntry(step.isError ? 'error' : 'tool', (step.isError ? 'Tool error: ' : 'Result: ') + step.toolName, truncate(step.result, 500));
+      }
+    }
+
+    async function run() {
+      const req = buildRequest();
+      if (!req.payload.task) {
+        setContent(finalAnswerEl, createElement('div', 'Please enter a task for the agent', { className: 'text-red-600' }));
+        return;
+      }
+
+      updatePreview();
+      const headers = { 'Content-Type': 'application/json' };
+      const token = tokenEl.value.trim();
+      if (token) headers['Authorization'] = 'Bearer ' + token;
+
+      abortController = new AbortController();
+      runBtn.classList.add('hidden');
+      cancelBtn.classList.remove('hidden');
+
+      setContent(timelineEl, '');
+      setContent(finalAnswerEl, createElement('div', 'Agent is working...', { className: 'text-gray-500' }));
+      usageInfo.classList.add('hidden');
+      setContent(usageInfo, '');
+
+      const startTime = performance.now();
+      let accumulatedText = '';
+
+      try {
+        const response = await fetch('/api/v1/agent/run', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(req),
+          signal: abortController.signal
+        });
+
+        if (!response.ok) {
+          const txt = await response.text();
+          throw new Error('Request failed: ' + response.status + ' ' + txt);
+        }
+
+        const contentType = response.headers.get('content-type');
+
+        if (req.config.stream && contentType && contentType.includes('text/event-stream')) {
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = '';
+          let usage = null;
+          let finished = false;
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+
+            for (const line of lines) {
+              if (!line.trim().startsWith('data:')) continue;
+              const data = line.replace(/^data:\s*/, '');
+              if (data.trim() === '' || data.trim() === '[DONE]') continue;
+              let parsed;
+              try {
+                parsed = JSON.parse(data);
+              } catch (e) {
+                console.warn('Failed to parse SSE data:', data);
+                continue;
+              }
+
+              if (parsed.error) {
+                throw new Error(parsed.error);
+              }
+
+              switch (parsed.type) {
+                case 'agent_start':
+                  addTimelineEntry('info', 'Agent started');
+                  break;
+                case 'turn_start':
+                  addTimelineEntry('info', 'Turn ' + parsed.turn);
+                  accumulatedText = '';
+                  break;
+                case 'text_delta':
+                  accumulatedText += parsed.delta;
+                  finalAnswerEl.innerHTML = renderMarkdown(accumulatedText);
+                  break;
+                case 'tool_call':
+                  addTimelineEntry('tool', 'Tool: ' + parsed.toolName, 'args: ' + truncate(JSON.stringify(parsed.args), 300));
+                  break;
+                case 'tool_result':
+                  addTimelineEntry(parsed.isError ? 'error' : 'tool', (parsed.isError ? 'Tool error: ' : 'Result: ') + parsed.toolName, truncate(parsed.result, 500));
+                  break;
+                case 'agent_end':
+                  addTimelineEntry('info', 'Agent finished');
+                  break;
+              }
+
+              if (parsed.done) {
+                finished = true;
+                usage = parsed.usage || null;
+                if (parsed.result) {
+                  finalAnswerEl.innerHTML = renderMarkdown(parsed.result);
+                }
+              }
+            }
+          }
+
+          if (!finished && !accumulatedText) {
+            setContent(finalAnswerEl, createElement('div', 'The agent did not return a result.', { className: 'text-amber-600' }));
+          }
+
+          const responseTime = (performance.now() - startTime).toFixed(2);
+          if (usage) displayUsageMetrics(usage, responseTime);
+        } else {
+          const data = await response.json();
+          const responseTime = (performance.now() - startTime).toFixed(2);
+
+          renderSteps(data.steps);
+          addTimelineEntry('info', 'Agent finished in ' + (data.turns || '?') + ' turn(s)');
+          finalAnswerEl.innerHTML = renderMarkdown(data.result || '');
+          if (data.usage) displayUsageMetrics(data.usage, responseTime);
+        }
+      } catch (err) {
+        if (err.name === 'AbortError') {
+          setContent(finalAnswerEl, createElement('div', 'Request cancelled by user', { className: 'text-amber-600' }));
+        } else {
+          setContent(finalAnswerEl, createElement('div', err.message || 'Unknown error', { className: 'text-red-600' }));
+        }
+        usageInfo.classList.add('hidden');
+        setContent(usageInfo, '');
+      } finally {
+        runBtn.classList.remove('hidden');
+        cancelBtn.classList.add('hidden');
+        abortController = null;
+      }
+    }
+
+    function displayUsageMetrics(usage, responseTime) {
+      usageInfo.classList.remove('hidden');
+      const inputTokens = usage.input_tokens || 0;
+      const outputTokens = usage.output_tokens || 0;
+      const totalTokens = usage.total_tokens || (inputTokens + outputTokens);
+
+      const container = createElement('div', '', { className: 'metrics-container' });
+      const grid = createElement('div', '', { className: 'grid grid-cols-2 sm:grid-cols-4 gap-3' });
+
+      const metrics = [
+        { label: 'Response', value: responseTime + ' ms', color: 'text-orange-600' },
+        { label: 'Input', value: inputTokens.toLocaleString(), color: 'text-blue-600' },
+        { label: 'Output', value: outputTokens.toLocaleString(), color: 'text-green-600' },
+        { label: 'Total', value: totalTokens.toLocaleString(), color: 'text-purple-600' }
+      ];
+
+      for (const metric of metrics) {
+        const item = createElement('div', '', { className: 'metric-item' });
+        const textWrap = createElement('div', '', {});
+        textWrap.appendChild(createElement('div', metric.label, { className: 'metric-label' }));
+        textWrap.appendChild(createElement('div', metric.value, { className: 'metric-value ' + metric.color }));
+        item.appendChild(textWrap);
+        grid.appendChild(item);
+      }
+
+      container.appendChild(grid);
+      setContent(usageInfo, container);
+    }
+
+    function cancel() {
+      if (abortController) abortController.abort();
+    }
+
+    runBtn.addEventListener('click', run);
+    cancelBtn.addEventListener('click', cancel);
+    loadSampleBtn.addEventListener('click', loadSample);
+    providerEl.addEventListener('change', updateModelOptions);
+    modelEl.addEventListener('change', updatePreview);
+    taskEl.addEventListener('input', updatePreview);
+    maxTurnsEl.addEventListener('input', updatePreview);
+    streamingEl.addEventListener('change', updatePreview);
+    tokenEl.addEventListener('change', () => { initModels(); });
+
+    loadSample();
+    initModels();
+    initTools();
+  </script>
+</body>
+</html>
