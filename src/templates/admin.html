@@ -56,6 +56,8 @@
     <div class="flex gap-6 border-b border-gray-200 mb-8 text-gray-600">
       <button data-tab="agents" class="tab-btn pb-3 px-1 tab-active">Agents</button>
       <button data-tab="tools" class="tab-btn pb-3 px-1">Tools</button>
+      <button data-tab="skills" class="tab-btn pb-3 px-1">Skills</button>
+      <button data-tab="mcp" class="tab-btn pb-3 px-1">MCP Servers</button>
       <button data-tab="keys" class="tab-btn pb-3 px-1">API Keys</button>
     </div>
 
@@ -92,6 +94,10 @@
         <div class="mt-4">
           <label class="block text-sm font-medium text-gray-700 mb-2">Tools</label>
           <div id="agentToolPicker" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2"></div>
+        </div>
+        <div class="mt-4">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Skills <span class="text-gray-400">(descriptions always visible; content loads on demand)</span></label>
+          <div id="agentSkillPicker" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2"></div>
         </div>
         <div class="mt-4">
           <label class="block text-sm font-medium text-gray-700 mb-1">Sample Tasks <span class="text-gray-400">(one per line, shown in demos)</span></label>
@@ -182,6 +188,83 @@
       <div id="builtInToolsList" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
     </section>
 
+    <!-- ================= SKILLS TAB ================= -->
+    <section id="tab-skills" class="hidden fade">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900">Skills</h1>
+          <p class="text-sm text-gray-500 mt-1">Instruction packages agents load on demand. The description is always visible to agents that have the skill; the full content loads when the agent calls <code class="mono">use_skill</code>.</p>
+        </div>
+        <button id="newSkillBtn" class="px-4 py-2 rounded-lg bg-gradient-brand text-white font-medium hover:opacity-90">+ New Skill</button>
+      </div>
+
+      <div id="skillForm" class="hidden bg-white rounded-2xl border border-gray-200 shadow p-6 mb-6">
+        <h2 id="skillFormTitle" class="text-lg font-semibold mb-4">New Skill</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Name <span class="text-gray-400">(slug)</span></label>
+            <input id="skillName" type="text" placeholder="refund-policy" class="w-full p-2 rounded-lg border border-gray-300 mono text-sm" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Description <span class="text-gray-400">(when should the agent use this?)</span></label>
+            <input id="skillDescription" type="text" placeholder="Company refund policy rules. Use when customers ask about refunds or returns." class="w-full p-2 rounded-lg border border-gray-300" />
+          </div>
+        </div>
+        <div class="mt-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Content <span class="text-gray-400">(markdown instructions)</span></label>
+          <textarea id="skillContent" rows="10" class="code w-full p-2 rounded-lg border border-gray-300"></textarea>
+        </div>
+        <div class="mt-5 flex gap-2">
+          <button id="saveSkillBtn" class="px-4 py-2 rounded-lg bg-gradient-brand text-white font-medium hover:opacity-90">Save Skill</button>
+          <button id="cancelSkillBtn" class="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200">Cancel</button>
+        </div>
+      </div>
+
+      <div id="skillsList" class="space-y-3"></div>
+    </section>
+
+    <!-- ================= MCP TAB ================= -->
+    <section id="tab-mcp" class="hidden fade">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900">MCP Servers</h1>
+          <p class="text-sm text-gray-500 mt-1">Connect Model Context Protocol servers (Streamable HTTP or SSE). Discovered tools are registered as <code class="mono">mcp_&lt;server&gt;_&lt;tool&gt;</code> and can be attached to agents like any other tool.</p>
+        </div>
+        <button id="newMcpBtn" class="px-4 py-2 rounded-lg bg-gradient-brand text-white font-medium hover:opacity-90">+ Add Server</button>
+      </div>
+
+      <div id="mcpForm" class="hidden bg-white rounded-2xl border border-gray-200 shadow p-6 mb-6">
+        <h2 id="mcpFormTitle" class="text-lg font-semibold mb-4">Add MCP Server</h2>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Name <span class="text-gray-400">(slug)</span></label>
+            <input id="mcpName" type="text" placeholder="demo" class="w-full p-2 rounded-lg border border-gray-300 mono text-sm" />
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700 mb-1">URL</label>
+            <input id="mcpUrl" type="text" placeholder="http://localhost:3900/mcp" class="w-full p-2 rounded-lg border border-gray-300 mono text-sm" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Transport</label>
+            <select id="mcpTransport" class="w-full p-2 rounded-lg border border-gray-300">
+              <option value="streamable-http">streamable-http</option>
+              <option value="sse">sse</option>
+            </select>
+          </div>
+        </div>
+        <div class="mt-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Headers <span class="text-gray-400">(JSON, optional)</span></label>
+          <textarea id="mcpHeaders" rows="3" class="code w-full p-2 rounded-lg border border-gray-300" placeholder='{"Authorization": "Bearer ..."}'></textarea>
+        </div>
+        <div class="mt-5 flex gap-2">
+          <button id="saveMcpBtn" class="px-4 py-2 rounded-lg bg-gradient-brand text-white font-medium hover:opacity-90">Save & Connect</button>
+          <button id="cancelMcpBtn" class="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200">Cancel</button>
+        </div>
+      </div>
+
+      <div id="mcpList" class="space-y-3"></div>
+    </section>
+
     <!-- ================= KEYS TAB ================= -->
     <section id="tab-keys" class="hidden fade">
       <h1 class="text-2xl font-bold text-gray-900">Provider API Keys</h1>
@@ -238,7 +321,7 @@
       btn.addEventListener('click', () => {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active'));
         btn.classList.add('tab-active');
-        ['agents', 'tools', 'keys'].forEach(tab => {
+        ['agents', 'tools', 'skills', 'mcp', 'keys'].forEach(tab => {
           document.getElementById('tab-' + tab).classList.toggle('hidden', tab !== btn.dataset.tab);
         });
       });
@@ -248,6 +331,7 @@
     // AGENTS
     // =======================================================
     let allTools = [];
+    let allSkills = [];
     let editingAgentKey = null;
 
     async function loadAgents() {
@@ -296,6 +380,9 @@
       left.appendChild(title);
       if (agent.description) left.appendChild(createElement('div', agent.description, { className: 'text-sm text-gray-600 mt-1' }));
       left.appendChild(createElement('div', 'Tools: ' + agent.tools.join(', '), { className: 'text-xs text-gray-500 mt-1 mono' }));
+      if ((agent.skills || []).length > 0) {
+        left.appendChild(createElement('div', 'Skills: ' + agent.skills.join(', '), { className: 'text-xs text-gray-500 mt-0.5 mono' }));
+      }
       row.appendChild(left);
 
       const actions = createElement('div', '', { className: 'flex gap-2 flex-shrink-0' });
@@ -330,9 +417,34 @@
         const meta = createElement('div', '', {});
         const nameRow = createElement('div', '', { className: 'flex items-center gap-1.5' });
         nameRow.appendChild(createElement('span', tool.name, { className: 'mono text-xs font-semibold text-gray-800' }));
-        nameRow.appendChild(badge(tool.builtIn ? 'built-in' : 'custom', tool.builtIn ? 'bg-gray-100 text-gray-500' : 'bg-orange-50 text-orange-700'));
+        const source = tool.source || (tool.builtIn ? 'built-in' : 'custom');
+        const sourceCls = source === 'built-in' ? 'bg-gray-100 text-gray-500' : source === 'mcp' ? 'bg-blue-50 text-blue-700' : 'bg-orange-50 text-orange-700';
+        nameRow.appendChild(badge(source, sourceCls));
         meta.appendChild(nameRow);
         meta.appendChild(createElement('div', tool.label, { className: 'text-xs text-gray-500' }));
+        item.appendChild(meta);
+        picker.appendChild(item);
+      }
+    }
+
+    function renderSkillPicker(selected) {
+      const picker = document.getElementById('agentSkillPicker');
+      setContent(picker, '');
+      if (allSkills.length === 0) {
+        picker.appendChild(createElement('div', 'No skills yet — create one in the Skills tab.', { className: 'text-xs text-gray-400 col-span-full' }));
+        return;
+      }
+      for (const skill of allSkills) {
+        const item = createElement('label', '', { className: 'flex items-start gap-2 p-2 rounded-lg border border-gray-200 hover:border-brand-purple cursor-pointer text-sm' });
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.value = skill.name;
+        cb.checked = (selected || []).includes(skill.name);
+        cb.className = 'mt-0.5 skill-cb';
+        item.appendChild(cb);
+        const meta = createElement('div', '', {});
+        meta.appendChild(createElement('div', skill.name, { className: 'mono text-xs font-semibold text-gray-800' }));
+        meta.appendChild(createElement('div', skill.description, { className: 'text-xs text-gray-500' }));
         item.appendChild(meta);
         picker.appendChild(item);
       }
@@ -348,6 +460,7 @@
       document.getElementById('agentSystemPrompt').value = agent ? agent.systemPrompt : '';
       document.getElementById('agentSampleTasks').value = agent ? (agent.sampleTasks || []).join('\n') : '';
       renderToolPicker(agent ? agent.tools : []);
+      renderSkillPicker(agent ? (agent.skills || []) : []);
       document.getElementById('agentForm').classList.remove('hidden');
       document.getElementById('agentForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
@@ -359,12 +472,14 @@
 
     document.getElementById('saveAgentBtn').addEventListener('click', async () => {
       const tools = Array.from(document.querySelectorAll('#agentToolPicker input:checked')).map(cb => cb.value);
+      const skills = Array.from(document.querySelectorAll('#agentSkillPicker input:checked')).map(cb => cb.value);
       const body = {
         key: document.getElementById('agentKey').value.trim(),
         label: document.getElementById('agentLabel').value.trim(),
         description: document.getElementById('agentDescription').value.trim(),
         systemPrompt: document.getElementById('agentSystemPrompt').value.trim(),
         tools,
+        skills,
         sampleTasks: document.getElementById('agentSampleTasks').value.split('\n').map(s => s.trim()).filter(Boolean)
       };
       try {
@@ -401,7 +516,7 @@
 
         const customList = document.getElementById('customToolsList');
         setContent(customList, '');
-        const customTools = allTools.filter(t => !t.builtIn);
+        const customTools = allTools.filter(t => t.source === 'custom');
         if (customTools.length === 0) {
           customList.appendChild(createElement('div', 'No custom tools yet. Create an HTTP tool to give agents new abilities.', { className: 'text-sm text-gray-500 bg-white rounded-2xl border border-dashed border-gray-300 p-6 text-center' }));
         }
@@ -544,6 +659,192 @@
     });
 
     // =======================================================
+    // SKILLS
+    // =======================================================
+    let editingSkillName = null;
+
+    async function loadSkillsCatalog() {
+      try {
+        const data = await api('/api/v1/admin/skills');
+        allSkills = data.skills;
+        const list = document.getElementById('skillsList');
+        setContent(list, '');
+        if (allSkills.length === 0) {
+          list.appendChild(createElement('div', 'No skills yet. Create instruction packages your agents can load on demand.', { className: 'text-sm text-gray-500 bg-white rounded-2xl border border-dashed border-gray-300 p-6 text-center' }));
+        }
+        for (const skill of allSkills) {
+          list.appendChild(renderSkillCard(skill));
+        }
+      } catch (err) {
+        toast(err.message, true);
+      }
+    }
+
+    function renderSkillCard(skill) {
+      const card = createElement('div', '', { className: 'bg-white rounded-2xl border border-gray-200 shadow-sm p-4' });
+      const row = createElement('div', '', { className: 'flex items-start justify-between gap-4' });
+      const left = createElement('div', '', {});
+      const title = createElement('div', '', { className: 'flex items-center gap-2 flex-wrap' });
+      title.appendChild(createElement('code', skill.name, { className: 'mono text-sm font-semibold text-brand-purple' }));
+      title.appendChild(badge('skill', 'bg-purple-50 text-purple-700 border border-purple-200'));
+      left.appendChild(title);
+      left.appendChild(createElement('div', skill.description, { className: 'text-sm text-gray-600 mt-1' }));
+      left.appendChild(createElement('div', skill.content.length.toLocaleString() + ' chars of instructions', { className: 'text-xs text-gray-400 mt-1' }));
+      row.appendChild(left);
+
+      const actions = createElement('div', '', { className: 'flex gap-2 flex-shrink-0' });
+      actions.appendChild(actionBtn('Edit', 'bg-gray-900 text-white hover:bg-gray-800', () => openSkillForm(skill)));
+      actions.appendChild(actionBtn('Delete', 'bg-red-50 text-red-700 hover:bg-red-100', async () => {
+        if (!confirm('Delete skill "' + skill.name + '"?')) return;
+        try {
+          await api('/api/v1/admin/skills/' + encodeURIComponent(skill.name), { method: 'DELETE' });
+          toast('Skill deleted');
+          loadSkillsCatalog();
+        } catch (err) { toast(err.message, true); }
+      }));
+      row.appendChild(actions);
+      card.appendChild(row);
+      return card;
+    }
+
+    function openSkillForm(skill) {
+      editingSkillName = skill ? skill.name : null;
+      document.getElementById('skillFormTitle').textContent = skill ? 'Edit Skill: ' + skill.name : 'New Skill';
+      document.getElementById('skillName').value = skill ? skill.name : '';
+      document.getElementById('skillName').disabled = !!skill;
+      document.getElementById('skillDescription').value = skill ? skill.description : '';
+      document.getElementById('skillContent').value = skill ? skill.content : '';
+      document.getElementById('skillForm').classList.remove('hidden');
+      document.getElementById('skillForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    document.getElementById('newSkillBtn').addEventListener('click', () => openSkillForm(null));
+    document.getElementById('cancelSkillBtn').addEventListener('click', () => {
+      document.getElementById('skillForm').classList.add('hidden');
+    });
+
+    document.getElementById('saveSkillBtn').addEventListener('click', async () => {
+      const body = {
+        name: document.getElementById('skillName').value.trim(),
+        description: document.getElementById('skillDescription').value.trim(),
+        content: document.getElementById('skillContent').value.trim()
+      };
+      try {
+        if (editingSkillName) {
+          await api('/api/v1/admin/skills/' + encodeURIComponent(editingSkillName), { method: 'PUT', body: JSON.stringify(body) });
+          toast('Skill updated');
+        } else {
+          await api('/api/v1/admin/skills', { method: 'POST', body: JSON.stringify(body) });
+          toast('Skill created');
+        }
+        document.getElementById('skillForm').classList.add('hidden');
+        loadSkillsCatalog();
+      } catch (err) { toast(err.message, true); }
+    });
+
+    // =======================================================
+    // MCP SERVERS
+    // =======================================================
+    let editingMcpName = null;
+
+    async function loadMcp() {
+      try {
+        const data = await api('/api/v1/admin/mcp-servers');
+        const list = document.getElementById('mcpList');
+        setContent(list, '');
+        if (data.servers.length === 0) {
+          list.appendChild(createElement('div', 'No MCP servers registered. Add one to bridge its tools into your agents.', { className: 'text-sm text-gray-500 bg-white rounded-2xl border border-dashed border-gray-300 p-6 text-center' }));
+        }
+        for (const server of data.servers) {
+          list.appendChild(renderMcpCard(server));
+        }
+      } catch (err) {
+        toast(err.message, true);
+      }
+    }
+
+    function renderMcpCard(server) {
+      const card = createElement('div', '', { className: 'bg-white rounded-2xl border border-gray-200 shadow-sm p-4' });
+      const row = createElement('div', '', { className: 'flex items-start justify-between gap-4' });
+      const left = createElement('div', '', {});
+      const title = createElement('div', '', { className: 'flex items-center gap-2 flex-wrap' });
+      title.appendChild(createElement('code', server.name, { className: 'mono text-sm font-semibold text-brand-purple' }));
+      title.appendChild(badge(server.connected ? 'connected' : 'disconnected', server.connected ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'));
+      title.appendChild(badge(server.transport, 'bg-blue-50 text-blue-700 border border-blue-200'));
+      left.appendChild(title);
+      left.appendChild(createElement('div', server.url, { className: 'text-xs text-gray-500 mt-1 mono break-all' }));
+      if (server.error) {
+        left.appendChild(createElement('div', 'Error: ' + server.error, { className: 'text-xs text-red-600 mt-1' }));
+      }
+      if (server.tools.length > 0) {
+        const chips = createElement('div', '', { className: 'flex flex-wrap gap-1.5 mt-2' });
+        for (const tool of server.tools) {
+          chips.appendChild(createElement('span', tool.name, { className: 'mono text-[11px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200' }));
+        }
+        left.appendChild(chips);
+      }
+      row.appendChild(left);
+
+      const actions = createElement('div', '', { className: 'flex gap-2 flex-shrink-0' });
+      actions.appendChild(actionBtn('Refresh', 'bg-gray-100 text-gray-700 hover:bg-gray-200', async () => {
+        try {
+          await api('/api/v1/admin/mcp-servers/' + encodeURIComponent(server.name) + '/refresh', { method: 'POST' });
+          toast('Reconnected to ' + server.name);
+          loadMcp(); loadTools();
+        } catch (err) { toast(err.message, true); }
+      }));
+      actions.appendChild(actionBtn('Delete', 'bg-red-50 text-red-700 hover:bg-red-100', async () => {
+        if (!confirm('Remove MCP server "' + server.name + '"?')) return;
+        try {
+          await api('/api/v1/admin/mcp-servers/' + encodeURIComponent(server.name), { method: 'DELETE' });
+          toast('MCP server removed');
+          loadMcp(); loadTools();
+        } catch (err) { toast(err.message, true); }
+      }));
+      row.appendChild(actions);
+      card.appendChild(row);
+      return card;
+    }
+
+    document.getElementById('newMcpBtn').addEventListener('click', () => {
+      editingMcpName = null;
+      document.getElementById('mcpFormTitle').textContent = 'Add MCP Server';
+      document.getElementById('mcpName').value = '';
+      document.getElementById('mcpName').disabled = false;
+      document.getElementById('mcpUrl').value = '';
+      document.getElementById('mcpTransport').value = 'streamable-http';
+      document.getElementById('mcpHeaders').value = '';
+      document.getElementById('mcpForm').classList.remove('hidden');
+    });
+    document.getElementById('cancelMcpBtn').addEventListener('click', () => {
+      document.getElementById('mcpForm').classList.add('hidden');
+    });
+
+    document.getElementById('saveMcpBtn').addEventListener('click', async () => {
+      let headers;
+      const headersRaw = document.getElementById('mcpHeaders').value.trim();
+      if (headersRaw) {
+        try { headers = JSON.parse(headersRaw); } catch (e) { return toast('Headers must be valid JSON', true); }
+      }
+      const body = {
+        name: document.getElementById('mcpName').value.trim(),
+        url: document.getElementById('mcpUrl').value.trim(),
+        transport: document.getElementById('mcpTransport').value,
+        ...(headers ? { headers } : {})
+      };
+      try {
+        const result = await api('/api/v1/admin/mcp-servers', { method: 'POST', body: JSON.stringify(body) });
+        if (result.connected) {
+          toast('Connected — discovered ' + result.toolCount + ' tool(s)');
+        } else {
+          toast('Server saved but connection failed: ' + (result.error || 'unknown error'), true);
+        }
+        document.getElementById('mcpForm').classList.add('hidden');
+        loadMcp(); loadTools();
+      } catch (err) { toast(err.message, true); }
+    });
+
+    // =======================================================
     // KEYS
     // =======================================================
     async function loadKeys() {
@@ -604,8 +905,10 @@
 
     // ------- init -------
     async function refreshAll() {
-      await loadTools();   // must run first: the agent form tool picker uses allTools
+      await loadTools();          // agent form tool picker uses allTools
+      await loadSkillsCatalog();  // agent form skill picker uses allSkills
       loadAgents();
+      loadMcp();
       loadKeys();
     }
     refreshAll();

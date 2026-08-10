@@ -2,8 +2,10 @@
 
 AI Backends ships an admin dashboard — separate from the demos — for managing the platform at runtime:
 
-- **Agents**: create custom agents (system prompt + toolset) that become immediately runnable through the [Agents API](agents-api.md) and selectable in the demo pages.
+- **Agents**: create custom agents (system prompt + toolset + skills) that become immediately runnable through the [Agents API](agents-api.md) and selectable in the demo pages.
 - **Tools**: define custom HTTP tools that agents can call, and test them before use.
+- **Skills**: create instruction packages (Agent Skills style) that agents load on demand.
+- **MCP Servers**: connect Model Context Protocol servers and use their tools in agents.
 - **API Keys**: configure provider API keys without restarting the server.
 
 Open it at [http://localhost:3000/api/admin](http://localhost:3000/api/admin). The page itself is public; every action calls the protected Admin API below, so in production you enter your bearer token (`DEFAULT_ACCESS_TOKEN`) in the top-right field (stored in your browser's localStorage).
@@ -27,6 +29,15 @@ All endpoints require `Authorization: Bearer <DEFAULT_ACCESS_TOKEN>` in producti
 | PUT | `/api/v1/admin/tools/{name}` | Update a custom HTTP tool |
 | DELETE | `/api/v1/admin/tools/{name}` | Delete a custom HTTP tool |
 | POST | `/api/v1/admin/tools/{name}/test` | Execute a tool once with given arguments |
+| GET | `/api/v1/admin/skills` | List skills |
+| POST | `/api/v1/admin/skills` | Create a skill |
+| PUT | `/api/v1/admin/skills/{name}` | Update a skill |
+| DELETE | `/api/v1/admin/skills/{name}` | Delete a skill |
+| GET | `/api/v1/admin/mcp-servers` | List MCP servers with status and discovered tools |
+| POST | `/api/v1/admin/mcp-servers` | Register an MCP server (connects + discovers tools) |
+| PUT | `/api/v1/admin/mcp-servers/{name}` | Update an MCP server (reconnects) |
+| DELETE | `/api/v1/admin/mcp-servers/{name}` | Remove an MCP server |
+| POST | `/api/v1/admin/mcp-servers/{name}/refresh` | Reconnect and re-discover tools |
 | GET | `/api/v1/admin/keys` | Provider API key status (masked) |
 | PUT | `/api/v1/admin/keys/{provider}` | Set a provider API key at runtime |
 | DELETE | `/api/v1/admin/keys/{provider}` | Clear a dashboard key override (falls back to env) |
@@ -132,6 +143,81 @@ curl -X POST 'http://localhost:3000/api/v1/admin/tools/get-exchange-rate/test' \
 - Limits: 100 custom tools, 50 custom agents.
 
 > Note: custom tools make the server perform HTTP requests to admin-supplied URLs. Only admins (bearer-token holders) can define tools, but treat this like any other server-side webhook configuration when deploying.
+
+---
+
+## Skills
+
+Skills follow the Agent Skills progressive-disclosure model: agents always see each skill's **name and description** in their system prompt; the **full content** loads only when the agent calls the built-in `use_skill` tool. This keeps context small while giving agents deep instructions on demand.
+
+**Create**
+
+```bash
+curl -X POST 'http://localhost:3000/api/v1/admin/skills' \
+  -H 'Authorization: Bearer your-secret-api-key' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "name": "shipping-policy",
+    "description": "Company shipping and delivery policy. Use when customers ask about shipping times, delays, or delivery guarantees.",
+    "content": "# Shipping Policy\n\n- Standard shipping: 3-5 business days...\n- If an order is delayed more than 3 business days past its ETA, the customer is entitled to a $10 credit."
+  }'
+```
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `name` | string | yes | Unique slug. Immutable after creation. |
+| `description` | string | yes | When to use the skill — always visible to agents that have it (max 1024 chars, per the Agent Skills spec) |
+| `content` | string | yes | Full markdown instructions, loaded on demand (max 50k chars) |
+
+**Attach to an agent** via the agent's `skills` array:
+
+```json
+{ "key": "order-support", "tools": ["mcp_demo_lookup_order"], "skills": ["shipping-policy"], ... }
+```
+
+At run time the agent's system prompt gains an `<available_skills>` listing plus a `use_skill` tool. Deletion is blocked while any agent references the skill.
+
+---
+
+## MCP servers
+
+Register a Model Context Protocol server and its tools become part of the tool registry, usable by any agent. Supported transports: **Streamable HTTP** and **SSE** (remote/HTTP servers; stdio servers are not supported in the API server context).
+
+**Register** (connects immediately and discovers tools):
+
+```bash
+curl -X POST 'http://localhost:3000/api/v1/admin/mcp-servers' \
+  -H 'Authorization: Bearer your-secret-api-key' \
+  -H 'Content-Type: application/json' \
+  -d '{ "name": "demo", "url": "http://localhost:3900/mcp", "transport": "streamable-http" }'
+```
+
+Response includes connection status and the discovered tools:
+
+```json
+{
+  "name": "demo", "connected": true, "toolCount": 2,
+  "tools": [
+    { "name": "mcp_demo_roll_dice", "originalName": "roll_dice", "serverName": "demo", ... },
+    { "name": "mcp_demo_lookup_order", "originalName": "lookup_order", "serverName": "demo", ... }
+  ]
+}
+```
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `name` | string | yes | Unique slug; tools are registered as `mcp_<name>_<tool>`. Immutable after creation. |
+| `url` | string | yes | MCP endpoint URL |
+| `transport` | string | no | `streamable-http` (default) or `sse` |
+| `headers` | object | no | Extra request headers, e.g. an `Authorization` header |
+
+Notes:
+
+- Bridged tools work everywhere normal tools do: attach them to agents, test them via `POST /admin/tools/{name}/test`, and they appear in `GET /admin/tools` with `source: "mcp"`.
+- Persisted servers are reconnected automatically at startup; use `/refresh` to reconnect or pick up new tools.
+- Failed tool calls trigger one automatic reconnect + retry.
+- Removal is blocked while any agent references the server's tools.
+- A runnable demo server ships in [`examples/mcp-demo-server.ts`](../examples/mcp-demo-server.ts) (`bun run examples/mcp-demo-server.ts`).
 
 ---
 

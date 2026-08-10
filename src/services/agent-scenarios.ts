@@ -1,9 +1,11 @@
 import type { AgentTool } from '@earendil-works/pi-agent-core';
-import { getCustomAgent, listCustomAgents, listCustomTools } from './admin-store';
+import { getCustomAgent, getSkill, listCustomAgents, listCustomTools, type SkillDefinition } from './admin-store';
 import { buildHttpTool } from './agent-custom-tools';
+import { buildSkillsPromptSection, buildUseSkillTool } from './agent-skills';
 import { demoAgentTools } from './agent-tools';
 import { customerSupportTools } from './agent-tools-customer-support';
 import { realEstateTools } from './agent-tools-real-estate';
+import { getMcpToolsSync } from './mcp';
 
 /**
  * Agent scenario registry. A scenario bundles a system prompt, a toolset, and
@@ -97,7 +99,10 @@ const builtInScenarios: Record<BuiltInScenarioKey, AgentScenario> = {
 
 export const builtInScenarioKeys = Object.keys(builtInScenarios) as BuiltInScenarioKey[];
 
-/** All runnable tools by name: built-in toolsets plus admin-defined HTTP tools. */
+/**
+ * All runnable tools by name: built-in toolsets, admin-defined HTTP tools,
+ * and tools discovered from connected MCP servers.
+ */
 export function getToolRegistry(): Map<string, AgentTool<any>> {
   const registry = new Map<string, AgentTool<any>>();
   for (const tool of [...demoAgentTools, ...customerSupportTools, ...realEstateTools]) {
@@ -105,6 +110,9 @@ export function getToolRegistry(): Map<string, AgentTool<any>> {
   }
   for (const definition of listCustomTools()) {
     registry.set(definition.name, buildHttpTool(definition));
+  }
+  for (const [name, tool] of getMcpToolsSync()) {
+    registry.set(name, tool);
   }
   return registry;
 }
@@ -143,11 +151,27 @@ export function getAgentScenario(key: AgentScenarioKey = 'general'): AgentScenar
     tools.push(tool);
   }
 
+  // Resolve skills: descriptions go into the system prompt, full content
+  // loads on demand through the use_skill tool (progressive disclosure)
+  const skills: SkillDefinition[] = [];
+  for (const skillName of custom.skills || []) {
+    const skill = getSkill(skillName);
+    if (!skill) {
+      throw new Error(`Agent "${key}" references unknown skill "${skillName}".`);
+    }
+    skills.push(skill);
+  }
+  let systemPrompt = custom.systemPrompt;
+  if (skills.length > 0) {
+    systemPrompt += buildSkillsPromptSection(skills);
+    tools.push(buildUseSkillTool(skills));
+  }
+
   return {
     key: custom.key,
     label: custom.label,
     description: custom.description,
-    systemPrompt: custom.systemPrompt,
+    systemPrompt,
     tools,
     sampleTasks: custom.sampleTasks,
     builtIn: false,

@@ -34,17 +34,22 @@ export const customToolSchema = z.object({
   }),
 })
 
-export const customToolInfoSchema = customToolSchema.extend({
-  builtIn: z.literal(false),
+export const adminToolItemSchema = agentToolInfoSchema.extend({
+  builtIn: z.boolean(),
+  source: z.enum(['built-in', 'custom', 'mcp']),
+  parameters: toolParametersSchema.optional(),
+  http: z
+    .object({
+      method: z.enum(['GET', 'POST']),
+      url: z.string(),
+      headers: z.record(z.string()).optional(),
+    })
+    .optional(),
+  serverName: z.string().optional().describe('MCP server the tool was discovered from'),
 })
 
 export const adminToolsResponseSchema = z.object({
-  tools: z.array(
-    z.union([
-      customToolInfoSchema,
-      agentToolInfoSchema.extend({ builtIn: z.literal(true) }),
-    ])
-  ),
+  tools: z.array(adminToolItemSchema),
 })
 
 export const customAgentSchema = z.object({
@@ -52,12 +57,56 @@ export const customAgentSchema = z.object({
   label: z.string().min(1).max(100).describe('Human-readable name'),
   description: z.string().max(1000).default('').describe('What this agent does'),
   systemPrompt: z.string().min(1).max(8000).describe('System prompt that shapes the agent behavior'),
-  tools: z.array(z.string()).min(1).describe('Tool names from the built-in and custom tool registries'),
+  tools: z.array(z.string()).min(1).describe('Tool names from the built-in, custom, and MCP tool registries'),
+  skills: z
+    .array(z.string())
+    .default([])
+    .describe('Skill names from the skill store; descriptions are always visible to the agent, full content loads on demand'),
   sampleTasks: z.array(z.string()).default([]).describe('Example tasks shown in the demos'),
 })
 
 export const adminAgentsResponseSchema = z.object({
   agents: z.array(customAgentSchema),
+})
+
+export const skillSchema = z.object({
+  name: slugSchema.describe('Unique skill name, e.g. "refund-policy"'),
+  description: z
+    .string()
+    .min(1)
+    .max(1024)
+    .describe('What the skill does and when to use it. Always visible to agents that have the skill.'),
+  content: z.string().min(1).max(50000).describe('Full skill instructions (markdown). Loaded on demand via the use_skill tool.'),
+})
+
+export const adminSkillsResponseSchema = z.object({
+  skills: z.array(skillSchema),
+})
+
+export const mcpServerSchema = z.object({
+  name: slugSchema.describe('Unique server name; discovered tools are registered as mcp_<name>_<tool>'),
+  url: z.string().url().describe('MCP server endpoint URL'),
+  transport: z.enum(['streamable-http', 'sse']).default('streamable-http').describe('MCP transport'),
+  headers: z.record(z.string()).optional().describe('Extra request headers, e.g. an Authorization header'),
+})
+
+export const mcpToolInfoSchema = z.object({
+  name: z.string(),
+  label: z.string(),
+  description: z.string(),
+  serverName: z.string(),
+  originalName: z.string(),
+})
+
+export const mcpServerStatusSchema = mcpServerSchema.extend({
+  connected: z.boolean(),
+  toolCount: z.number(),
+  tools: z.array(mcpToolInfoSchema),
+  error: z.string().optional(),
+})
+
+export const adminMcpServersResponseSchema = z.object({
+  servers: z.array(mcpServerStatusSchema),
 })
 
 export const providerKeyInfoSchema = z.object({

@@ -45,24 +45,46 @@ export interface CustomAgentDefinition {
   label: string;
   description: string;
   systemPrompt: string;
-  /** Tool names from the built-in and custom tool registries. */
+  /** Tool names from the built-in, custom, and MCP tool registries. */
   tools: string[];
+  /** Skill names from the skill store. Loaded on demand via the use_skill tool. */
+  skills?: string[];
   sampleTasks: string[];
+}
+
+/** Agent Skills-style skill: name + description always visible, content loaded on demand. */
+export interface SkillDefinition {
+  name: string;
+  description: string;
+  /** Full skill instructions (markdown). */
+  content: string;
+}
+
+export interface McpServerDefinition {
+  /** Unique slug; discovered tools are registered as mcp_<name>_<tool>. */
+  name: string;
+  url: string;
+  transport: 'streamable-http' | 'sse';
+  headers?: Record<string, string>;
 }
 
 interface AdminConfigFile {
   agents: CustomAgentDefinition[];
   tools: CustomToolDefinition[];
+  skills: SkillDefinition[];
+  mcpServers: McpServerDefinition[];
   /** Provider id → API key override. */
   keys: Record<string, string>;
 }
 
 export const MAX_CUSTOM_AGENTS = 50;
 export const MAX_CUSTOM_TOOLS = 100;
+export const MAX_SKILLS = 100;
+export const MAX_MCP_SERVERS = 20;
 
 const CONFIG_PATH = process.env.ADMIN_CONFIG_PATH || path.resolve(process.cwd(), 'data', 'admin-config.json');
 
-const emptyConfig = (): AdminConfigFile => ({ agents: [], tools: [], keys: {} });
+const emptyConfig = (): AdminConfigFile => ({ agents: [], tools: [], skills: [], mcpServers: [], keys: {} });
 
 let config: AdminConfigFile = emptyConfig();
 
@@ -73,6 +95,8 @@ function loadConfig(): void {
       config = {
         agents: Array.isArray(raw.agents) ? raw.agents : [],
         tools: Array.isArray(raw.tools) ? raw.tools : [],
+        skills: Array.isArray(raw.skills) ? raw.skills : [],
+        mcpServers: Array.isArray(raw.mcpServers) ? raw.mcpServers : [],
         keys: raw.keys && typeof raw.keys === 'object' ? raw.keys : {},
       };
     }
@@ -212,6 +236,93 @@ export function deleteCustomTool(name: string): boolean {
     throw new Error(`Tool "${name}" is used by agent(s): ${usedBy.join(', ')}. Update or delete those agents first.`);
   }
   config.tools.splice(index, 1);
+  saveConfig();
+  return true;
+}
+
+// ---------------------------------------------------------------------------
+// Skills
+// ---------------------------------------------------------------------------
+
+export function listSkills(): SkillDefinition[] {
+  return [...config.skills];
+}
+
+export function getSkill(name: string): SkillDefinition | undefined {
+  return config.skills.find((skill) => skill.name === name);
+}
+
+export function upsertSkill(definition: SkillDefinition, options?: { create?: boolean }): SkillDefinition {
+  const index = config.skills.findIndex((skill) => skill.name === definition.name);
+  if (index === -1) {
+    if (config.skills.length >= MAX_SKILLS) {
+      throw new Error(`Skill limit reached (${MAX_SKILLS}).`);
+    }
+    config.skills.push(definition);
+  } else {
+    if (options?.create) {
+      throw new Error(`A skill named "${definition.name}" already exists.`);
+    }
+    config.skills[index] = definition;
+  }
+  saveConfig();
+  return definition;
+}
+
+export function deleteSkill(name: string): boolean {
+  const index = config.skills.findIndex((skill) => skill.name === name);
+  if (index === -1) return false;
+  const usedBy = config.agents.filter((agent) => (agent.skills || []).includes(name)).map((agent) => agent.key);
+  if (usedBy.length > 0) {
+    throw new Error(`Skill "${name}" is used by agent(s): ${usedBy.join(', ')}. Update or delete those agents first.`);
+  }
+  config.skills.splice(index, 1);
+  saveConfig();
+  return true;
+}
+
+// ---------------------------------------------------------------------------
+// MCP servers
+// ---------------------------------------------------------------------------
+
+export function listMcpServers(): McpServerDefinition[] {
+  return [...config.mcpServers];
+}
+
+export function getMcpServer(name: string): McpServerDefinition | undefined {
+  return config.mcpServers.find((server) => server.name === name);
+}
+
+export function upsertMcpServer(definition: McpServerDefinition, options?: { create?: boolean }): McpServerDefinition {
+  const index = config.mcpServers.findIndex((server) => server.name === definition.name);
+  if (index === -1) {
+    if (config.mcpServers.length >= MAX_MCP_SERVERS) {
+      throw new Error(`MCP server limit reached (${MAX_MCP_SERVERS}).`);
+    }
+    config.mcpServers.push(definition);
+  } else {
+    if (options?.create) {
+      throw new Error(`An MCP server named "${definition.name}" already exists.`);
+    }
+    config.mcpServers[index] = definition;
+  }
+  saveConfig();
+  return definition;
+}
+
+export function deleteMcpServer(name: string): boolean {
+  const index = config.mcpServers.findIndex((server) => server.name === name);
+  if (index === -1) return false;
+  const toolPrefix = `mcp_${name}_`;
+  const usedBy = config.agents
+    .filter((agent) => agent.tools.some((tool) => tool.startsWith(toolPrefix)))
+    .map((agent) => agent.key);
+  if (usedBy.length > 0) {
+    throw new Error(
+      `Tools from MCP server "${name}" are used by agent(s): ${usedBy.join(', ')}. Update or delete those agents first.`
+    );
+  }
+  config.mcpServers.splice(index, 1);
   saveConfig();
   return true;
 }

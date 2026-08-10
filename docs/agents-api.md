@@ -33,7 +33,7 @@ A scenario selects the agent's toolset and default system prompt. Pass it as `pa
 
 `GET /api/v1/agent/scenarios` returns this catalog programmatically (labels, descriptions, tools, and sample tasks), including any custom agents.
 
-**Custom agents**: beyond the built-in scenarios, you can create your own agents (system prompt + toolset, including custom HTTP tools) via the [Admin API or the admin dashboard](admin-api.md). A custom agent's key works exactly like a scenario key on `/agent/run` and `/agent/chat`.
+**Custom agents**: beyond the built-in scenarios, you can create your own agents (system prompt + toolset + skills) via the [Admin API or the admin dashboard](admin-api.md). Agents can use custom HTTP tools, tools discovered from connected MCP servers, and skills (instruction packages loaded on demand). A custom agent's key works exactly like a scenario key on `/agent/run` and `/agent/chat`.
 
 ## Endpoints
 

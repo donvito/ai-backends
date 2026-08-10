@@ -3,11 +3,16 @@ import { Context } from 'hono'
 import {
   adminAgentsResponseSchema,
   adminKeysResponseSchema,
+  adminMcpServersResponseSchema,
+  adminSkillsResponseSchema,
   adminToolsResponseSchema,
   customAgentSchema,
   customToolSchema,
+  mcpServerSchema,
+  mcpServerStatusSchema,
   providerKeyInfoSchema,
   setProviderKeySchema,
+  skillSchema,
   toolTestRequestSchema,
   toolTestResponseSchema,
 } from '../../schemas/v1/admin'
@@ -15,14 +20,22 @@ import {
   clearProviderKey,
   deleteCustomAgent,
   deleteCustomTool,
+  deleteMcpServer,
+  deleteSkill,
   getCustomAgent,
   getCustomTool,
+  getMcpServer,
   getProviderKeyInfos,
+  getSkill,
   listCustomAgents,
   listCustomTools,
+  listMcpServers,
+  listSkills,
   setProviderKey,
   upsertCustomAgent,
   upsertCustomTool,
+  upsertMcpServer,
+  upsertSkill,
 } from '../../services/admin-store'
 import { executeHttpTool } from '../../services/agent-custom-tools'
 import {
@@ -33,6 +46,16 @@ import {
 import { demoAgentTools } from '../../services/agent-tools'
 import { customerSupportTools } from '../../services/agent-tools-customer-support'
 import { realEstateTools } from '../../services/agent-tools-real-estate'
+import {
+  connectMcpServer,
+  disconnectMcpServer,
+  getMcpServerStatus,
+  getMcpToolsSync,
+  warmUpMcpServers,
+} from '../../services/mcp'
+
+// Reconnect persisted MCP servers in the background at startup
+warmUpMcpServers()
 
 const router = new OpenAPIHono()
 
@@ -66,6 +89,14 @@ function validateAgentTools(toolNames: string[]): string | null {
   return null
 }
 
+function validateAgentSkills(skillNames: string[]): string | null {
+  const missing = skillNames.filter((name) => !getSkill(name))
+  if (missing.length > 0) {
+    return `Unknown skill(s): ${missing.join(', ')}. Check GET /api/v1/admin/skills for available skills.`
+  }
+  return null
+}
+
 // ---------------------------------------------------------------------------
 // Agents
 // ---------------------------------------------------------------------------
@@ -86,7 +117,10 @@ router.openapi(
     description: 'This endpoint lists all custom agents. Run them with the Agents API by passing the agent key as payload.scenario.',
     tags: ['Admin'],
   }),
-  (c) => c.json({ agents: listCustomAgents() }, 200)
+  ((c: Context) => {
+    const agents = listCustomAgents().map((agent) => ({ ...agent, skills: agent.skills ?? [] }))
+    return c.json({ agents }, 200)
+  }) as any
 )
 
 router.openapi(
@@ -121,6 +155,8 @@ router.openapi(
     }
     const toolError = validateAgentTools(input.tools)
     if (toolError) return badRequest(c, toolError)
+    const skillError = validateAgentSkills(input.skills)
+    if (skillError) return badRequest(c, skillError)
     try {
       return c.json(upsertCustomAgent(input, { create: true }), 201)
     } catch (error) {
@@ -165,6 +201,8 @@ router.openapi(
     }
     const toolError = validateAgentTools(input.tools)
     if (toolError) return badRequest(c, toolError)
+    const skillError = validateAgentSkills(input.skills)
+    if (skillError) return badRequest(c, skillError)
     return c.json(upsertCustomAgent(input), 200)
   }) as any
 )
@@ -215,7 +253,8 @@ router.openapi(
       401: errorResponses[401],
     },
     summary: 'List all tools',
-    description: 'This endpoint lists every tool agents can use: the built-in toolsets plus custom HTTP tools created via this API.',
+    description:
+      'This endpoint lists every tool agents can use: the built-in toolsets, custom HTTP tools created via this API, and tools discovered from connected MCP servers.',
     tags: ['Admin'],
   }),
   ((c: Context) => {
@@ -224,9 +263,18 @@ router.openapi(
       label: tool.label,
       description: tool.description,
       builtIn: true as const,
+      source: 'built-in' as const,
     }))
-    const custom = listCustomTools().map((tool) => ({ ...tool, builtIn: false as const }))
-    return c.json({ tools: [...builtIn, ...custom] }, 200)
+    const custom = listCustomTools().map((tool) => ({ ...tool, builtIn: false as const, source: 'custom' as const }))
+    const mcp = [...getMcpToolsSync().values()].map((tool) => ({
+      name: tool.name,
+      label: tool.label,
+      description: tool.description,
+      builtIn: false as const,
+      source: 'mcp' as const,
+      serverName: tool.name.split('_')[1],
+    }))
+    return c.json({ tools: [...builtIn, ...custom, ...mcp] }, 200)
   }) as any
 )
 
@@ -393,6 +441,320 @@ router.openapi(
     } catch (error) {
       return badRequest(c, error instanceof Error ? error.message : 'Tool execution failed')
     }
+  }) as any
+)
+
+// ---------------------------------------------------------------------------
+// Skills
+// ---------------------------------------------------------------------------
+
+router.openapi(
+  createRoute({
+    path: '/skills',
+    method: 'get',
+    security: [{ BearerAuth: [] }],
+    responses: {
+      200: {
+        description: 'Lists all skills.',
+        content: { 'application/json': { schema: adminSkillsResponseSchema } },
+      },
+      401: errorResponses[401],
+    },
+    summary: 'List skills',
+    description:
+      'This endpoint lists all skills. Attach skills to agents via the agent skills field; agents see skill descriptions and load full instructions on demand through the use_skill tool.',
+    tags: ['Admin'],
+  }),
+  (c) => c.json({ skills: listSkills() }, 200)
+)
+
+router.openapi(
+  createRoute({
+    path: '/skills',
+    method: 'post',
+    security: [{ BearerAuth: [] }],
+    request: {
+      body: { content: { 'application/json': { schema: skillSchema } } },
+    },
+    responses: {
+      201: {
+        description: 'Skill created.',
+        content: { 'application/json': { schema: skillSchema } },
+      },
+      ...errorResponses,
+    },
+    summary: 'Create a skill',
+    description:
+      'This endpoint creates a skill (Agent Skills style): a name, a description that is always visible to agents that have the skill, and full markdown instructions loaded on demand.',
+    tags: ['Admin'],
+  }),
+  (async (c: Context) => {
+    let input
+    try {
+      input = skillSchema.parse(await c.req.json())
+    } catch (error) {
+      return badRequest(c, error instanceof z.ZodError ? error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join('; ') : 'Invalid request body')
+    }
+    try {
+      return c.json(upsertSkill(input, { create: true }), 201)
+    } catch (error) {
+      return badRequest(c, error instanceof Error ? error.message : 'Failed to create skill')
+    }
+  }) as any
+)
+
+router.openapi(
+  createRoute({
+    path: '/skills/{name}',
+    method: 'put',
+    security: [{ BearerAuth: [] }],
+    request: {
+      params: z.object({ name: z.string() }),
+      body: { content: { 'application/json': { schema: skillSchema } } },
+    },
+    responses: {
+      200: {
+        description: 'Skill updated.',
+        content: { 'application/json': { schema: skillSchema } },
+      },
+      ...errorResponses,
+    },
+    summary: 'Update a skill',
+    description: 'This endpoint updates an existing skill. The skill name in the body must match the name in the path.',
+    tags: ['Admin'],
+  }),
+  (async (c: Context) => {
+    const name = c.req.param('name')
+    if (!getSkill(name)) {
+      return c.json({ error: `No skill named "${name}"` }, 404)
+    }
+    let input
+    try {
+      input = skillSchema.parse(await c.req.json())
+    } catch (error) {
+      return badRequest(c, error instanceof z.ZodError ? error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join('; ') : 'Invalid request body')
+    }
+    if (input.name !== name) {
+      return badRequest(c, 'The skill name cannot be changed. Create a new skill instead.')
+    }
+    return c.json(upsertSkill(input), 200)
+  }) as any
+)
+
+router.openapi(
+  createRoute({
+    path: '/skills/{name}',
+    method: 'delete',
+    security: [{ BearerAuth: [] }],
+    request: {
+      params: z.object({ name: z.string() }),
+    },
+    responses: {
+      200: {
+        description: 'Skill deleted.',
+        content: { 'application/json': { schema: z.object({ deleted: z.boolean(), name: z.string() }) } },
+      },
+      400: errorResponses[400],
+      401: errorResponses[401],
+      404: errorResponses[404],
+    },
+    summary: 'Delete a skill',
+    description: 'This endpoint deletes a skill. Deletion is blocked while any agent still references the skill.',
+    tags: ['Admin'],
+  }),
+  ((c: Context) => {
+    const name = c.req.param('name')
+    try {
+      if (!deleteSkill(name)) {
+        return c.json({ error: `No skill named "${name}"` }, 404)
+      }
+    } catch (error) {
+      return badRequest(c, error instanceof Error ? error.message : 'Failed to delete skill')
+    }
+    return c.json({ deleted: true, name }, 200)
+  }) as any
+)
+
+// ---------------------------------------------------------------------------
+// MCP servers
+// ---------------------------------------------------------------------------
+
+router.openapi(
+  createRoute({
+    path: '/mcp-servers',
+    method: 'get',
+    security: [{ BearerAuth: [] }],
+    responses: {
+      200: {
+        description: 'Lists registered MCP servers with connection status and discovered tools.',
+        content: { 'application/json': { schema: adminMcpServersResponseSchema } },
+      },
+      401: errorResponses[401],
+    },
+    summary: 'List MCP servers',
+    description:
+      'This endpoint lists registered MCP (Model Context Protocol) servers, whether each is connected, and the tools discovered from it.',
+    tags: ['Admin'],
+  }),
+  ((c: Context) => {
+    return c.json({ servers: listMcpServers().map(getMcpServerStatus) }, 200)
+  }) as any
+)
+
+router.openapi(
+  createRoute({
+    path: '/mcp-servers',
+    method: 'post',
+    security: [{ BearerAuth: [] }],
+    request: {
+      body: { content: { 'application/json': { schema: mcpServerSchema } } },
+    },
+    responses: {
+      201: {
+        description:
+          'MCP server registered. The response includes connection status and discovered tools; if the connection failed, the server is still saved and the error is reported.',
+        content: { 'application/json': { schema: mcpServerStatusSchema } },
+      },
+      ...errorResponses,
+    },
+    summary: 'Register an MCP server',
+    description:
+      'This endpoint registers an MCP server (Streamable HTTP or SSE transport) and connects to it. Discovered tools are registered as mcp_<server>_<tool> and can be attached to agents like any other tool.',
+    tags: ['Admin'],
+  }),
+  (async (c: Context) => {
+    let input
+    try {
+      input = mcpServerSchema.parse(await c.req.json())
+    } catch (error) {
+      return badRequest(c, error instanceof z.ZodError ? error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join('; ') : 'Invalid request body')
+    }
+    try {
+      upsertMcpServer(input, { create: true })
+    } catch (error) {
+      return badRequest(c, error instanceof Error ? error.message : 'Failed to register MCP server')
+    }
+    try {
+      await connectMcpServer(input)
+    } catch (error) {
+      console.warn('[WARN] MCP server registered but connection failed:', error)
+    }
+    return c.json(getMcpServerStatus(input), 201)
+  }) as any
+)
+
+router.openapi(
+  createRoute({
+    path: '/mcp-servers/{name}',
+    method: 'put',
+    security: [{ BearerAuth: [] }],
+    request: {
+      params: z.object({ name: z.string() }),
+      body: { content: { 'application/json': { schema: mcpServerSchema } } },
+    },
+    responses: {
+      200: {
+        description: 'MCP server updated and reconnected.',
+        content: { 'application/json': { schema: mcpServerStatusSchema } },
+      },
+      ...errorResponses,
+    },
+    summary: 'Update an MCP server',
+    description: 'This endpoint updates an MCP server configuration and reconnects to it. The name in the body must match the path.',
+    tags: ['Admin'],
+  }),
+  (async (c: Context) => {
+    const name = c.req.param('name')
+    if (!getMcpServer(name)) {
+      return c.json({ error: `No MCP server named "${name}"` }, 404)
+    }
+    let input
+    try {
+      input = mcpServerSchema.parse(await c.req.json())
+    } catch (error) {
+      return badRequest(c, error instanceof z.ZodError ? error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join('; ') : 'Invalid request body')
+    }
+    if (input.name !== name) {
+      return badRequest(c, 'The MCP server name cannot be changed. Register a new server instead.')
+    }
+    upsertMcpServer(input)
+    try {
+      await connectMcpServer(input)
+    } catch (error) {
+      console.warn('[WARN] MCP server updated but reconnection failed:', error)
+    }
+    return c.json(getMcpServerStatus(input), 200)
+  }) as any
+)
+
+router.openapi(
+  createRoute({
+    path: '/mcp-servers/{name}',
+    method: 'delete',
+    security: [{ BearerAuth: [] }],
+    request: {
+      params: z.object({ name: z.string() }),
+    },
+    responses: {
+      200: {
+        description: 'MCP server removed and disconnected.',
+        content: { 'application/json': { schema: z.object({ deleted: z.boolean(), name: z.string() }) } },
+      },
+      400: errorResponses[400],
+      401: errorResponses[401],
+      404: errorResponses[404],
+    },
+    summary: 'Remove an MCP server',
+    description: 'This endpoint disconnects and removes an MCP server. Removal is blocked while any agent still references its tools.',
+    tags: ['Admin'],
+  }),
+  (async (c: Context) => {
+    const name = c.req.param('name')
+    try {
+      if (!deleteMcpServer(name)) {
+        return c.json({ error: `No MCP server named "${name}"` }, 404)
+      }
+    } catch (error) {
+      return badRequest(c, error instanceof Error ? error.message : 'Failed to remove MCP server')
+    }
+    await disconnectMcpServer(name)
+    return c.json({ deleted: true, name }, 200)
+  }) as any
+)
+
+router.openapi(
+  createRoute({
+    path: '/mcp-servers/{name}/refresh',
+    method: 'post',
+    security: [{ BearerAuth: [] }],
+    request: {
+      params: z.object({ name: z.string() }),
+    },
+    responses: {
+      200: {
+        description: 'Reconnected to the MCP server and re-discovered its tools.',
+        content: { 'application/json': { schema: mcpServerStatusSchema } },
+      },
+      400: errorResponses[400],
+      401: errorResponses[401],
+      404: errorResponses[404],
+    },
+    summary: 'Refresh an MCP server connection',
+    description: 'This endpoint reconnects to an MCP server and refreshes its discovered tool list.',
+    tags: ['Admin'],
+  }),
+  (async (c: Context) => {
+    const name = c.req.param('name')
+    const definition = getMcpServer(name)
+    if (!definition) {
+      return c.json({ error: `No MCP server named "${name}"` }, 404)
+    }
+    try {
+      await connectMcpServer(definition)
+    } catch (error) {
+      return badRequest(c, error instanceof Error ? error.message : 'Failed to connect to MCP server')
+    }
+    return c.json(getMcpServerStatus(definition), 200)
   }) as any
 )
 
