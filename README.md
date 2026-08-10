@@ -4,13 +4,28 @@ AIBackends is an API server that you can use to integrate AI into your applicati
 
 The project supports running open models locally with Ollama, LM Studio or LlamaCpp. It also supports LLM Gateway, OpenRouter, OpenAI, Anthropic, Google AI Studio, Baseten and ZAI providers.
 
+### A small poem about this project
+
+> *Where prompts become a steady route,*  
+> *and models—local, cloud—salute,*  
+> *AI Backends stands: one honest bridge*  
+> *from “I have an app” to “turn the hinge.”*  
+>  
+> *Hono hums; the schemas hold;*  
+> *each `/api` path is clear and bold:*  
+> *summarize the night, translate the dawn,*  
+> *read the image till the meaning’s drawn.*  
+>  
+> *No sermon on the art of prompts—*  
+> *just OpenAPI’s well-lighted romps;*  
+> *from Ollama’s desk to gateway skies,*  
+> *you pick the mind; the server tries.*
+
 ## Why AI Backends?
 
 The purpose of this project is to make common AI use cases easily accessible to non-coders who want to add AI features to their applications. AIBackends have been tested with popular AI app builder tools like [Bolt.new](https://bolt.new), [v0](https://v0.dev) and [Lovable](https://lovable.dev). You can also use it with [Warp](https://warp.dev), [Cursor](https://cursor.com/), [Claude Code](https://www.anthropic.com/claude-code), [Windsurf](https://windsurf.com/) or [AmpCode](https://ampcode.com/).
 
 Since APIs are ready to use, you don't need to understand prompt engineering. Just prompt the API documentation and you are good to go. For those who want use with online app builders, you need to host AIBackends on your own server. I have tested in Railway and it is a good option.
-
-AI Backends
 
 ## Supported LLM Providers
 
