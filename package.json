@@ -9,10 +9,10 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.57.0",
+    "@earendil-works/pi-ai": "^0.84.1",
     "@hono/node-server": "^1.18.2",
     "@hono/swagger-ui": "^0.5.1",
     "@hono/zod-openapi": "^0.19.6",
-    "@mariozechner/pi-ai": "^0.73.1",
     "@scalar/openapi-to-markdown": "^0.2.45",
     "@types/pdf-parse": "^1.1.5",
     "bun": "^1.2.20",

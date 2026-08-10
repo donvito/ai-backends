@@ -1,7 +1,25 @@
-import { complete, stream } from '@mariozechner/pi-ai';
-import type { Api, AssistantMessage, Context, Model, ProviderStreamOptions } from '@mariozechner/pi-ai';
+import type { Api, AssistantMessage, Context, Model, ProviderStreams, StreamOptions } from '@earendil-works/pi-ai';
+import { anthropicMessagesApi } from '@earendil-works/pi-ai/api/anthropic-messages.lazy';
+import { openAICompletionsApi } from '@earendil-works/pi-ai/api/openai-completions.lazy';
+import { openAIResponsesApi } from '@earendil-works/pi-ai/api/openai-responses.lazy';
 import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
+
+// API implementations used by this app, dispatched by Model.api. The lazy
+// factories only load the underlying implementation on first use.
+const apiImplementations: Partial<Record<Api, ProviderStreams>> = {
+  'openai-completions': openAICompletionsApi(),
+  'anthropic-messages': anthropicMessagesApi(),
+  'openai-responses': openAIResponsesApi(),
+};
+
+function streamsFor(model: Model<Api>): ProviderStreams {
+  const implementation = apiImplementations[model.api];
+  if (!implementation) {
+    throw new Error(`Unsupported pi-ai API: ${model.api}`);
+  }
+  return implementation;
+}
 
 /**
  * Thin compatibility layer around @mariozechner/pi-ai that exposes the
@@ -141,8 +159,8 @@ function buildContext(prompt: string): Context {
   };
 }
 
-function buildOptions(options: GenerateOptions): ProviderStreamOptions {
-  const streamOptions: ProviderStreamOptions = {};
+function buildOptions(options: GenerateOptions): StreamOptions {
+  const streamOptions: StreamOptions = {};
   if (options.apiKey) {
     streamOptions.apiKey = options.apiKey;
   }
@@ -156,7 +174,8 @@ function buildOptions(options: GenerateOptions): ProviderStreamOptions {
  * Generate a plain text response. Equivalent of the AI SDK's generateText.
  */
 export async function generateText(options: GenerateOptions): Promise<TextResult> {
-  const message = await complete(options.model, buildContext(options.prompt), buildOptions(options));
+  const eventStream = streamsFor(options.model).stream(options.model, buildContext(options.prompt), buildOptions(options));
+  const message = await eventStream.result();
   assertSuccess(message);
   return {
     text: extractText(message),
@@ -171,7 +190,7 @@ export async function generateText(options: GenerateOptions): Promise<TextResult
  * the stream has completed.
  */
 export function streamText(options: GenerateOptions): StreamTextResult {
-  const eventStream = stream(options.model, buildContext(options.prompt), buildOptions(options));
+  const eventStream = streamsFor(options.model).stream(options.model, buildContext(options.prompt), buildOptions(options));
 
   let resolveUsage!: (usage: TokenUsage) => void;
   let rejectUsage!: (error: unknown) => void;
@@ -220,10 +239,8 @@ export async function generateObject<T>(options: GenerateObjectOptions): Promise
     'Do not include markdown code fences, comments, or any text outside the JSON object.',
   ].join('\n');
 
-  const message = await complete(options.model, buildContext(structuredPrompt), buildOptions({
-    ...options,
-    prompt: structuredPrompt,
-  }));
+  const eventStream = streamsFor(options.model).stream(options.model, buildContext(structuredPrompt), buildOptions(options));
+  const message = await eventStream.result();
   assertSuccess(message);
 
   const rawText = extractText(message);
