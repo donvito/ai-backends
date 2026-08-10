@@ -115,6 +115,18 @@ Sandboxes are needed only when the agent must **execute** something (`run_shell`
 
 The architectural move that makes this cheap is keeping **durable state out of the sandbox**: files live in `WorkspaceFS`, transcripts in the session store. The sandbox is pure scratch compute — safe to kill anytime, recreated on demand.
 
+### Searching files
+
+Search also runs in the shared API tier — it is our code scanning the customer's data, not customer code executing, so it never requires a sandbox. What changes across backends is *how* the `search_files` tool answers:
+
+| Backend | Strategy |
+|---|---|
+| **A — local directory** | Ripgrep-style streaming scan of the jailed directory at query time. No index needed; always fresh. Fine at personal-agent scale (hundreds–thousands of files). Cap match counts and snippet sizes so results stay model-friendly. |
+| **B — object storage** | Grep-per-query would download every object — unacceptable. Instead, **index at write time**: `WorkspaceFS.write` extracts text (PDFs via the existing `pdfExtractor`) and updates a per-customer SQLite FTS5 index stored *inside the customer's own workspace* (e.g. `.index/search.db`). The index is tenant-partitioned by construction, migrates with the workspace, and is deleted with it. |
+| **C — sandboxes** | Unchanged: search still hits the API-tier index. Waking a machine to grep would reintroduce the per-query compute cost the scale-to-zero design avoids. |
+
+**Semantic search** is the natural upgrade for a personal agent (queries like "my notes about the meeting with Bob" rather than exact keywords). Reuse the same write-time hook: chunk + embed on write, store vectors per customer (sqlite-vec in the same per-workspace database, or a vector store with a per-customer namespace), and make `search_files` hybrid — FTS5 keyword hits merged with vector similarity. The tenancy rule is identical everywhere: the index/namespace is selected by the `customerId` from auth context, so a query can only ever touch one tenant's data.
+
 ## Agent-facing file tools
 
 New module `src/services/agent-tools-workspace.ts`. Tools are constructed **per session**, closed over the authenticated customer's `WorkspaceFS` — the model never supplies a customer id:
