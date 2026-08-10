@@ -14,6 +14,11 @@ function getRedocHtml() {
     return readFileSync(templatePath, 'utf-8')
 }
 
+function getAdminHtml() {
+    const templatePath = join(process.cwd(), 'src', 'templates', 'admin.html')
+    return readFileSync(templatePath, 'utf-8')
+}
+
 async function configureApiDocs(app: OpenAPIHono) {
     // The OpenAPI documentation will be available at /doc
     const openApiSpec = {
@@ -75,6 +80,9 @@ async function configureApiDocs(app: OpenAPIHono) {
 
     // Root page with links to documentation
     app.get('/', (c) => c.html(getLandingPageHtml()))
+
+    // Admin dashboard app (the Admin APIs it calls live under /api/v1/admin)
+    app.get('/admin', (c) => c.html(getAdminHtml()))
 }
 
 export default configureApiDocs

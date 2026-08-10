@@ -54,7 +54,7 @@ You can also **create your own agents and tools** — via the API or the admin d
 
 ## Admin Dashboard
 
-The main admin dashboard — separate from the demos — lives at [http://localhost:3000/api/admin](http://localhost:3000/api/admin). Use it to:
+The main admin dashboard — separate from the demos — lives at [http://localhost:3000/admin](http://localhost:3000/admin). Use it to:
 
 - **Create and edit agents**: system prompt, toolset, skills, and sample tasks; new agents are instantly runnable via the Agents API and listed in the demo pages.
 - **Define custom HTTP tools**: point a tool at any HTTP endpoint (with `{placeholder}` URL templating, query/body argument mapping, and custom headers), then test it right in the dashboard before agents use it.

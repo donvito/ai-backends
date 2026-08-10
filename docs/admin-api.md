@@ -8,7 +8,7 @@ AI Backends ships an admin dashboard — separate from the demos — for managin
 - **MCP Servers**: connect Model Context Protocol servers and use their tools in agents.
 - **API Keys**: configure provider API keys without restarting the server.
 
-Open it at [http://localhost:3000/api/admin](http://localhost:3000/api/admin). The page itself is public; every action calls the protected Admin API below, so in production you enter your bearer token (`DEFAULT_ACCESS_TOKEN`) in the top-right field (stored in your browser's localStorage).
+Open it at [http://localhost:3000/admin](http://localhost:3000/admin). The page itself is public; every action calls the protected Admin API below, so in production you enter your bearer token (`DEFAULT_ACCESS_TOKEN`) in the sidebar field (stored in your browser's localStorage).
 
 ## Persistence
 
