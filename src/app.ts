@@ -70,6 +70,8 @@ function configureApiSecurity(app: OpenAPIHono, tokenConfig: string) {
                 path === '/api/v1/agent-chat-demo' ||
                 path === '/api/models' ||
                 path === '/api/jsoneditor' ||
+                // Admin dashboard page (the Admin APIs it calls stay protected)
+                path === '/api/admin' ||
                 // Public read-only service catalog for demos
                 path === '/api/v1/services/models' ||
                 // Public read-only agent tool/scenario catalogs for the Agents demo

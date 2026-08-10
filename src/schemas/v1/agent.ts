@@ -8,16 +8,20 @@ import { DEFAULT_MAX_TURNS, MAX_TURNS_LIMIT } from '../../services/pi-agent'
 export const agentProviderSchema = z.enum(['openrouter', 'openai'])
 
 /**
- * Demo scenarios that select the agent's toolset and default system prompt.
+ * Scenario key selecting the agent's toolset and default system prompt.
+ * Built-in: general, customer-support, real-estate. Custom agents created via
+ * the Admin API are addressed by their key as well.
  */
-export const agentScenarioSchema = z.enum(['general', 'customer-support', 'real-estate'])
+export const agentScenarioSchema = z.string().min(1)
 
 export const agentPayloadSchema = z.object({
   task: z.string().min(1, 'Task must not be empty').describe('The task for the agent to complete'),
   scenario: agentScenarioSchema
     .optional()
     .default('general')
-    .describe('Scenario selecting the toolset and default system prompt (general, customer-support, real-estate)'),
+    .describe(
+      'Scenario selecting the toolset and default system prompt: general, customer-support, real-estate, or the key of a custom agent'
+    ),
   systemPrompt: z.string().optional().describe('Optional system prompt override for the agent'),
   maxTurns: z
     .number()
@@ -103,6 +107,7 @@ export const agentScenarioInfoSchema = z.object({
   description: z.string(),
   sampleTasks: z.array(z.string()),
   tools: z.array(agentToolInfoSchema),
+  builtIn: z.boolean(),
 })
 
 export const agentScenariosResponseSchema = z.object({

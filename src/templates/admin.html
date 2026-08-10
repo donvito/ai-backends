@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Backends - Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'brand-purple': '#D97757',
+            'brand-pink': '#BD5D3A'
+          },
+          backgroundImage: {
+            'gradient-brand': 'linear-gradient(135deg, #D97757, #BD5D3A)',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .mono { font-family: 'Monaco', 'Menlo', 'Courier New', monospace; }
+    .tab-active { border-bottom: 2px solid #D97757; color: #D97757; font-weight: 600; }
+    textarea.code { font-family: 'Monaco', 'Menlo', 'Courier New', monospace; font-size: 12px; }
+    .fade { animation: fadeIn 0.15s ease-in; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  </style>
+  <script src="/api/shared/safedom.js"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <!-- Top bar -->
+  <nav class="sticky top-0 z-50 bg-gray-900 text-white">
+    <div class="container mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-[#D97757] flex items-center justify-center">
+          <span class="text-white font-bold">AI</span>
+        </div>
+        <span class="text-lg font-semibold">Backends <span class="text-[#D97757]">Admin</span></span>
+      </div>
+      <div class="flex items-center gap-3 text-sm">
+        <a href="/" class="text-gray-300 hover:text-white">Home</a>
+        <a href="/api/ui" target="_blank" class="text-gray-300 hover:text-white">API Docs</a>
+        <a href="/api/demos" class="text-gray-300 hover:text-white">Demos</a>
+        <input id="token" type="password" placeholder="Bearer token (prod only)"
+          class="px-3 py-1.5 rounded-lg bg-gray-800 border border-gray-700 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-[#D97757] w-56" />
+      </div>
+    </div>
+  </nav>
+
+  <main class="container mx-auto px-6 py-8 max-w-6xl">
+    <div id="toast" class="hidden fixed top-16 right-6 z-50 px-4 py-3 rounded-lg shadow-lg text-sm text-white"></div>
+
+    <!-- Tabs -->
+    <div class="flex gap-6 border-b border-gray-200 mb-8 text-gray-600">
+      <button data-tab="agents" class="tab-btn pb-3 px-1 tab-active">Agents</button>
+      <button data-tab="tools" class="tab-btn pb-3 px-1">Tools</button>
+      <button data-tab="keys" class="tab-btn pb-3 px-1">API Keys</button>
+    </div>
+
+    <!-- ================= AGENTS TAB ================= -->
+    <section id="tab-agents" class="fade">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900">Agents</h1>
+          <p class="text-sm text-gray-500 mt-1">Custom agents are runnable immediately: use the agent key as <code class="mono">payload.scenario</code> on the Agents API, or pick it in the chat demo.</p>
+        </div>
+        <button id="newAgentBtn" class="px-4 py-2 rounded-lg bg-gradient-brand text-white font-medium hover:opacity-90">+ New Agent</button>
+      </div>
+
+      <div id="agentForm" class="hidden bg-white rounded-2xl border border-gray-200 shadow p-6 mb-6">
+        <h2 id="agentFormTitle" class="text-lg font-semibold mb-4">New Agent</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Key <span class="text-gray-400">(slug, used as scenario)</span></label>
+            <input id="agentKey" type="text" placeholder="travel-planner" class="w-full p-2 rounded-lg border border-gray-300 mono text-sm" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Label</label>
+            <input id="agentLabel" type="text" placeholder="Travel planner" class="w-full p-2 rounded-lg border border-gray-300" />
+          </div>
+        </div>
+        <div class="mt-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+          <input id="agentDescription" type="text" placeholder="What this agent does" class="w-full p-2 rounded-lg border border-gray-300" />
+        </div>
+        <div class="mt-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">System Prompt</label>
+          <textarea id="agentSystemPrompt" rows="5" class="w-full p-2 rounded-lg border border-gray-300 text-sm" placeholder="You are a helpful assistant that..."></textarea>
+        </div>
+        <div class="mt-4">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Tools</label>
+          <div id="agentToolPicker" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2"></div>
+        </div>
+        <div class="mt-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Sample Tasks <span class="text-gray-400">(one per line, shown in demos)</span></label>
+          <textarea id="agentSampleTasks" rows="3" class="w-full p-2 rounded-lg border border-gray-300 text-sm"></textarea>
+        </div>
+        <div class="mt-5 flex gap-2">
+          <button id="saveAgentBtn" class="px-4 py-2 rounded-lg bg-gradient-brand text-white font-medium hover:opacity-90">Save Agent</button>
+          <button id="cancelAgentBtn" class="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200">Cancel</button>
+        </div>
+      </div>
+
+      <div id="agentsList" class="space-y-3"></div>
+
+      <h2 class="text-lg font-semibold text-gray-900 mt-10 mb-3">Built-in scenarios</h2>
+      <div id="builtInAgentsList" class="space-y-3"></div>
+    </section>
+
+    <!-- ================= TOOLS TAB ================= -->
+    <section id="tab-tools" class="hidden fade">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900">Tools</h1>
+          <p class="text-sm text-gray-500 mt-1">Custom tools make one HTTP request per call. <code class="mono">{placeholders}</code> in the URL are filled from arguments; remaining args become query params (GET) or the JSON body (POST).</p>
+        </div>
+        <button id="newToolBtn" class="px-4 py-2 rounded-lg bg-gradient-brand text-white font-medium hover:opacity-90">+ New Tool</button>
+      </div>
+
+      <div id="toolForm" class="hidden bg-white rounded-2xl border border-gray-200 shadow p-6 mb-6">
+        <h2 id="toolFormTitle" class="text-lg font-semibold mb-4">New Tool</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Name <span class="text-gray-400">(slug the model calls)</span></label>
+            <input id="toolName" type="text" placeholder="get-exchange-rate" class="w-full p-2 rounded-lg border border-gray-300 mono text-sm" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Label</label>
+            <input id="toolLabel" type="text" placeholder="Exchange rates" class="w-full p-2 rounded-lg border border-gray-300" />
+          </div>
+        </div>
+        <div class="mt-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Description <span class="text-gray-400">(tells the model when to use it)</span></label>
+          <input id="toolDescription" type="text" placeholder="Get the latest currency exchange rates for a base currency" class="w-full p-2 rounded-lg border border-gray-300" />
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Method</label>
+            <select id="toolMethod" class="w-full p-2 rounded-lg border border-gray-300">
+              <option value="GET">GET</option>
+              <option value="POST">POST</option>
+            </select>
+          </div>
+          <div class="md:col-span-3">
+            <label class="block text-sm font-medium text-gray-700 mb-1">URL</label>
+            <input id="toolUrl" type="text" placeholder="https://api.frankfurter.dev/v1/latest?base={base}" class="w-full p-2 rounded-lg border border-gray-300 mono text-sm" />
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Parameters <span class="text-gray-400">(JSON Schema, object)</span></label>
+            <textarea id="toolParameters" rows="7" class="code w-full p-2 rounded-lg border border-gray-300"></textarea>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Headers <span class="text-gray-400">(JSON, optional)</span></label>
+            <textarea id="toolHeaders" rows="7" class="code w-full p-2 rounded-lg border border-gray-300" placeholder='{"Authorization": "Bearer ..."}'></textarea>
+          </div>
+        </div>
+        <div class="mt-5 flex gap-2">
+          <button id="saveToolBtn" class="px-4 py-2 rounded-lg bg-gradient-brand text-white font-medium hover:opacity-90">Save Tool</button>
+          <button id="cancelToolBtn" class="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200">Cancel</button>
+        </div>
+      </div>
+
+      <!-- Tool test panel -->
+      <div id="toolTestPanel" class="hidden bg-white rounded-2xl border border-gray-200 shadow p-6 mb-6">
+        <h2 class="text-lg font-semibold mb-1">Test tool: <span id="toolTestName" class="mono text-brand-purple"></span></h2>
+        <label class="block text-sm font-medium text-gray-700 mb-1 mt-3">Arguments (JSON)</label>
+        <textarea id="toolTestArgs" rows="4" class="code w-full p-2 rounded-lg border border-gray-300">{}</textarea>
+        <div class="mt-3 flex gap-2">
+          <button id="runToolTestBtn" class="px-4 py-2 rounded-lg bg-gray-900 text-white font-medium hover:bg-gray-800">Run Test</button>
+          <button id="closeToolTestBtn" class="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200">Close</button>
+        </div>
+        <pre id="toolTestResult" class="hidden mono mt-4 p-3 rounded-lg bg-gray-900 text-green-400 text-xs whitespace-pre-wrap break-words max-h-64 overflow-auto"></pre>
+      </div>
+
+      <div id="customToolsList" class="space-y-3"></div>
+
+      <h2 class="text-lg font-semibold text-gray-900 mt-10 mb-3">Built-in tools</h2>
+      <div id="builtInToolsList" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+    </section>
+
+    <!-- ================= KEYS TAB ================= -->
+    <section id="tab-keys" class="hidden fade">
+      <h1 class="text-2xl font-bold text-gray-900">Provider API Keys</h1>
+      <p class="text-sm text-gray-500 mt-1 mb-6">Keys set here take effect immediately and are persisted to <code class="mono">data/admin-config.json</code> (gitignored — protect it like a .env file). Environment variables remain the fallback.</p>
+      <div id="keysList" class="space-y-3"></div>
+    </section>
+  </main>
+
+  <script>
+    const tokenEl = document.getElementById('token');
+    tokenEl.value = localStorage.getItem('aib_admin_token') || '';
+    tokenEl.addEventListener('change', () => {
+      localStorage.setItem('aib_admin_token', tokenEl.value.trim());
+      refreshAll();
+    });
+
+    // ------- helpers -------
+    function toast(message, isError) {
+      const el = document.getElementById('toast');
+      el.textContent = message;
+      el.className = 'fixed top-16 right-6 z-50 px-4 py-3 rounded-lg shadow-lg text-sm text-white ' + (isError ? 'bg-red-600' : 'bg-gray-900');
+      el.classList.remove('hidden');
+      clearTimeout(toast._t);
+      toast._t = setTimeout(() => el.classList.add('hidden'), 4000);
+    }
+
+    async function api(path, options) {
+      const opts = options || {};
+      opts.headers = Object.assign({}, opts.headers || {});
+      if (opts.body && !opts.headers['Content-Type']) opts.headers['Content-Type'] = 'application/json';
+      const token = tokenEl.value.trim();
+      if (token) opts.headers['Authorization'] = 'Bearer ' + token;
+      const res = await fetch(path, opts);
+      let data = null;
+      try { data = await res.json(); } catch (e) { /* non-JSON */ }
+      if (!res.ok) {
+        throw new Error((data && data.error) || ('Request failed: ' + res.status));
+      }
+      return data;
+    }
+
+    function badge(text, cls) {
+      return createElement('span', text, { className: 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ' + cls });
+    }
+
+    function actionBtn(text, cls, onClick) {
+      const b = createElement('button', text, { className: 'px-3 py-1.5 rounded-lg text-sm ' + cls });
+      b.addEventListener('click', onClick);
+      return b;
+    }
+
+    // ------- tabs -------
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active'));
+        btn.classList.add('tab-active');
+        ['agents', 'tools', 'keys'].forEach(tab => {
+          document.getElementById('tab-' + tab).classList.toggle('hidden', tab !== btn.dataset.tab);
+        });
+      });
+    });
+
+    // =======================================================
+    // AGENTS
+    // =======================================================
+    let allTools = [];
+    let editingAgentKey = null;
+
+    async function loadAgents() {
+      const list = document.getElementById('agentsList');
+      const builtInList = document.getElementById('builtInAgentsList');
+      try {
+        const [custom, scenarios] = await Promise.all([
+          api('/api/v1/admin/agents'),
+          fetch('/api/v1/agent/scenarios').then(r => r.json())
+        ]);
+
+        setContent(list, '');
+        if (custom.agents.length === 0) {
+          list.appendChild(createElement('div', 'No custom agents yet. Create one to make it available as a scenario on the Agents API and in the demos.', { className: 'text-sm text-gray-500 bg-white rounded-2xl border border-dashed border-gray-300 p-6 text-center' }));
+        }
+        for (const agent of custom.agents) {
+          list.appendChild(renderAgentCard(agent));
+        }
+
+        setContent(builtInList, '');
+        for (const scenario of (scenarios.scenarios || []).filter(s => s.builtIn)) {
+          const card = createElement('div', '', { className: 'bg-white rounded-2xl border border-gray-200 p-4 flex items-center justify-between' });
+          const left = createElement('div', '', {});
+          const title = createElement('div', '', { className: 'flex items-center gap-2' });
+          title.appendChild(createElement('span', scenario.label, { className: 'font-semibold text-gray-900' }));
+          title.appendChild(createElement('code', scenario.key, { className: 'mono text-xs text-gray-500' }));
+          title.appendChild(badge('built-in', 'bg-gray-100 text-gray-600'));
+          left.appendChild(title);
+          left.appendChild(createElement('div', 'Tools: ' + scenario.tools.map(t => t.name).join(', '), { className: 'text-xs text-gray-500 mt-1 mono' }));
+          card.appendChild(left);
+          builtInList.appendChild(card);
+        }
+      } catch (err) {
+        toast(err.message, true);
+      }
+    }
+
+    function renderAgentCard(agent) {
+      const card = createElement('div', '', { className: 'bg-white rounded-2xl border border-gray-200 shadow-sm p-4' });
+      const row = createElement('div', '', { className: 'flex items-start justify-between gap-4' });
+      const left = createElement('div', '', {});
+      const title = createElement('div', '', { className: 'flex items-center gap-2 flex-wrap' });
+      title.appendChild(createElement('span', agent.label, { className: 'font-semibold text-gray-900' }));
+      title.appendChild(createElement('code', agent.key, { className: 'mono text-xs text-brand-purple' }));
+      title.appendChild(badge('custom', 'bg-orange-50 text-orange-700 border border-orange-200'));
+      left.appendChild(title);
+      if (agent.description) left.appendChild(createElement('div', agent.description, { className: 'text-sm text-gray-600 mt-1' }));
+      left.appendChild(createElement('div', 'Tools: ' + agent.tools.join(', '), { className: 'text-xs text-gray-500 mt-1 mono' }));
+      row.appendChild(left);
+
+      const actions = createElement('div', '', { className: 'flex gap-2 flex-shrink-0' });
+      const chatLink = createElement('a', 'Try in Chat', { className: 'px-3 py-1.5 rounded-lg text-sm bg-gray-100 text-gray-700 hover:bg-gray-200' });
+      chatLink.href = '/api/v1/agent-chat-demo';
+      actions.appendChild(chatLink);
+      actions.appendChild(actionBtn('Edit', 'bg-gray-900 text-white hover:bg-gray-800', () => openAgentForm(agent)));
+      actions.appendChild(actionBtn('Delete', 'bg-red-50 text-red-700 hover:bg-red-100', async () => {
+        if (!confirm('Delete agent "' + agent.key + '"?')) return;
+        try {
+          await api('/api/v1/admin/agents/' + encodeURIComponent(agent.key), { method: 'DELETE' });
+          toast('Agent deleted');
+          loadAgents();
+        } catch (err) { toast(err.message, true); }
+      }));
+      row.appendChild(actions);
+      card.appendChild(row);
+      return card;
+    }
+
+    function renderToolPicker(selected) {
+      const picker = document.getElementById('agentToolPicker');
+      setContent(picker, '');
+      for (const tool of allTools) {
+        const item = createElement('label', '', { className: 'flex items-start gap-2 p-2 rounded-lg border border-gray-200 hover:border-brand-purple cursor-pointer text-sm' });
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.value = tool.name;
+        cb.checked = (selected || []).includes(tool.name);
+        cb.className = 'mt-0.5';
+        item.appendChild(cb);
+        const meta = createElement('div', '', {});
+        const nameRow = createElement('div', '', { className: 'flex items-center gap-1.5' });
+        nameRow.appendChild(createElement('span', tool.name, { className: 'mono text-xs font-semibold text-gray-800' }));
+        nameRow.appendChild(badge(tool.builtIn ? 'built-in' : 'custom', tool.builtIn ? 'bg-gray-100 text-gray-500' : 'bg-orange-50 text-orange-700'));
+        meta.appendChild(nameRow);
+        meta.appendChild(createElement('div', tool.label, { className: 'text-xs text-gray-500' }));
+        item.appendChild(meta);
+        picker.appendChild(item);
+      }
+    }
+
+    function openAgentForm(agent) {
+      editingAgentKey = agent ? agent.key : null;
+      document.getElementById('agentFormTitle').textContent = agent ? 'Edit Agent: ' + agent.label : 'New Agent';
+      document.getElementById('agentKey').value = agent ? agent.key : '';
+      document.getElementById('agentKey').disabled = !!agent;
+      document.getElementById('agentLabel').value = agent ? agent.label : '';
+      document.getElementById('agentDescription').value = agent ? agent.description : '';
+      document.getElementById('agentSystemPrompt').value = agent ? agent.systemPrompt : '';
+      document.getElementById('agentSampleTasks').value = agent ? (agent.sampleTasks || []).join('\n') : '';
+      renderToolPicker(agent ? agent.tools : []);
+      document.getElementById('agentForm').classList.remove('hidden');
+      document.getElementById('agentForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    document.getElementById('newAgentBtn').addEventListener('click', () => openAgentForm(null));
+    document.getElementById('cancelAgentBtn').addEventListener('click', () => {
+      document.getElementById('agentForm').classList.add('hidden');
+    });
+
+    document.getElementById('saveAgentBtn').addEventListener('click', async () => {
+      const tools = Array.from(document.querySelectorAll('#agentToolPicker input:checked')).map(cb => cb.value);
+      const body = {
+        key: document.getElementById('agentKey').value.trim(),
+        label: document.getElementById('agentLabel').value.trim(),
+        description: document.getElementById('agentDescription').value.trim(),
+        systemPrompt: document.getElementById('agentSystemPrompt').value.trim(),
+        tools,
+        sampleTasks: document.getElementById('agentSampleTasks').value.split('\n').map(s => s.trim()).filter(Boolean)
+      };
+      try {
+        if (editingAgentKey) {
+          await api('/api/v1/admin/agents/' + encodeURIComponent(editingAgentKey), { method: 'PUT', body: JSON.stringify(body) });
+          toast('Agent updated');
+        } else {
+          await api('/api/v1/admin/agents', { method: 'POST', body: JSON.stringify(body) });
+          toast('Agent created — it is now available as a scenario');
+        }
+        document.getElementById('agentForm').classList.add('hidden');
+        loadAgents();
+      } catch (err) { toast(err.message, true); }
+    });
+
+    // =======================================================
+    // TOOLS
+    // =======================================================
+    let editingToolName = null;
+    let testingToolName = null;
+
+    const defaultParameters = JSON.stringify({
+      type: 'object',
+      properties: {
+        base: { type: 'string', description: 'Base currency code, e.g. USD' }
+      },
+      required: ['base']
+    }, null, 2);
+
+    async function loadTools() {
+      try {
+        const data = await api('/api/v1/admin/tools');
+        allTools = data.tools;
+
+        const customList = document.getElementById('customToolsList');
+        setContent(customList, '');
+        const customTools = allTools.filter(t => !t.builtIn);
+        if (customTools.length === 0) {
+          customList.appendChild(createElement('div', 'No custom tools yet. Create an HTTP tool to give agents new abilities.', { className: 'text-sm text-gray-500 bg-white rounded-2xl border border-dashed border-gray-300 p-6 text-center' }));
+        }
+        for (const tool of customTools) {
+          customList.appendChild(renderToolCard(tool));
+        }
+
+        const builtInList = document.getElementById('builtInToolsList');
+        setContent(builtInList, '');
+        for (const tool of allTools.filter(t => t.builtIn)) {
+          const card = createElement('div', '', { className: 'bg-white rounded-xl border border-gray-200 p-3' });
+          const row = createElement('div', '', { className: 'flex items-center gap-2' });
+          row.appendChild(createElement('span', tool.name, { className: 'mono text-xs font-semibold text-gray-800' }));
+          row.appendChild(badge('built-in', 'bg-gray-100 text-gray-500'));
+          card.appendChild(row);
+          card.appendChild(createElement('div', tool.description, { className: 'text-xs text-gray-500 mt-1' }));
+          builtInList.appendChild(card);
+        }
+      } catch (err) {
+        toast(err.message, true);
+      }
+    }
+
+    function renderToolCard(tool) {
+      const card = createElement('div', '', { className: 'bg-white rounded-2xl border border-gray-200 shadow-sm p-4' });
+      const row = createElement('div', '', { className: 'flex items-start justify-between gap-4' });
+      const left = createElement('div', '', {});
+      const title = createElement('div', '', { className: 'flex items-center gap-2 flex-wrap' });
+      title.appendChild(createElement('span', tool.label, { className: 'font-semibold text-gray-900' }));
+      title.appendChild(createElement('code', tool.name, { className: 'mono text-xs text-brand-purple' }));
+      title.appendChild(badge('custom', 'bg-orange-50 text-orange-700 border border-orange-200'));
+      left.appendChild(title);
+      left.appendChild(createElement('div', tool.description, { className: 'text-sm text-gray-600 mt-1' }));
+      left.appendChild(createElement('div', tool.http.method + ' ' + tool.http.url, { className: 'text-xs text-gray-500 mt-1 mono break-all' }));
+      row.appendChild(left);
+
+      const actions = createElement('div', '', { className: 'flex gap-2 flex-shrink-0' });
+      actions.appendChild(actionBtn('Test', 'bg-gray-100 text-gray-700 hover:bg-gray-200', () => openToolTest(tool)));
+      actions.appendChild(actionBtn('Edit', 'bg-gray-900 text-white hover:bg-gray-800', () => openToolForm(tool)));
+      actions.appendChild(actionBtn('Delete', 'bg-red-50 text-red-700 hover:bg-red-100', async () => {
+        if (!confirm('Delete tool "' + tool.name + '"?')) return;
+        try {
+          await api('/api/v1/admin/tools/' + encodeURIComponent(tool.name), { method: 'DELETE' });
+          toast('Tool deleted');
+          loadTools();
+        } catch (err) { toast(err.message, true); }
+      }));
+      row.appendChild(actions);
+      card.appendChild(row);
+      return card;
+    }
+
+    function openToolForm(tool) {
+      editingToolName = tool ? tool.name : null;
+      document.getElementById('toolFormTitle').textContent = tool ? 'Edit Tool: ' + tool.label : 'New Tool';
+      document.getElementById('toolName').value = tool ? tool.name : '';
+      document.getElementById('toolName').disabled = !!tool;
+      document.getElementById('toolLabel').value = tool ? tool.label : '';
+      document.getElementById('toolDescription').value = tool ? tool.description : '';
+      document.getElementById('toolMethod').value = tool ? tool.http.method : 'GET';
+      document.getElementById('toolUrl').value = tool ? tool.http.url : '';
+      document.getElementById('toolParameters').value = tool ? JSON.stringify(tool.parameters, null, 2) : defaultParameters;
+      document.getElementById('toolHeaders').value = tool && tool.http.headers ? JSON.stringify(tool.http.headers, null, 2) : '';
+      document.getElementById('toolForm').classList.remove('hidden');
+      document.getElementById('toolTestPanel').classList.add('hidden');
+      document.getElementById('toolForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    document.getElementById('newToolBtn').addEventListener('click', () => openToolForm(null));
+    document.getElementById('cancelToolBtn').addEventListener('click', () => {
+      document.getElementById('toolForm').classList.add('hidden');
+    });
+
+    document.getElementById('saveToolBtn').addEventListener('click', async () => {
+      let parameters, headers;
+      try {
+        parameters = JSON.parse(document.getElementById('toolParameters').value || '{}');
+      } catch (e) { return toast('Parameters must be valid JSON', true); }
+      const headersRaw = document.getElementById('toolHeaders').value.trim();
+      if (headersRaw) {
+        try { headers = JSON.parse(headersRaw); } catch (e) { return toast('Headers must be valid JSON', true); }
+      }
+      const body = {
+        name: document.getElementById('toolName').value.trim(),
+        label: document.getElementById('toolLabel').value.trim(),
+        description: document.getElementById('toolDescription').value.trim(),
+        parameters,
+        http: {
+          method: document.getElementById('toolMethod').value,
+          url: document.getElementById('toolUrl').value.trim(),
+          ...(headers ? { headers } : {})
+        }
+      };
+      try {
+        if (editingToolName) {
+          await api('/api/v1/admin/tools/' + encodeURIComponent(editingToolName), { method: 'PUT', body: JSON.stringify(body) });
+          toast('Tool updated');
+        } else {
+          await api('/api/v1/admin/tools', { method: 'POST', body: JSON.stringify(body) });
+          toast('Tool created');
+        }
+        document.getElementById('toolForm').classList.add('hidden');
+        loadTools();
+      } catch (err) { toast(err.message, true); }
+    });
+
+    function openToolTest(tool) {
+      testingToolName = tool.name;
+      document.getElementById('toolTestName').textContent = tool.name;
+      const props = (tool.parameters && tool.parameters.properties) || {};
+      const sample = {};
+      for (const key of Object.keys(props)) sample[key] = '';
+      document.getElementById('toolTestArgs').value = JSON.stringify(sample, null, 2);
+      document.getElementById('toolTestResult').classList.add('hidden');
+      document.getElementById('toolTestPanel').classList.remove('hidden');
+      document.getElementById('toolForm').classList.add('hidden');
+      document.getElementById('toolTestPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    document.getElementById('closeToolTestBtn').addEventListener('click', () => {
+      document.getElementById('toolTestPanel').classList.add('hidden');
+    });
+
+    document.getElementById('runToolTestBtn').addEventListener('click', async () => {
+      let args;
+      try { args = JSON.parse(document.getElementById('toolTestArgs').value || '{}'); }
+      catch (e) { return toast('Arguments must be valid JSON', true); }
+      const resultEl = document.getElementById('toolTestResult');
+      resultEl.classList.remove('hidden');
+      resultEl.textContent = 'Running...';
+      try {
+        const data = await api('/api/v1/admin/tools/' + encodeURIComponent(testingToolName) + '/test', {
+          method: 'POST',
+          body: JSON.stringify({ args })
+        });
+        resultEl.textContent = data.result;
+      } catch (err) {
+        resultEl.textContent = 'Error: ' + err.message;
+      }
+    });
+
+    // =======================================================
+    // KEYS
+    // =======================================================
+    async function loadKeys() {
+      const list = document.getElementById('keysList');
+      try {
+        const data = await api('/api/v1/admin/keys');
+        setContent(list, '');
+        for (const key of data.keys) {
+          list.appendChild(renderKeyRow(key));
+        }
+      } catch (err) {
+        toast(err.message, true);
+      }
+    }
+
+    function renderKeyRow(info) {
+      const card = createElement('div', '', { className: 'bg-white rounded-2xl border border-gray-200 shadow-sm p-4 flex flex-wrap items-center gap-3' });
+      const name = createElement('div', '', { className: 'w-32' });
+      name.appendChild(createElement('div', info.provider, { className: 'font-semibold text-gray-900 mono text-sm' }));
+      card.appendChild(name);
+
+      const status = createElement('div', '', { className: 'w-48 flex items-center gap-2' });
+      if (info.configured) {
+        status.appendChild(badge(info.source === 'dashboard' ? 'dashboard' : 'env', info.source === 'dashboard' ? 'bg-orange-50 text-orange-700 border border-orange-200' : 'bg-green-50 text-green-700 border border-green-200'));
+        status.appendChild(createElement('span', info.maskedKey || '', { className: 'mono text-xs text-gray-500' }));
+      } else {
+        status.appendChild(badge('not set', 'bg-gray-100 text-gray-500'));
+      }
+      card.appendChild(status);
+
+      const input = document.createElement('input');
+      input.type = 'password';
+      input.placeholder = 'Paste API key...';
+      input.className = 'flex-1 min-w-48 p-2 rounded-lg border border-gray-300 text-sm mono';
+      card.appendChild(input);
+
+      card.appendChild(actionBtn('Save', 'bg-gradient-brand text-white hover:opacity-90', async () => {
+        const apiKey = input.value.trim();
+        if (!apiKey) return toast('Enter an API key first', true);
+        try {
+          await api('/api/v1/admin/keys/' + encodeURIComponent(info.provider), { method: 'PUT', body: JSON.stringify({ apiKey }) });
+          toast(info.provider + ' key saved — active immediately');
+          loadKeys();
+        } catch (err) { toast(err.message, true); }
+      }));
+
+      if (info.source === 'dashboard') {
+        card.appendChild(actionBtn('Clear override', 'bg-gray-100 text-gray-700 hover:bg-gray-200', async () => {
+          try {
+            await api('/api/v1/admin/keys/' + encodeURIComponent(info.provider), { method: 'DELETE' });
+            toast(info.provider + ' override cleared');
+            loadKeys();
+          } catch (err) { toast(err.message, true); }
+        }));
+      }
+      return card;
+    }
+
+    // ------- init -------
+    async function refreshAll() {
+      await loadTools();   // must run first: the agent form tool picker uses allTools
+      loadAgents();
+      loadKeys();
+    }
+    refreshAll();
+  </script>
+</body>
+</html>

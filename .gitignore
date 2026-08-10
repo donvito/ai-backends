@@ -149,3 +149,6 @@ __pycache__/
 *.py[cod]
 aibackends-python/models/*.gguf
 aibackends-python/models/**/*.gguf
+
+# Admin dashboard runtime config (contains API keys)
+data/

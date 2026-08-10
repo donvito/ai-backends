@@ -14,7 +14,7 @@ import {
   createAgentResponse,
 } from '../../schemas/v1/agent'
 import { getAgentToolCatalog } from '../../services/agent-tools'
-import { getAgentScenarioCatalog } from '../../services/agent-scenarios'
+import { getAgentScenarioCatalog, scenarioExists } from '../../services/agent-scenarios'
 import {
   createAgentSession,
   deleteAgentSession,
@@ -33,6 +33,9 @@ async function handleAgentRunRequest(c: Context) {
     const body = await c.req.json()
     const parsed = agentRequestSchema.parse(body)
     const { payload, config } = parsed
+    if (!scenarioExists(payload.scenario)) {
+      return c.json({ error: `Unknown scenario "${payload.scenario}". Check GET /api/v1/agent/scenarios for available keys.` }, 400)
+    }
     const provider = config.provider as AgentProviderName
     const model = config.model
     const isStreaming = config.stream || false
@@ -155,8 +158,8 @@ router.openapi(
       'This endpoint runs an autonomous agent loop. ' +
       'The agent calls tools across multiple turns to complete the task. Pick a scenario to select the toolset: ' +
       'general (calculator, date/time, weather), customer-support (account, subscription, billing, tickets), ' +
-      'or real-estate (listing search, property details, viewing slots, appointment booking). ' +
-      'Supported providers: OpenRouter and the official OpenAI API.',
+      'real-estate (listing search, property details, viewing slots, appointment booking), or the key of a custom agent ' +
+      'created via the Admin API. Supported providers: OpenRouter and the official OpenAI API.',
     tags: ['Agents'],
   }),
   handleAgentRunRequest as any
@@ -185,6 +188,9 @@ async function handleAgentChatRequest(c: Context) {
     }
     session = existing
   } else {
+    if (!scenarioExists(payload.scenario)) {
+      return c.json({ error: `Unknown scenario "${payload.scenario}". Check GET /api/v1/agent/scenarios for available keys.` }, 400)
+    }
     try {
       session = createAgentSession({
         provider: config.provider as AgentProviderName,
@@ -457,7 +463,7 @@ router.openapi(
     },
     summary: 'List agent scenarios',
     description:
-      'This endpoint lists the demo scenarios available for the agent (general, customer-support, real-estate), including each scenario\'s toolset and sample tasks.',
+      'This endpoint lists all agent scenarios — built-in (general, customer-support, real-estate) and custom agents created via the Admin API — including each scenario\'s toolset and sample tasks.',
     tags: ['Agents'],
   }),
   (c) => c.json({ scenarios: getAgentScenarioCatalog() }, 200)
