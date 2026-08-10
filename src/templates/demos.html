@@ -81,14 +81,22 @@
                             Autonomous, tool-using agents powered by pi core (<code>@earendil-works/pi-agent-core</code>).
                             Pick a scenario — general assistant, customer support (account, billing &amp; ticket lookups),
                             or real estate (search listings and book viewing appointments) — and watch the agent plan across
-                            multiple turns, calling tools and streaming its activity in real time. Runs on OpenRouter or an
-                            official OpenAI API key.
+                            multiple turns, calling tools and streaming its activity in real time. Chat with the agent in a
+                            multi-turn session that remembers the conversation, or run one-off tasks. Runs on OpenRouter or
+                            an official OpenAI API key.
                         </p>
                     </div>
-                    <div class="mt-6 md:mt-0 flex-shrink-0">
-                        <a href="/api/v1/agents-demo"
+                    <div class="mt-6 md:mt-0 flex-shrink-0 flex flex-col gap-3">
+                        <a href="/api/v1/agent-chat-demo"
                            class="inline-flex items-center justify-center relative px-6 pr-10 py-3 bg-gradient-brand text-white rounded-lg font-medium hover:opacity-90 transition-opacity duration-200 group">
-                            Try Agents Demo
+                            Try Agent Chat
+                            <svg class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </a>
+                        <a href="/api/v1/agents-demo"
+                           class="inline-flex items-center justify-center relative px-6 pr-10 py-3 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors duration-200 group">
+                            Try Agent Tasks
                             <svg class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                             </svg>

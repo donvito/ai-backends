@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Backends - Agent Chat Demo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'brand-purple': '#D97757',
+            'brand-pink': '#BD5D3A',
+            'terminal-bg': '#262624',
+            'terminal-text': '#C2C0B6'
+          },
+          backgroundImage: {
+            'gradient-brand': 'linear-gradient(135deg, #D97757, #BD5D3A)',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .markdown-content { font-size: 14px; line-height: 1.6; }
+    .markdown-content p { margin-bottom: 0.5rem; }
+    .markdown-content p:last-child { margin-bottom: 0; }
+    .markdown-content ul, .markdown-content ol { margin-left: 1.25rem; margin-bottom: 0.5rem; list-style: disc; }
+    .markdown-content ol { list-style: decimal; }
+    .markdown-content code {
+      background: var(--c-bg-muted);
+      padding: 0.125rem 0.4rem;
+      border-radius: 0.25rem;
+      font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+      font-size: 12px;
+    }
+    .markdown-content pre { background: var(--c-text-strong); color: var(--c-bg-muted); padding: 0.75rem; border-radius: 0.5rem; overflow-x: auto; margin-bottom: 0.5rem; }
+    .markdown-content table { border-collapse: collapse; margin-bottom: 0.5rem; }
+    .markdown-content th, .markdown-content td { border: 1px solid var(--c-border); padding: 0.35rem 0.6rem; text-align: left; }
+    .mono { font-family: 'Monaco', 'Menlo', 'Courier New', monospace; }
+    .chat-scroll { scroll-behavior: smooth; }
+    .typing-dot {
+      width: 6px; height: 6px; border-radius: 9999px; background: #D97757;
+      display: inline-block; animation: typingBlink 1.2s infinite both;
+    }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes typingBlink { 0%, 80%, 100% { opacity: 0.25; } 40% { opacity: 1; } }
+  </style>
+  <script src="/api/shared/safedom.js"></script>
+  <link rel="stylesheet" href="/api/shared/theme.css" />
+  <script src="/api/shared/theme.js"></script>
+</head>
+<body class="bg-white min-h-screen">
+  <!-- Navigation -->
+  <nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100">
+    <div class="container mx-auto px-6 py-4">
+      <div class="flex justify-between items-center">
+        <a href="/" class="flex items-center space-x-2">
+          <div class="w-10 h-10 rounded-xl bg-[#D97757] flex items-center justify-center">
+            <span class="text-white font-bold text-xl">AI</span>
+          </div>
+          <span class="text-2xl font-bold text-gray-900">Backends</span>
+          <span class="ml-2 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-50 text-orange-700">
+            Agent Chat
+          </span>
+        </a>
+        <div class="flex items-center space-x-6">
+          <a href="/api/ui" target="_blank" class="text-gray-700 hover:text-brand-purple transition-colors duration-300">API Docs</a>
+          <a href="/api/demos" class="text-gray-700 hover:text-brand-purple transition-colors duration-300">Demos</a>
+          <a href="/api/v1/agents-demo" class="text-gray-700 hover:text-brand-purple transition-colors duration-300">Agent Tasks</a>
+          <a href="https://github.com/donvito/ai-backend" class="inline-flex items-center px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors duration-300">
+            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 0C4.477 0 0 4.484 0 10.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0020 10.017C20 4.484 15.522 0 10 0z" clip-rule="evenodd"/>
+            </svg>
+            GitHub
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container mx-auto px-6 py-10">
+    <!-- Breadcrumb -->
+    <nav class="mb-6 text-sm">
+      <ol class="flex items-center space-x-2 text-gray-500">
+        <li><a href="/" class="hover:text-gray-700">Home</a></li>
+        <li><span>/</span></li>
+        <li><a href="/api/demos" class="hover:text-gray-700">Demos</a></li>
+        <li><span>/</span></li>
+        <li class="text-gray-900 font-medium">Agent Chat</li>
+      </ol>
+    </nav>
+
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-bold text-gray-900 mb-3">Agent Chat Demo</h1>
+      <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+        A multi-turn conversation with a tool-using agent powered by
+        <a href="https://github.com/earendil-works/pi" target="_blank" rel="noopener noreferrer" class="text-brand-purple underline">pi core</a>.
+        The agent keeps the full conversation in a session, so follow-up messages have complete context.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+      <!-- Settings -->
+      <section class="bg-white p-6 rounded-2xl border border-gray-100 shadow-lg h-fit">
+        <h2 class="text-lg font-semibold mb-3">Session</h2>
+
+        <div id="sessionBadge" class="mb-4 text-xs text-gray-500">
+          <span class="inline-flex items-center px-2 py-1 rounded-full bg-gray-100 text-gray-600">No active session</span>
+        </div>
+
+        <label class="block text-sm font-medium text-gray-700 mb-1">Scenario</label>
+        <select id="scenario" class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple"></select>
+        <p id="scenarioDescription" class="text-xs text-gray-500 mt-2 mb-3"></p>
+
+        <div class="grid grid-cols-1 gap-3">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Provider</label>
+            <select id="provider" class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple">
+              <option value="openrouter">openrouter</option>
+              <option value="openai">openai</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Model</label>
+            <select id="model" class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple"></select>
+          </div>
+          <div class="flex items-center gap-2">
+            <input id="streaming" type="checkbox" class="w-4 h-4 text-brand-purple rounded focus:ring-2 focus:ring-brand-purple" checked />
+            <span class="text-sm font-medium text-gray-700">Enable Streaming</span>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Bearer Token (optional)</label>
+            <input id="token" type="password" placeholder="Only needed in production" class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple" />
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <button id="newChatBtn" class="w-full px-4 py-2 rounded-lg bg-gray-100 text-gray-800 hover:bg-gray-200">New Chat</button>
+        </div>
+
+        <div class="mt-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Available tools</label>
+          <div id="toolsList" class="flex flex-wrap gap-2 text-xs text-gray-600"></div>
+        </div>
+      </section>
+
+      <!-- Chat -->
+      <section class="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-lg flex flex-col" style="height: 640px;">
+        <div id="chatMessages" class="chat-scroll flex-1 overflow-y-auto p-6 space-y-4"></div>
+
+        <div id="starters" class="px-6 pb-2 flex flex-wrap gap-2"></div>
+
+        <div class="border-t border-gray-100 p-4">
+          <div class="flex items-end gap-2">
+            <textarea id="chatInput" rows="2" placeholder="Message the agent... (Enter to send, Shift+Enter for a new line)"
+              class="flex-1 p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-purple resize-none"></textarea>
+            <button id="sendBtn" class="px-5 py-3 rounded-lg bg-brand-purple text-white hover:bg-[#C15F3C] disabled:opacity-50 disabled:cursor-not-allowed">Send</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    // Fallback scenario catalog if the /api/v1/agent/scenarios fetch fails
+    const fallbackScenarios = [
+      {
+        key: 'general',
+        label: 'General assistant',
+        description: 'A general-purpose assistant with a calculator, date/time, and weather lookup tools.',
+        sampleTasks: ["What's the weather in Manila right now?"],
+        tools: [
+          { name: 'calculate', label: 'Calculator' },
+          { name: 'get_current_datetime', label: 'Current date & time' },
+          { name: 'get_weather', label: 'Weather lookup' }
+        ]
+      },
+      {
+        key: 'customer-support',
+        label: 'Customer support',
+        description: 'A support agent that can look up accounts, subscriptions, billing history, and open tickets.',
+        sampleTasks: ["Hi, I'm jane.cruz@example.com. Is my subscription active?"],
+        tools: [
+          { name: 'lookup_customer', label: 'Customer lookup' },
+          { name: 'get_subscription', label: 'Subscription status' },
+          { name: 'get_billing_history', label: 'Billing history' },
+          { name: 'get_support_tickets', label: 'Support tickets' },
+          { name: 'create_support_ticket', label: 'Create support ticket' }
+        ]
+      },
+      {
+        key: 'real-estate',
+        label: 'Real estate',
+        description: 'A real-estate assistant that can search listings, share details, and book viewing appointments.',
+        sampleTasks: ['What properties do you have in Quezon City?'],
+        tools: [
+          { name: 'search_properties', label: 'Search listings' },
+          { name: 'get_property_details', label: 'Property details' },
+          { name: 'get_viewing_slots', label: 'Viewing slots' },
+          { name: 'book_viewing', label: 'Book a viewing' }
+        ]
+      }
+    ];
+
+    // Conversation starters per scenario that invite follow-up messages
+    const starterMessages = {
+      general: [
+        "What's the weather in Manila right now?",
+        'What is 15% of 2400?'
+      ],
+      'customer-support': [
+        "Hi, I'm jane.cruz@example.com. Is my subscription active?",
+        'My account is CUST-1002. What is my account status?'
+      ],
+      'real-estate': [
+        'What properties do you have in Quezon City?',
+        "I'm looking for a condo under $450,000 in Makati."
+      ]
+    };
+
+    let scenarios = fallbackScenarios;
+    let sessionId = null;
+    let messageCount = 0;
+    let sending = false;
+
+    const scenarioEl = document.getElementById('scenario');
+    const scenarioDescriptionEl = document.getElementById('scenarioDescription');
+    const providerEl = document.getElementById('provider');
+    const modelEl = document.getElementById('model');
+    const streamingEl = document.getElementById('streaming');
+    const tokenEl = document.getElementById('token');
+    const newChatBtn = document.getElementById('newChatBtn');
+    const toolsListEl = document.getElementById('toolsList');
+    const chatMessagesEl = document.getElementById('chatMessages');
+    const startersEl = document.getElementById('starters');
+    const chatInputEl = document.getElementById('chatInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const sessionBadgeEl = document.getElementById('sessionBadge');
+
+    let modelOptions = null;
+    const fallbackModelOptions = {
+      openrouter: [
+        { value: 'deepseek/deepseek-v4-flash', label: 'deepseek/deepseek-v4-flash' },
+        { value: 'qwen/qwen3.6-35b-a3b', label: 'qwen/qwen3.6-35b-a3b' }
+      ],
+      openai: [
+        { value: 'gpt-4o-mini', label: 'gpt-4o-mini' },
+        { value: 'gpt-4.1-nano', label: 'gpt-4.1-nano' }
+      ]
+    };
+
+    function currentScenario() {
+      return scenarios.find(s => s.key === scenarioEl.value) || scenarios[0];
+    }
+
+    function authHeaders(extra) {
+      const headers = extra || {};
+      const token = tokenEl.value.trim();
+      if (token) headers['Authorization'] = 'Bearer ' + token;
+      return headers;
+    }
+
+    function renderMarkdown(markdown) {
+      return DOMPurify.sanitize(marked.parse(markdown || ''));
+    }
+
+    function scrollChat() {
+      chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+    }
+
+    function updateSessionBadge() {
+      if (!sessionId) {
+        setContent(sessionBadgeEl, createElement('span', 'No active session', {
+          className: 'inline-flex items-center px-2 py-1 rounded-full bg-gray-100 text-gray-600'
+        }));
+        return;
+      }
+      const wrap = document.createElement('div');
+      wrap.appendChild(createElement('span', 'Session ' + sessionId.slice(0, 8) + '… · ' + messageCount + ' message(s)', {
+        className: 'inline-flex items-center px-2 py-1 rounded-full bg-green-50 text-green-700 border border-green-200'
+      }));
+      setContent(sessionBadgeEl, wrap);
+    }
+
+    function setControlsLocked(locked) {
+      scenarioEl.disabled = locked;
+      providerEl.disabled = locked;
+      modelEl.disabled = locked;
+      [scenarioEl, providerEl, modelEl].forEach(el => {
+        el.classList.toggle('bg-gray-100', locked);
+        el.classList.toggle('text-gray-500', locked);
+      });
+    }
+
+    function addUserBubble(text) {
+      const row = createElement('div', '', { className: 'flex justify-end' });
+      const bubble = createElement('div', text, {
+        className: 'max-w-[80%] px-4 py-2 rounded-2xl rounded-br-sm bg-brand-purple text-white text-sm whitespace-pre-wrap'
+      });
+      row.appendChild(bubble);
+      chatMessagesEl.appendChild(row);
+      scrollChat();
+    }
+
+    function addAssistantContainer() {
+      const row = createElement('div', '', { className: 'flex justify-start' });
+      const wrap = createElement('div', '', { className: 'max-w-[85%] space-y-2' });
+
+      const activity = createElement('div', '', { className: 'space-y-1' });
+      const bubble = createElement('div', '', {
+        className: 'px-4 py-2 rounded-2xl rounded-bl-sm bg-gray-50 border border-gray-200 text-gray-800 markdown-content'
+      });
+      const typing = document.createElement('div');
+      typing.className = 'px-2 py-1';
+      typing.appendChild(createElement('span', '', { className: 'typing-dot' }));
+      typing.appendChild(createElement('span', '', { className: 'typing-dot ml-1' }));
+      typing.appendChild(createElement('span', '', { className: 'typing-dot ml-1' }));
+
+      wrap.appendChild(activity);
+      wrap.appendChild(typing);
+      wrap.appendChild(bubble);
+      bubble.classList.add('hidden');
+      row.appendChild(wrap);
+      chatMessagesEl.appendChild(row);
+      scrollChat();
+      return { activity, bubble, typing };
+    }
+
+    function truncate(text, max) {
+      if (typeof text !== 'string') text = JSON.stringify(text);
+      return text.length > max ? text.slice(0, max) + '…' : text;
+    }
+
+    function addToolChip(container, kind, title, body) {
+      const chip = document.createElement('details');
+      chip.className = 'text-xs rounded-lg border px-2 py-1 ' +
+        (kind === 'error' ? 'border-red-200 bg-red-50 text-red-700' : 'border-orange-200 bg-orange-50 text-orange-800');
+      const summary = createElement('summary', title, { className: 'cursor-pointer select-none' });
+      chip.appendChild(summary);
+      if (body) {
+        chip.appendChild(createElement('pre', body, { className: 'mono whitespace-pre-wrap break-words mt-1 text-[11px] text-gray-600' }));
+      }
+      container.appendChild(chip);
+      scrollChat();
+    }
+
+    function addSystemNote(text, isError) {
+      const note = createElement('div', text, {
+        className: 'text-center text-xs ' + (isError ? 'text-red-600' : 'text-gray-400')
+      });
+      chatMessagesEl.appendChild(note);
+      scrollChat();
+    }
+
+    function renderStarters() {
+      const list = starterMessages[scenarioEl.value] || [];
+      const chips = list.map(text => {
+        const chip = createElement('button', text, {
+          className: 'text-xs px-3 py-1.5 rounded-full border border-gray-300 text-gray-600 hover:border-brand-purple hover:text-brand-purple transition-colors'
+        });
+        chip.addEventListener('click', () => {
+          chatInputEl.value = text;
+          chatInputEl.focus();
+        });
+        return chip;
+      });
+      setContent(startersEl, chips);
+    }
+
+    function renderScenario() {
+      const scenario = currentScenario();
+      scenarioDescriptionEl.textContent = scenario.description || '';
+      const badges = (scenario.tools || []).map(tool =>
+        createElement('span', tool.label, {
+          className: 'px-2 py-1 rounded-full bg-orange-50 text-orange-700 border border-orange-200'
+        })
+      );
+      setContent(toolsListEl, badges);
+      renderStarters();
+    }
+
+    function updateModelOptions() {
+      const provider = providerEl.value;
+      const source = modelOptions || fallbackModelOptions;
+      const models = (source && source[provider]) ? source[provider] : [];
+      setContent(modelEl, createOptions(models));
+    }
+
+    async function fetchAgentModels() {
+      const res = await fetch('/api/v1/services/models?source=config&view=capability', { headers: authHeaders() });
+      if (!res.ok) throw new Error('Failed to load models: ' + res.status);
+      const data = await res.json();
+      const agentModels = data && data.byCapability && data.byCapability.agent;
+      if (!agentModels || typeof agentModels !== 'object') throw new Error('Invalid models response');
+      const mapped = {};
+      for (const provider in agentModels) {
+        if (provider !== 'openrouter' && provider !== 'openai') continue;
+        const list = Array.isArray(agentModels[provider]) ? agentModels[provider] : [];
+        if (list.length > 0) mapped[provider] = list.map(name => ({ value: name, label: name }));
+      }
+      if (Object.keys(mapped).length === 0) throw new Error('No agent models configured');
+      return mapped;
+    }
+
+    async function initModels() {
+      try { modelOptions = await fetchAgentModels(); } catch (e) { modelOptions = null; }
+      const source = modelOptions || fallbackModelOptions;
+      const providers = Object.keys(source);
+      setContent(providerEl, createOptions(providers.map(p => ({ value: p, label: p }))));
+      if (!providers.includes(providerEl.value)) providerEl.value = providers[0] || '';
+      updateModelOptions();
+    }
+
+    async function initScenarios() {
+      try {
+        const res = await fetch('/api/v1/agent/scenarios');
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.scenarios) && data.scenarios.length > 0) scenarios = data.scenarios;
+        }
+      } catch (e) { /* use fallback */ }
+      const selected = scenarioEl.value;
+      setContent(scenarioEl, createOptions(scenarios.map(s => ({ value: s.key, label: s.label }))));
+      if (scenarios.some(s => s.key === selected)) scenarioEl.value = selected;
+      renderScenario();
+    }
+
+    function resetChat() {
+      if (sessionId) {
+        fetch('/api/v1/agent/sessions/' + encodeURIComponent(sessionId), {
+          method: 'DELETE',
+          headers: authHeaders()
+        }).catch(() => {});
+      }
+      sessionId = null;
+      messageCount = 0;
+      setContent(chatMessagesEl, '');
+      updateSessionBadge();
+      setControlsLocked(false);
+      addSystemNote('New chat. Scenario, provider, and model lock in with the first message.');
+      renderStarters();
+    }
+
+    async function sendMessage() {
+      const message = chatInputEl.value.trim();
+      if (!message || sending) return;
+
+      sending = true;
+      sendBtn.disabled = true;
+      chatInputEl.value = '';
+      setContent(startersEl, '');
+      setControlsLocked(true);
+      addUserBubble(message);
+
+      const { activity, bubble, typing } = addAssistantContainer();
+      let accumulatedText = '';
+
+      const request = {
+        payload: {
+          message,
+          scenario: scenarioEl.value || 'general',
+          ...(sessionId ? { sessionId } : {})
+        },
+        config: {
+          provider: providerEl.value,
+          model: modelEl.value,
+          stream: streamingEl.checked
+        }
+      };
+
+      try {
+        const response = await fetch('/api/v1/agent/chat', {
+          method: 'POST',
+          headers: authHeaders({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify(request)
+        });
+
+        if (!response.ok) {
+          const txt = await response.text();
+          let detail = txt;
+          try { detail = JSON.parse(txt).error || txt; } catch (e) {}
+          throw new Error(detail || ('Request failed: ' + response.status));
+        }
+
+        const contentType = response.headers.get('content-type');
+
+        if (request.config.stream && contentType && contentType.includes('text/event-stream')) {
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = '';
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+
+            for (const line of lines) {
+              if (!line.trim().startsWith('data:')) continue;
+              const data = line.replace(/^data:\s*/, '');
+              if (data.trim() === '' || data.trim() === '[DONE]') continue;
+              let parsed;
+              try { parsed = JSON.parse(data); } catch (e) { continue; }
+
+              if (parsed.error) throw new Error(parsed.error);
+              if (parsed.sessionId) sessionId = parsed.sessionId;
+
+              switch (parsed.type) {
+                case 'text_delta':
+                  accumulatedText += parsed.delta;
+                  bubble.classList.remove('hidden');
+                  bubble.innerHTML = renderMarkdown(accumulatedText);
+                  scrollChat();
+                  break;
+                case 'tool_call':
+                  addToolChip(activity, 'tool', '🔧 ' + parsed.toolName, 'args: ' + truncate(JSON.stringify(parsed.args), 300));
+                  break;
+                case 'tool_result':
+                  addToolChip(activity, parsed.isError ? 'error' : 'tool',
+                    (parsed.isError ? '⚠️ ' : '✓ ') + parsed.toolName, truncate(parsed.result, 400));
+                  break;
+              }
+
+              if (parsed.done) {
+                if (parsed.reply) {
+                  bubble.classList.remove('hidden');
+                  bubble.innerHTML = renderMarkdown(parsed.reply);
+                }
+                messageCount += 1;
+              }
+            }
+          }
+        } else {
+          const data = await response.json();
+          if (data.sessionId) sessionId = data.sessionId;
+          for (const step of data.steps || []) {
+            addToolChip(activity, step.isError ? 'error' : 'tool',
+              (step.isError ? '⚠️ ' : '✓ ') + step.toolName, truncate(step.result, 400));
+          }
+          bubble.classList.remove('hidden');
+          bubble.innerHTML = renderMarkdown(data.reply || '');
+          messageCount += 1;
+        }
+
+        if (!accumulatedText && bubble.classList.contains('hidden')) {
+          bubble.classList.remove('hidden');
+          bubble.innerHTML = renderMarkdown('_The agent finished without a text reply._');
+        }
+      } catch (err) {
+        bubble.classList.remove('hidden');
+        bubble.innerHTML = '';
+        bubble.appendChild(createElement('span', err.message || 'Unknown error', { className: 'text-red-600 text-sm' }));
+        if (!sessionId) setControlsLocked(false);
+      } finally {
+        typing.remove();
+        updateSessionBadge();
+        sending = false;
+        sendBtn.disabled = false;
+        chatInputEl.focus();
+        scrollChat();
+      }
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    chatInputEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+    newChatBtn.addEventListener('click', resetChat);
+    scenarioEl.addEventListener('change', renderScenario);
+    providerEl.addEventListener('change', updateModelOptions);
+    tokenEl.addEventListener('change', () => { initModels(); });
+
+    setContent(scenarioEl, createOptions(fallbackScenarios.map(s => ({ value: s.key, label: s.label }))));
+    renderScenario();
+    updateSessionBadge();
+    addSystemNote('Pick a scenario and start chatting. The agent remembers the whole conversation.');
+    initModels();
+    initScenarios();
+  </script>
+</body>
+</html>

@@ -61,6 +61,32 @@ export const agentResponseSchema = z.object({
   }),
 })
 
+export const agentChatPayloadSchema = z.object({
+  message: z.string().min(1, 'Message must not be empty').describe('The user message to send to the agent'),
+  sessionId: z
+    .string()
+    .optional()
+    .describe('Existing chat session id. Omit to start a new session; the response returns the id to reuse.'),
+  scenario: agentScenarioSchema
+    .optional()
+    .default('general')
+    .describe('Scenario for a NEW session (ignored when sessionId is provided)'),
+  systemPrompt: z.string().optional().describe('Optional system prompt override for a NEW session'),
+  maxTurns: z
+    .number()
+    .int()
+    .min(1)
+    .max(MAX_TURNS_LIMIT)
+    .optional()
+    .default(DEFAULT_MAX_TURNS)
+    .describe(`Maximum agent turns (LLM calls) for this message. Defaults to ${DEFAULT_MAX_TURNS}.`),
+})
+
+export const agentChatRequestSchema = z.object({
+  payload: agentChatPayloadSchema,
+  config: agentConfigSchema,
+})
+
 export const agentToolInfoSchema = z.object({
   name: z.string(),
   label: z.string(),
@@ -81,6 +107,43 @@ export const agentScenarioInfoSchema = z.object({
 
 export const agentScenariosResponseSchema = z.object({
   scenarios: z.array(agentScenarioInfoSchema),
+})
+
+export const agentChatResponseSchema = z.object({
+  sessionId: z.string().describe('Chat session id. Send it with the next message to continue the conversation.'),
+  scenario: agentScenarioSchema,
+  reply: z.string().describe('Assistant reply to the user message'),
+  steps: z.array(agentStepSchema).describe('Tool calls executed while answering this message'),
+  turns: z.number().describe('Agent turns (LLM calls) used for this message'),
+  provider: z.string().optional(),
+  model: z.string().optional(),
+  usage: z.object({
+    input_tokens: z.number(),
+    output_tokens: z.number(),
+    total_tokens: z.number(),
+  }),
+})
+
+export const agentTranscriptEntrySchema = z.object({
+  role: z.enum(['user', 'assistant', 'tool']),
+  text: z.string(),
+  toolName: z.string().optional(),
+  isError: z.boolean().optional(),
+})
+
+export const agentSessionResponseSchema = z.object({
+  sessionId: z.string(),
+  provider: z.string(),
+  model: z.string(),
+  scenario: agentScenarioSchema,
+  createdAt: z.string(),
+  lastActivityAt: z.string(),
+  messages: z.array(agentTranscriptEntrySchema),
+})
+
+export const agentSessionDeleteResponseSchema = z.object({
+  deleted: z.boolean(),
+  sessionId: z.string(),
 })
 
 export function createAgentResponse(

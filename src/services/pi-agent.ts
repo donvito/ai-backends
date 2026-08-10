@@ -8,9 +8,10 @@ import { agentStreamFn, createOpenAICompatibleModel, createOpenAIResponsesModel 
 /**
  * Agent runner built on @earendil-works/pi-agent-core (pi core).
  *
- * Runs a tool-using agent loop against OpenRouter (OpenAI-compatible chat
- * completions API) or the official OpenAI API (Responses API) and surfaces
- * lifecycle events for streaming plus an aggregated result.
+ * A pi Agent is stateful: it owns the conversation transcript and tools. This
+ * module exposes a session runtime (create once, send many messages) used by
+ * the multi-turn chat endpoint, plus a one-off runAgent helper for the
+ * single-task endpoint. Lifecycle events are surfaced for SSE streaming.
  */
 
 export type AgentProviderName = 'openrouter' | 'openai';
@@ -45,19 +46,43 @@ export interface AgentRunResult {
   usage: TokenUsage;
 }
 
-export interface RunAgentOptions {
+export interface CreateAgentRuntimeOptions {
   provider: AgentProviderName;
   model: string;
-  task: string;
   /** Scenario key selecting the toolset and default system prompt. Defaults to 'general'. */
   scenario?: AgentScenarioKey;
   systemPrompt?: string;
+}
+
+export interface SendAgentMessageOptions {
+  message: string;
   maxTurns?: number;
   /**
    * Called for each simplified agent event. Awaited before the run continues,
    * so it is safe to write SSE events here.
    */
   onEvent?: (event: AgentRunEvent) => void | Promise<void>;
+}
+
+/**
+ * A live agent conversation runtime. The wrapped pi Agent keeps the full
+ * transcript, so each sendAgentMessage() call continues the same conversation.
+ */
+export interface AgentRuntime {
+  agent: Agent;
+  provider: AgentProviderName;
+  model: string;
+  scenario: AgentScenarioKey;
+  /** Mutable per-message turn budget shared with the agent's stop hook. */
+  turnBudget: { turns: number; maxTurns: number };
+}
+
+/** Simplified transcript entry for session inspection. */
+export interface AgentTranscriptEntry {
+  role: 'user' | 'assistant' | 'tool';
+  text: string;
+  toolName?: string;
+  isError?: boolean;
 }
 
 function resolveApiKey(provider: AgentProviderName): string {
@@ -99,20 +124,24 @@ function extractToolResultText(result: unknown): string {
   return typeof result === 'string' ? result : JSON.stringify(result);
 }
 
+function extractUserText(content: string | { type?: string; text?: string }[]): string {
+  if (typeof content === 'string') return content;
+  return content
+    .filter((block) => block.type === 'text' && typeof block.text === 'string')
+    .map((block) => block.text)
+    .join('');
+}
+
 /**
- * Run a tool-using agent to completion and return the aggregated result.
+ * Create a reusable agent runtime for a conversation. The underlying pi Agent
+ * keeps the transcript across sendAgentMessage() calls.
  */
-export async function runAgent(options: RunAgentOptions): Promise<AgentRunResult> {
+export function createAgentRuntime(options: CreateAgentRuntimeOptions): AgentRuntime {
   const apiKey = resolveApiKey(options.provider);
   const model = buildAgentModel(options.provider, options.model);
-  const maxTurns = Math.min(options.maxTurns ?? DEFAULT_MAX_TURNS, MAX_TURNS_LIMIT);
-  const scenario = getAgentScenario(options.scenario ?? 'general');
-
-  const steps: AgentStep[] = [];
-  const pendingToolCalls = new Map<string, { toolName: string; args: unknown }>();
-  const usage: TokenUsage = { promptTokens: 0, completionTokens: 0, totalTokens: 0 };
-  let turns = 0;
-  let finalText = '';
+  const scenarioKey = options.scenario ?? 'general';
+  const scenario = getAgentScenario(scenarioKey);
+  const turnBudget = { turns: 0, maxTurns: DEFAULT_MAX_TURNS };
 
   const agent = new Agent({
     initialState: {
@@ -122,8 +151,36 @@ export async function runAgent(options: RunAgentOptions): Promise<AgentRunResult
     },
     streamFn: agentStreamFn,
     getApiKey: () => apiKey,
-    shouldStopAfterTurn: () => turns >= maxTurns,
+    shouldStopAfterTurn: () => turnBudget.turns >= turnBudget.maxTurns,
   });
+
+  return {
+    agent,
+    provider: options.provider,
+    model: options.model,
+    scenario: scenarioKey,
+    turnBudget,
+  };
+}
+
+/**
+ * Send one user message to the agent and run the loop to completion. Returns
+ * the aggregated result for this message (reply text, tool steps, turns,
+ * usage). The transcript stays on the runtime for follow-up messages.
+ */
+export async function sendAgentMessage(runtime: AgentRuntime, options: SendAgentMessageOptions): Promise<AgentRunResult> {
+  const { agent, turnBudget } = runtime;
+  if (agent.state.isStreaming) {
+    throw new Error('The agent is still processing the previous message for this session.');
+  }
+
+  turnBudget.turns = 0;
+  turnBudget.maxTurns = Math.min(options.maxTurns ?? DEFAULT_MAX_TURNS, MAX_TURNS_LIMIT);
+
+  const steps: AgentStep[] = [];
+  const pendingToolCalls = new Map<string, { toolName: string; args: unknown }>();
+  const usage: TokenUsage = { promptTokens: 0, completionTokens: 0, totalTokens: 0 };
+  let finalText = '';
 
   const emit = async (event: AgentRunEvent) => {
     if (options.onEvent) {
@@ -131,14 +188,14 @@ export async function runAgent(options: RunAgentOptions): Promise<AgentRunResult
     }
   };
 
-  agent.subscribe(async (event) => {
+  const unsubscribe = agent.subscribe(async (event) => {
     switch (event.type) {
       case 'agent_start':
         await emit({ type: 'agent_start' });
         break;
       case 'turn_start':
-        turns += 1;
-        await emit({ type: 'turn_start', turn: turns });
+        turnBudget.turns += 1;
+        await emit({ type: 'turn_start', turn: turnBudget.turns });
         break;
       case 'message_update': {
         const streamEvent = event.assistantMessageEvent;
@@ -200,8 +257,12 @@ export async function runAgent(options: RunAgentOptions): Promise<AgentRunResult
     }
   });
 
-  await agent.prompt(options.task);
-  await agent.waitForIdle();
+  try {
+    await agent.prompt(options.message);
+    await agent.waitForIdle();
+  } finally {
+    unsubscribe();
+  }
 
   if (agent.state.errorMessage) {
     throw new Error(`Agent run failed: ${agent.state.errorMessage}`);
@@ -210,7 +271,50 @@ export async function runAgent(options: RunAgentOptions): Promise<AgentRunResult
   return {
     result: finalText,
     steps,
-    turns,
+    turns: turnBudget.turns,
     usage,
   };
+}
+
+/**
+ * Extract a simplified transcript from the runtime's conversation history.
+ */
+export function getAgentTranscript(runtime: AgentRuntime): AgentTranscriptEntry[] {
+  const entries: AgentTranscriptEntry[] = [];
+  for (const message of runtime.agent.state.messages) {
+    if (!message || typeof message !== 'object' || !('role' in message)) continue;
+    if (message.role === 'user') {
+      entries.push({ role: 'user', text: extractUserText(message.content) });
+    } else if (message.role === 'assistant') {
+      const assistantMessage = message as AssistantMessage;
+      const text = extractAssistantText(assistantMessage);
+      if (text.trim()) {
+        entries.push({ role: 'assistant', text });
+      }
+    } else if (message.role === 'toolResult') {
+      entries.push({
+        role: 'tool',
+        text: extractToolResultText(message),
+        toolName: message.toolName,
+        isError: false,
+      });
+    }
+  }
+  return entries;
+}
+
+export interface RunAgentOptions extends SendAgentMessageOptions, CreateAgentRuntimeOptions {
+  task: string;
+}
+
+/**
+ * Run a one-off tool-using agent task to completion (no session kept).
+ */
+export async function runAgent(options: Omit<RunAgentOptions, 'message'>): Promise<AgentRunResult> {
+  const runtime = createAgentRuntime(options);
+  return sendAgentMessage(runtime, {
+    message: options.task,
+    maxTurns: options.maxTurns,
+    onEvent: options.onEvent,
+  });
 }

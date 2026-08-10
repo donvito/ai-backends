@@ -3,15 +3,26 @@ import { Context } from 'hono'
 import { streamSSE } from 'hono/streaming'
 import { handleError } from '../../utils/errorHandler'
 import {
+  agentChatRequestSchema,
+  agentChatResponseSchema,
   agentRequestSchema,
   agentResponseSchema,
   agentScenariosResponseSchema,
+  agentSessionDeleteResponseSchema,
+  agentSessionResponseSchema,
   agentToolsResponseSchema,
   createAgentResponse,
 } from '../../schemas/v1/agent'
 import { getAgentToolCatalog } from '../../services/agent-tools'
 import { getAgentScenarioCatalog } from '../../services/agent-scenarios'
-import { runAgent, type AgentProviderName } from '../../services/pi-agent'
+import {
+  createAgentSession,
+  deleteAgentSession,
+  getAgentSession,
+  getAgentSessionInfo,
+  type AgentSession,
+} from '../../services/agent-sessions'
+import { runAgent, sendAgentMessage, type AgentProviderName } from '../../services/pi-agent'
 import { apiVersion } from './versionConfig'
 import { createFinalResponse } from './finalResponse'
 
@@ -149,6 +160,284 @@ router.openapi(
     tags: ['Agents'],
   }),
   handleAgentRunRequest as any
+)
+
+async function handleAgentChatRequest(c: Context) {
+  let parsed
+  try {
+    parsed = agentChatRequestSchema.parse(await c.req.json())
+  } catch (error) {
+    return handleError(c, error, 'Invalid agent chat request')
+  }
+
+  const { payload, config } = parsed
+  const isStreaming = config.stream || false
+
+  // Resolve an existing session or start a new one
+  let session: AgentSession
+  if (payload.sessionId) {
+    const existing = getAgentSession(payload.sessionId)
+    if (!existing) {
+      return c.json({ error: 'Session not found or expired. Start a new chat by omitting sessionId.' }, 404)
+    }
+    if (existing.runtime.agent.state.isStreaming) {
+      return c.json({ error: 'The agent is still processing the previous message for this session.' }, 409)
+    }
+    session = existing
+  } else {
+    try {
+      session = createAgentSession({
+        provider: config.provider as AgentProviderName,
+        model: config.model,
+        scenario: payload.scenario,
+        systemPrompt: payload.systemPrompt,
+      })
+    } catch (error) {
+      return handleError(c, error, 'Failed to start agent chat session')
+    }
+  }
+
+  // Sessions keep their original provider/model/scenario
+  const provider = session.runtime.provider
+  const model = session.runtime.model
+  const scenario = session.runtime.scenario
+  const sessionId = session.sessionId
+
+  const sendOptions = {
+    message: payload.message,
+    maxTurns: payload.maxTurns,
+  }
+
+  try {
+    // Stream agent lifecycle events over SSE
+    if (isStreaming) {
+      c.header('Content-Type', 'text/event-stream')
+      c.header('Cache-Control', 'no-cache')
+      c.header('Connection', 'keep-alive')
+
+      return streamSSE(c, async (stream) => {
+        try {
+          const runResult = await sendAgentMessage(session.runtime, {
+            ...sendOptions,
+            onEvent: async (event) => {
+              await stream.writeSSE({
+                data: JSON.stringify({ ...event, sessionId, scenario, provider, model, version: apiVersion }),
+              })
+            },
+          })
+
+          session.lastActivityAt = Date.now()
+          await stream.writeSSE({
+            data: JSON.stringify({
+              done: true,
+              sessionId,
+              scenario,
+              reply: runResult.result,
+              steps: runResult.steps,
+              turns: runResult.turns,
+              usage: {
+                input_tokens: runResult.usage.promptTokens,
+                output_tokens: runResult.usage.completionTokens,
+                total_tokens: runResult.usage.totalTokens,
+              },
+              provider,
+              model,
+              version: apiVersion,
+            }),
+          })
+        } catch (error) {
+          console.error('Agent chat streaming error:', error)
+          try {
+            await stream.writeSSE({
+              data: JSON.stringify({
+                error: error instanceof Error ? error.message : 'Agent chat streaming error',
+                sessionId,
+                done: true,
+              }),
+            })
+          } catch (writeError) {
+            console.error('Error writing error message to stream:', writeError)
+          }
+        } finally {
+          try {
+            await stream.close()
+          } catch (closeError) {
+            console.error('Error closing stream:', closeError)
+          }
+        }
+      })
+    }
+
+    // Non-streaming response
+    const runResult = await sendAgentMessage(session.runtime, sendOptions)
+    session.lastActivityAt = Date.now()
+
+    return c.json(
+      createFinalResponse(
+        {
+          sessionId,
+          scenario,
+          reply: runResult.result,
+          steps: runResult.steps,
+          turns: runResult.turns,
+          provider,
+          model,
+          usage: {
+            input_tokens: runResult.usage.promptTokens,
+            output_tokens: runResult.usage.completionTokens,
+            total_tokens: runResult.usage.totalTokens,
+          },
+        },
+        apiVersion
+      ),
+      200
+    )
+  } catch (error) {
+    return handleError(c, error, 'Failed to process agent chat message')
+  }
+}
+
+router.openapi(
+  createRoute({
+    path: '/chat',
+    method: 'post',
+    security: [{ BearerAuth: [] }],
+    request: {
+      body: {
+        content: {
+          'application/json': {
+            schema: agentChatRequestSchema,
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description:
+          'Sends a user message to a multi-turn agent chat session and returns the assistant reply with the tool calls it made. Omit payload.sessionId to start a new session; reuse the returned sessionId to continue the conversation with full context. When config.stream is true, agent lifecycle events are streamed over SSE.',
+        content: {
+          'application/json': {
+            schema: agentChatResponseSchema,
+          },
+        },
+      },
+      404: {
+        description: 'Session not found or expired',
+        content: {
+          'application/json': {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+      },
+      409: {
+        description: 'The session is still processing a previous message',
+        content: {
+          'application/json': {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+      },
+      401: {
+        description: 'Unauthorized - Bearer token required',
+        content: {
+          'application/json': {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+      },
+    },
+    summary: 'Chat with an agent (multi-turn session)',
+    description:
+      'This endpoint holds a multi-turn conversation with a tool-using agent powered by pi core. ' +
+      'The agent keeps the full conversation transcript in an in-memory session, so follow-up messages have complete context. ' +
+      'Sessions expire after 30 minutes of inactivity. Scenario, provider, and model are fixed when the session is created.',
+    tags: ['Agents'],
+  }),
+  handleAgentChatRequest as any
+)
+
+router.openapi(
+  createRoute({
+    path: '/sessions/{sessionId}',
+    method: 'get',
+    security: [{ BearerAuth: [] }],
+    request: {
+      params: z.object({
+        sessionId: z.string().describe('Chat session id returned by POST /agent/chat'),
+      }),
+    },
+    responses: {
+      200: {
+        description: 'Returns the session metadata and simplified conversation transcript.',
+        content: {
+          'application/json': {
+            schema: agentSessionResponseSchema,
+          },
+        },
+      },
+      404: {
+        description: 'Session not found or expired',
+        content: {
+          'application/json': {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+      },
+    },
+    summary: 'Get an agent chat session',
+    description: 'This endpoint returns the transcript and metadata of an active agent chat session.',
+    tags: ['Agents'],
+  }),
+  ((c: Context) => {
+    const sessionId = c.req.param('sessionId')
+    const session = getAgentSession(sessionId)
+    if (!session) {
+      return c.json({ error: 'Session not found or expired' }, 404)
+    }
+    return c.json(getAgentSessionInfo(session), 200)
+  }) as any
+)
+
+router.openapi(
+  createRoute({
+    path: '/sessions/{sessionId}',
+    method: 'delete',
+    security: [{ BearerAuth: [] }],
+    request: {
+      params: z.object({
+        sessionId: z.string().describe('Chat session id returned by POST /agent/chat'),
+      }),
+    },
+    responses: {
+      200: {
+        description: 'Deletes the chat session and its transcript.',
+        content: {
+          'application/json': {
+            schema: agentSessionDeleteResponseSchema,
+          },
+        },
+      },
+      404: {
+        description: 'Session not found or expired',
+        content: {
+          'application/json': {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+      },
+    },
+    summary: 'End an agent chat session',
+    description: 'This endpoint ends an agent chat session and discards its in-memory transcript.',
+    tags: ['Agents'],
+  }),
+  ((c: Context) => {
+    const sessionId = c.req.param('sessionId')
+    const deleted = deleteAgentSession(sessionId)
+    if (!deleted) {
+      return c.json({ error: 'Session not found or expired' }, 404)
+    }
+    return c.json({ deleted: true, sessionId }, 200)
+  }) as any
 )
 
 router.openapi(
