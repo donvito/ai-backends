@@ -1,5 +1,6 @@
 {
   "name": "ai-backend",
+  "license": "Apache-2.0",
   "scripts": {
     "dev": "NODE_ENV=development BUN_DEBUG=true bun run --hot src/index.ts",
     "start": "bun src/index.ts",

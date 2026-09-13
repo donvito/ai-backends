@@ -457,3 +457,7 @@ Technical Architecture
 ## Supporting the project
 
 You can support my AI Backends project by becoming a Github Sponsor.
+
+## License
+
+This project is licensed under the [Apache License 2.0](LICENSE).
