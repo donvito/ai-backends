@@ -90,6 +90,14 @@ Configuration persists to `data/admin-config.json` (gitignored — it contains A
 | [Baseten](https://baseten.co/)                     | Cloud-hosted ML models with OpenAI-compatible API                         | Available |
 | [ZAI](https://z.ai/)                               | GLM models with vision/OCR capabilities                                   | Available |
 
+### Evaluation / Decision Providers
+
+These are not text-generation models. They answer typed questions about a piece of state with calibrated probabilities and are only available through the [Evaluation API](#evaluation--decision).
+
+| Provider                                    | Description                                                        | Status    |
+| ------------------------------------------- | ------------------------------------------------------------------ | --------- |
+| [TypeSafe Jev](https://docs.typesafe.ai/)   | System One decision model: `choice`, `score`, and `noul` questions | Available |
+
 
 ## Set up environment variables
 
@@ -142,6 +150,12 @@ LLM_GATEWAY_API_KEY=your-llm-gateway-api-key
 
 # ZAI Configuration (for Vision/OCR endpoints)
 ZAI_API_KEY=your-zai-api-key
+
+# TypeSafe / Jev Configuration (for the /api/evaluate decision endpoint)
+TYPESAFE_API_KEY=your-typesafe-api-key
+TYPESAFE_BASE_URL=https://api.typesafe.ai
+TYPESAFE_MODEL=jev-latest
+TYPESAFE_TIMEOUT=10000
 ```
 
 ### LLM Gateway Setup (Recommended for Cloud Providers)
@@ -357,6 +371,67 @@ Both `run` and `chat` support streaming (SSE) so you can watch the agent's turns
 
 See the full usage guide and API shapes in [docs/agents-api.md](docs/agents-api.md), or try the interactive demos: [Agent Chat](http://localhost:3000/api/v1/agent-chat-demo) and [Agent Tasks](http://localhost:3000/api/v1/agents-demo).
 
+### Evaluation / Decision
+
+Fast, structured decisions for your code instead of generated text. Send a shared `state` (a string or any JSON object/array) plus a map of typed questions to a System One decision model ([TypeSafe Jev](https://docs.typesafe.ai/)) and get back one calibrated answer per question. Keep each question a small, atomic judgment and compose them in code.
+
+| Endpoint          | Description                                                                          |
+| ----------------- | ------------------------------------------------------------------------------------ |
+| **/api/evaluate** | Answer `choice`, `score`, and `noul` questions about a state with probabilities      |
+
+| Question | Asks for                                          | Answer                                                   |
+| -------- | ------------------------------------------------- | -------------------------------------------------------- |
+| `choice` | One option from a set you define                  | `choice`, `probabilities` per option, `confidence`       |
+| `score`  | A position on an ordered scale you define         | fractional `score`, `legend`, `probabilities`, `confidence` |
+| `noul`   | Yes or no                                         | `noul`, the probability (0–1) of yes                     |
+
+```bash
+curl -X POST http://localhost:3000/api/v1/evaluate \
+  -H "Authorization: Bearer $DEFAULT_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "payload": {
+      "state": { "user_request": "Create an invoice for Acme Corp" },
+      "questions": {
+        "route": {
+          "type": "choice",
+          "instructions": "Which agent should handle this request?",
+          "criteria": {
+            "accounting": "Invoices and bookkeeping",
+            "research": "Research and documents",
+            "coder": "Software development",
+            "human": "Ambiguous or unsupported"
+          }
+        },
+        "needs_clarification": {
+          "type": "noul",
+          "instructions": "Is information required before this request can be executed?"
+        }
+      }
+    },
+    "config": { "provider": "typesafe", "model": "jev-latest" }
+  }'
+```
+
+```json
+{
+  "provider": "typesafe",
+  "model": "jev-latest",
+  "answers": {
+    "route": {
+      "type": "choice",
+      "choice": "accounting",
+      "probabilities": { "accounting": 0.94, "research": 0.02, "coder": 0.01, "human": 0.03 },
+      "confidence": 0.91
+    },
+    "needs_clarification": { "type": "noul", "noul": 0.18 }
+  },
+  "usage": { "input_tokens": 123, "output_tokens": 20, "total_tokens": 143 }
+}
+```
+
+Set `TYPESAFE_API_KEY` in `.env` or add the key under **API Keys** in the [Admin Dashboard](#admin-dashboard). Evaluation providers are kept separate from the generative LLM providers: `typesafe` is not accepted by text endpoints such as `/api/summarize`, and LLM providers are not accepted by `/api/evaluate`. Upstream `429`/`529` responses are retried with exponential backoff.
+
 More to come...check swagger docs for updated endpoints.
 
 ## Tech Stack
@@ -437,6 +512,12 @@ LLMs.txt Example
 ## Testing Examples
 
 Check swagger docs for examples.
+
+Run the unit tests with `bun run test`. The TypeSafe integration test is opt-in and only runs when a real key is provided:
+
+```bash
+TYPESAFE_API_KEY=... bun run test:integration
+```
 
 The project is in active development. More endpoints and providers will be added in the future. If you want to support me with API credits from your provider, please contact me.
 

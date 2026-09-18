@@ -8,6 +8,7 @@ import {
   aigatewayConfig,
   llamacppConfig,
   googleConfig,
+  typesafeConfig,
   isServiceEnabled 
 } from "../config/services";
 import { llmRequestSchema } from "../schemas/v1/llm";
@@ -190,6 +191,16 @@ export async function getServiceStatus() {
       config: {
         model: googleConfig.model,
         hasApiKey: !!googleConfig.apiKey,
+      }
+    },
+    // Evaluation/decision provider (Jev). Not usable with text-generation endpoints;
+    // see POST /api/v1/evaluate.
+    typesafe: {
+      enabled: typesafeConfig.enabled,
+      available: !!typesafeConfig.apiKey,
+      config: {
+        model: typesafeConfig.model,
+        hasApiKey: !!typesafeConfig.apiKey,
       }
     }
   };

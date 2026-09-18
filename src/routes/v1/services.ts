@@ -58,7 +58,15 @@ const serviceStatusSchema = z.object({
           model: z.string(),
           hasApiKey: z.boolean(),
         })
-      })
+      }),
+      typesafe: z.object({
+        enabled: z.boolean(),
+        available: z.boolean(),
+        config: z.object({
+          model: z.string(),
+          hasApiKey: z.boolean(),
+        })
+      }).describe('Evaluation/decision provider (Jev) used by /evaluate; not a text-generation provider')
   }),
   primary: z.string().nullable(),
   anyAvailable: z.boolean()
