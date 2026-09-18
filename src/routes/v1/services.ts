@@ -3,11 +3,20 @@ import { Context } from 'hono'
 import { getServiceStatus, getAvailableModels, checkServiceAvailability } from '../../services/ai'
 import { getModelsByCapability, getModelsCatalogByProvider } from '../../config/models'
 import { handleError } from '../../utils/errorHandler'
+import { getTypeSafeStatus } from '../../services/typesafe'
 
 const router = new OpenAPIHono()
 
 const serviceStatusSchema = z.object({
   services: z.object({
+    typesafe: z.object({
+      enabled: z.boolean(),
+      available: z.boolean(),
+      config: z.object({
+        model: z.string(),
+        hasApiKey: z.boolean(),
+      }),
+    }),
     openai: z.object({
       enabled: z.boolean(),
       available: z.boolean(),
@@ -103,7 +112,7 @@ const providerViewSchema = z.record(z.array(z.object({
 async function handleServiceStatus(c: Context) {
   try {
     const status = await getServiceStatus()
-    return c.json(status, 200)
+    return c.json({ ...status, services: { ...status.services, typesafe: getTypeSafeStatus() } }, 200)
   } catch (error) {
     return handleError(c, error, 'Failed to get service status')
   }
@@ -306,4 +315,3 @@ export default {
   handler: router,
   mountPath: 'services'
 }
-

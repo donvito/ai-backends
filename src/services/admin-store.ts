@@ -8,6 +8,7 @@ import {
   llmgatewayConfig,
   openaiConfig,
   openrouterConfig,
+  typesafeConfig,
   zaiConfig,
 } from '../config/services';
 
@@ -132,6 +133,7 @@ const managedProviders: Record<string, ManagedProvider> = {
   baseten: { config: basetenConfig, envVar: 'BASETEN_API_KEY', envValue: basetenConfig.apiKey },
   llmgateway: { config: llmgatewayConfig, envVar: 'LLM_GATEWAY_API_KEY', envValue: llmgatewayConfig.apiKey },
   zai: { config: zaiConfig, envVar: 'ZAI_API_KEY', envValue: zaiConfig.apiKey },
+  typesafe: { config: typesafeConfig, envVar: 'TYPESAFE_API_KEY', envValue: typesafeConfig.apiKey },
 };
 
 export const managedProviderIds = Object.keys(managedProviders);

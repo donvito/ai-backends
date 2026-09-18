@@ -223,7 +223,7 @@ Notes:
 
 ## Provider API keys
 
-`GET /api/v1/admin/keys` shows every supported provider (`openai`, `anthropic`, `openrouter`, `google`, `aigateway`, `baseten`, `llmgateway`, `zai`) with:
+`GET /api/v1/admin/keys` shows every supported provider (`openai`, `anthropic`, `openrouter`, `google`, `aigateway`, `baseten`, `llmgateway`, `zai`, `typesafe`) with:
 
 ```json
 { "provider": "openrouter", "configured": true, "source": "env", "maskedKey": "••••87e5" }

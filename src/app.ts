@@ -7,6 +7,7 @@ import configureRoutes from "./utils/apiRoutes";
 import configureApiDocs from "./utils/apiDocs";
 import {checkOllamaAvailability} from "./providers/ollama";
 import {checkLLMStudioAvailability} from "./providers/llmstudio";
+import { typesafeConfig } from "./config/services";
 
 
 function configureApiSecurity(app: OpenAPIHono, tokenConfig: string) {
@@ -216,10 +217,14 @@ export async function checkProvidersAvailability() {
         console.log('[WARN] No external LLM providers available. Set one of: OPENAI_API_KEY, ANTHROPIC_API_KEY, or OPENROUTER_API_KEY in .env');
     }
 
+    if (typesafeConfig.enabled && typesafeConfig.apiKey) {
+        availableProviders.push('TypeSafe (evaluation)');
+    }
+
     if (availableProviders.length > 0) {
-        console.log('Available LLM providers:', availableProviders);
+        console.log('Available providers:', availableProviders);
     } else {
-        throw new Error('No LLM providers available. Either run a local LLM (Ollama/LLMStudio) or set one of: OPENAI_API_KEY, ANTHROPIC_API_KEY, or OPENROUTER_API_KEY in .env');
+        throw new Error('No providers available. Run a local LLM (Ollama/LLMStudio) or configure a cloud LLM API key or TYPESAFE_API_KEY.');
     }
 }                
 

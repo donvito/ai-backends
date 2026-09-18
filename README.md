@@ -64,6 +64,18 @@ The main admin dashboard — separate from the demos — lives at [http://localh
 
 Configuration persists to `data/admin-config.json` (gitignored — it contains API keys, so protect it like a `.env` file). All admin APIs require the bearer token in production; enter it once in the dashboard header. Details in [docs/admin-api.md](docs/admin-api.md).
 
+## Evaluation / Decision
+
+Use **TypeSafe Jev** through `POST /api/v1/evaluate` for typed `choice`, `score`,
+and `noul` judgments over text or structured JSON state. Answers preserve
+probabilities, confidence, and token usage. Configure `TYPESAFE_API_KEY` in the
+environment or through the admin dashboard.
+
+Jev is separate from generative LLM providers: compose atomic judgments in
+application code rather than asking it to generate text or reason through
+multiple steps. See the [Evaluation API guide](docs/evaluation-api.md) for
+requests, configuration, errors, and opt-in integration testing.
+
 ## Supported LLM Providers
 
 ### Local Providers

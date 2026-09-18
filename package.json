@@ -4,6 +4,8 @@
     "dev": "NODE_ENV=development BUN_DEBUG=true bun run --hot src/index.ts",
     "start": "bun src/index.ts",
     "build": "echo \"No build needed (Bun runs TS directly).\"",
+    "test": "vitest run",
+    "test:integration": "RUN_TYPESAFE_INTEGRATION=1 vitest run src/services/tests/typesafe.integration.test.ts",
     "docs:redoc": "redoc-cli build http://localhost:3000/api/doc --output docs/redoc.html",
     "docs:redoc-serve": "redoc-cli serve http://localhost:3000/api/doc"
   },

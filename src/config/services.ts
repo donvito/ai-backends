@@ -6,6 +6,23 @@ export interface ServiceConfig {
   priority: number; // Lower number = higher priority
 }
 
+export interface TypeSafeConfig extends ServiceConfig {
+  apiKey: string;
+  baseURL: string;
+  model: string;
+  timeout: number;
+}
+
+export const typesafeConfig: TypeSafeConfig = {
+  name: 'TypeSafe',
+  enabled: !!process.env.TYPESAFE_API_KEY,
+  priority: 1,
+  apiKey: process.env.TYPESAFE_API_KEY || '',
+  baseURL: process.env.TYPESAFE_BASE_URL || 'https://api.typesafe.ai',
+  model: process.env.TYPESAFE_MODEL || 'jev-latest',
+  timeout: Number(process.env.TYPESAFE_TIMEOUT || '10000'),
+};
+
 export interface OpenAIConfig extends ServiceConfig {
   apiKey: string;
   model: string;
