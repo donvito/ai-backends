@@ -80,6 +80,18 @@ export interface ZAIConfig extends ServiceConfig {
   timeout?: number;
 }
 
+/**
+ * TypeSafe is an evaluation/decision provider (Jev), not a generative LLM.
+ * It is intentionally kept out of `availableServices` so it never becomes the
+ * primary text-generation service.
+ */
+export interface TypeSafeConfig extends ServiceConfig {
+  apiKey: string;
+  baseURL: string;
+  model: string;
+  timeout: number;
+}
+
 // OpenAI Configuration
 export const openaiConfig: OpenAIConfig = {
   name: 'OpenAI',
@@ -197,7 +209,18 @@ export const zaiConfig: ZAIConfig = {
   timeout: parseInt(process.env.ZAI_TIMEOUT || '30000'),
 };
 
-// Available services
+// TypeSafe (Jev) Configuration — evaluation/decision provider
+export const typesafeConfig: TypeSafeConfig = {
+  name: 'TypeSafe',
+  enabled: !!process.env.TYPESAFE_API_KEY,
+  priority: 100,
+  apiKey: process.env.TYPESAFE_API_KEY || '',
+  baseURL: (process.env.TYPESAFE_BASE_URL || 'https://api.typesafe.ai').replace(/\/+$/, ''),
+  model: process.env.TYPESAFE_MODEL || 'jev-latest',
+  timeout: parseInt(process.env.TYPESAFE_TIMEOUT || '10000'),
+};
+
+// Available services (generative LLM providers only)
 export const availableServices = [openaiConfig, anthropicConfig, ollamaConfig, openrouterConfig, lmstudioConfig, aigatewayConfig, llamacppConfig, googleConfig, basetenConfig, llmgatewayConfig, zaiConfig];
 
 // Get the primary service (highest priority enabled service)
