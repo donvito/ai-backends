@@ -45,6 +45,7 @@ function configureApiSecurity(app: OpenAPIHono, tokenConfig: string) {
                 path === '/api/aibackends-python-demo' ||
                 path === '/api/agents-demo' ||
                 path === '/api/agent-chat-demo' ||
+                path === '/api/jev-demo' ||
                 // Versioned demo pages (v1)
                 path === '/api/v1/demos' ||
                 path === '/api/v1/highlighter-demo' ||
@@ -69,6 +70,7 @@ function configureApiSecurity(app: OpenAPIHono, tokenConfig: string) {
                 path === '/api/v1/aibackends-python-demo' ||
                 path === '/api/v1/agents-demo' ||
                 path === '/api/v1/agent-chat-demo' ||
+                path === '/api/v1/jev-demo' ||
                 path === '/api/models' ||
                 path === '/api/jsoneditor' ||
                 // Admin dashboard page (the Admin APIs it calls stay protected)

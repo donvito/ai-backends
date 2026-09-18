@@ -71,6 +71,10 @@ and `noul` judgments over text or structured JSON state. Answers preserve
 probabilities, confidence, and token usage. Configure `TYPESAFE_API_KEY` in the
 environment or through the admin dashboard.
 
+Open **Demos → TypeSafe Jev Playground** in the same app to edit state and
+questions, try six presets, and inspect structured results at
+`/api/v1/jev-demo`. It uses the TypeSafe key configured in the existing admin.
+
 Jev is separate from generative LLM providers: compose atomic judgments in
 application code rather than asking it to generate text or reason through
 multiple steps. See the [Evaluation API guide](docs/evaluation-api.md) for

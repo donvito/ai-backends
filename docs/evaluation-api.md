@@ -36,6 +36,34 @@ network health check. No API key is returned.
 
 ## Request
 
+### Interactive playground
+
+In the existing app, open **Demos → TypeSafe Jev Playground**
+(`/api/v1/jev-demo`, also available at `/api/jev-demo`). The page uses the
+same theme, navigation, and admin key configuration as the other demos.
+
+Choose Agent Router, Support Ticket Triage, Travel Email Classification,
+Prompt Injection Guard, PR Risk Review, or Invoice Compliance. Edit the two
+JSON editors for state and questions, then select **Run evaluation**. A text
+state must be a JSON string, including quotes; objects and arrays also work.
+The default router example demonstrates all three question types.
+
+Configure the TypeSafe provider key in the existing **Admin → API Keys**
+screen. In production, enter the **AIBackends bearer token** in the
+playground; this is separate from the server's TypeSafe key. Leave the model
+blank to use `TYPESAFE_MODEL`, or enter an override.
+
+Results show answer cards, probability bars, confidence, score legends, token
+usage, and the complete JSON response. Loading a preset or editing the request
+clears previous results. JSON syntax errors are shown locally; API validation,
+authentication, rate-limit, and timeout errors appear in the same page.
+
+Examples perform atomic evaluations only: they do not invoke agents, approve
+invoices, block prompts, or execute other actions. Compose thresholds and
+multi-step decisions in application code.
+
+### HTTP request
+
 ```sh
 curl http://localhost:3000/api/v1/evaluate \
   -H "Authorization: Bearer $DEFAULT_ACCESS_TOKEN" \
@@ -117,4 +145,4 @@ testing is skipped unless explicitly enabled by the integration command.
 - [Quickstart](https://docs.typesafe.ai/introduction/quickstart)
 - [Atomic judgments and composition](https://docs.typesafe.ai/introduction)
 
-The Jev playground and automatic agent routing are separate follow-up features.
+Automatic agent routing remains a separate follow-up feature.
