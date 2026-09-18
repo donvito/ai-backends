@@ -106,6 +106,42 @@
             </div>
         </section>
 
+        <!-- Evaluation Section (Jev Playground for the Evaluation API) -->
+        <section class="max-w-6xl mx-auto mb-12">
+            <div class="group relative overflow-hidden bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-orange-200">
+                <div class="absolute top-0 right-0 w-40 h-40 bg-gradient-brand opacity-10 rounded-full -mr-20 -mt-20 group-hover:scale-150 transition-transform duration-500"></div>
+                <div class="p-8 md:flex md:items-center md:justify-between">
+                    <div class="md:pr-8">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-12 h-12 bg-gradient-brand rounded-xl flex items-center justify-center text-white">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
+                            </div>
+                            <h2 class="text-2xl font-bold text-gray-900">Jev Playground</h2>
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-50 text-orange-700 border border-orange-200">Evaluation API</span>
+                        </div>
+                        <p class="text-gray-600 leading-relaxed max-w-3xl">
+                            Fast, structured decisions instead of generated text. Give TypeSafe's Jev a shared
+                            <code>state</code> (text or JSON) and typed <code>choice</code>, <code>score</code>, and <code>noul</code>
+                            questions, and get back calibrated probabilities and confidence your code can act on directly.
+                            Try presets for agent routing, support triage, travel email classification, prompt injection
+                            guarding, PR risk review, and invoice compliance.
+                        </p>
+                    </div>
+                    <div class="mt-6 md:mt-0 flex-shrink-0 flex flex-col gap-3">
+                        <a href="/api/v1/jev-demo"
+                           class="inline-flex items-center justify-center relative px-6 pr-10 py-3 bg-gradient-brand text-white rounded-lg font-medium hover:opacity-90 transition-opacity duration-200 group">
+                            Open Playground
+                            <svg class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- Demos Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto items-stretch">
             <!-- aibackends-python Demo Card -->
