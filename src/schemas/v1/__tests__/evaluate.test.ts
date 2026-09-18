@@ -131,6 +131,12 @@ describe('questionSchema', () => {
     expect(questionSchema.safeParse({ type: 'score', instructions: 'Rate', criteria: [] }).success).toBe(false);
   });
 
+  it('rejects score questions with more than ten levels (TypeSafe limit)', () => {
+    const eleven = Array.from({ length: 11 }, (_, i) => `Level ${i}`);
+    expect(questionSchema.safeParse({ type: 'score', instructions: 'Rate', criteria: eleven }).success).toBe(false);
+    expect(questionSchema.safeParse({ type: 'score', instructions: 'Rate', criteria: eleven.slice(0, 10) }).success).toBe(true);
+  });
+
   it('accepts noul questions with and without criteria', () => {
     expect(questionSchema.safeParse({ type: 'noul', instructions: 'Is it urgent?' }).success).toBe(true);
     expect(

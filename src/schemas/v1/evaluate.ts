@@ -62,6 +62,8 @@ export const MAX_QUESTIONS = 50;
 export const MIN_CHOICE_OPTIONS = 2;
 export const MAX_CHOICE_OPTIONS = 255;
 export const MIN_SCORE_LEVELS = 2;
+/** TypeSafe rejects Score questions with more than 10 levels. */
+export const MAX_SCORE_LEVELS = 10;
 
 const instructionsSchema = entrySchema.describe('What the model should decide, as text or structured JSON');
 
@@ -92,7 +94,8 @@ export const scoreQuestionSchema = z.object({
   criteria: z
     .array(z.string().min(1, 'Level description must not be empty'))
     .min(MIN_SCORE_LEVELS, `Score criteria must define at least ${MIN_SCORE_LEVELS} levels`)
-    .describe('Ordered level descriptions, from lowest to highest'),
+    .max(MAX_SCORE_LEVELS, `Score criteria must not define more than ${MAX_SCORE_LEVELS} levels`)
+    .describe('Ordered level descriptions, from lowest to highest (2-10 levels)'),
 });
 
 /** Noul: a yes/no judgment returning the probability of "yes". */
