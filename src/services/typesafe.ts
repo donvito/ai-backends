@@ -239,9 +239,12 @@ async function readErrorBody(response: Response): Promise<unknown> {
 /** Parses a Retry-After header (delta-seconds or HTTP date) into milliseconds. */
 export function parseRetryAfter(value: string | null): number | undefined {
   if (!value) return undefined;
-  const seconds = Number(value);
-  if (Number.isFinite(seconds) && seconds >= 0) return Math.round(seconds * 1000);
-  const date = Date.parse(value);
+  const trimmed = value.trim();
+  if (/^-?\d+(\.\d+)?$/.test(trimmed)) {
+    const seconds = Number(trimmed);
+    return seconds >= 0 ? Math.round(seconds * 1000) : undefined;
+  }
+  const date = Date.parse(trimmed);
   if (!Number.isNaN(date)) return Math.max(0, date - Date.now());
   return undefined;
 }
