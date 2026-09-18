@@ -557,6 +557,16 @@
       jsonPreview.textContent = JSON.stringify(req.body, null, 2);
     }
 
+    function resetResults(message) {
+      errorBox.classList.add('hidden');
+      usageInfo.classList.add('hidden');
+      rawDetails.classList.add('hidden');
+      rawDetails.removeAttribute('open');
+      rawResponse.textContent = '';
+      modelUsed.textContent = '';
+      setContent(answersEl, message ? createElement('p', message, { className: 'text-sm text-gray-500' }) : '');
+    }
+
     function loadPreset(preset) {
       activePreset = preset.id;
       stateEditor.value = JSON.stringify(preset.state, null, 2);
@@ -565,6 +575,7 @@
       for (const chip of presetsEl.children) {
         chip.classList.toggle('active', chip.getAttribute('data-preset') === preset.id);
       }
+      resetResults('Preset "' + preset.label + '" loaded. Press Run to evaluate.');
       updatePreview();
     }
 
@@ -745,11 +756,7 @@
       runBtn.classList.add('hidden');
       cancelBtn.classList.remove('hidden');
       loadingIndicator.classList.remove('hidden');
-      errorBox.classList.add('hidden');
-      usageInfo.classList.add('hidden');
-      rawDetails.classList.add('hidden');
-      modelUsed.textContent = '';
-      setContent(answersEl, '');
+      resetResults('');
 
       const startTime = performance.now();
       try {
