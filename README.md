@@ -430,7 +430,7 @@ curl -X POST http://localhost:3000/api/v1/evaluate \
 }
 ```
 
-Try it interactively in the [Jev Playground](http://localhost:3000/api/v1/jev-demo), which ships with presets for agent routing, support ticket triage, travel email classification, prompt injection guarding, PR risk review, and invoice compliance.
+Try it interactively in the [Jev Playground](http://localhost:3000/api/v1/jev-demo), which ships with presets for agent routing, support ticket triage, prompt injection guarding, PR risk review, and invoice compliance.
 
 Set `TYPESAFE_API_KEY` in `.env` or add the key under **API Keys** in the [Admin Dashboard](#admin-dashboard). Evaluation providers are kept separate from the generative LLM providers: `typesafe` is not accepted by text endpoints such as `/api/summarize`, and LLM providers are not accepted by `/api/evaluate`. Upstream `429`/`529` responses are retried with exponential backoff.
 

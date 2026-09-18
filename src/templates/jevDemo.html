@@ -327,41 +327,6 @@
         }
       },
       {
-        id: 'travel-email',
-        label: 'Travel Email Classification',
-        description: 'Sort travel-related emails into categories and detect whether they contain a booking reference or need action.',
-        state: {
-          from: 'no-reply@skyline-air.example',
-          subject: 'Your flight SL204 to Lisbon is confirmed',
-          body: 'Thanks for booking with Skyline Air. Booking reference: QX7P2L. Departure: 14 Oct, 09:35 from LHR. Online check-in opens 24 hours before departure. Fancy an upgrade? Reply to this email to bid for business class.'
-        },
-        questions: {
-          category: {
-            type: 'choice',
-            instructions: 'What kind of travel email is this?',
-            criteria: {
-              flight_confirmation: 'Confirms a flight booking',
-              hotel_booking: 'Confirms or changes a hotel reservation',
-              itinerary_change: 'Announces a delay, cancellation, or schedule change',
-              marketing: 'Promotional offers or newsletters',
-              other: null
-            }
-          },
-          has_booking_reference: {
-            type: 'noul',
-            instructions: 'Does the email contain a booking or confirmation reference code?'
-          },
-          action_required: {
-            type: 'noul',
-            instructions: 'Does the traveler need to do something in response to this email?',
-            criteria: {
-              true: 'A required step such as check-in, payment, or rebooking',
-              false: 'Informational only; optional offers do not count'
-            }
-          }
-        }
-      },
-      {
         id: 'prompt-injection',
         label: 'Prompt Injection Guard',
         description: 'Screen a user message before it reaches your LLM. Detect injection attempts, classify intent, and rate risk so you can block, review, or allow.',
