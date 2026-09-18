@@ -1,13 +1,14 @@
+import { fetchWithTimeout } from '../utils/fetchWithTimeout';
 import { ProviderConfig, LLMStudioModel } from './types';
 
 
 export async function checkLLMStudioAvailability(baseUrl: string): Promise<ProviderConfig> {
     try {
         // Check health first
-        await fetch(`${baseUrl}/v1/health`);
+        await fetchWithTimeout(`${baseUrl}/v1/health`);
 
         // Check for available models
-        const modelsResponse = await fetch(`${baseUrl}/v1/models`);
+        const modelsResponse = await fetchWithTimeout(`${baseUrl}/v1/models`);
         const models: LLMStudioModel[] = (await modelsResponse.json()).data;
 
         if (models.length === 0) {

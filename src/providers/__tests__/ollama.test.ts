@@ -41,8 +41,8 @@ describe('checkOllamaAvailability', () => {
         });
 
         expect(fetch).toHaveBeenCalledTimes(2);
-        expect(fetch).toHaveBeenNthCalledWith(1, `${baseUrl}/api/health`);
-        expect(fetch).toHaveBeenNthCalledWith(2, `${baseUrl}/api/tags`);
+        expect(fetch).toHaveBeenNthCalledWith(1, `${baseUrl}/api/health`, expect.objectContaining({ signal: expect.any(AbortSignal) }));
+        expect(fetch).toHaveBeenNthCalledWith(2, `${baseUrl}/api/tags`, expect.objectContaining({ signal: expect.any(AbortSignal) }));
     });
 
     it('should throw error when health check fails', async () => {
@@ -53,7 +53,7 @@ describe('checkOllamaAvailability', () => {
             .toThrow('Failed to connect to Ollama: Health check failed');
 
         expect(fetch).toHaveBeenCalledTimes(1);
-        expect(fetch).toHaveBeenCalledWith(`${baseUrl}/api/health`);
+        expect(fetch).toHaveBeenCalledWith(`${baseUrl}/api/health`, expect.objectContaining({ signal: expect.any(AbortSignal) }));
     });
 
     it('should throw error when no models are available', async () => {

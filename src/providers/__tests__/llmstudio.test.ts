@@ -39,8 +39,8 @@ describe('checkLLMStudioAvailability', () => {
         });
 
         expect(fetch).toHaveBeenCalledTimes(2);
-        expect(fetch).toHaveBeenNthCalledWith(1, `${baseUrl}/v1/health`);
-        expect(fetch).toHaveBeenNthCalledWith(2, `${baseUrl}/v1/models`);
+        expect(fetch).toHaveBeenNthCalledWith(1, `${baseUrl}/v1/health`, expect.objectContaining({ signal: expect.any(AbortSignal) }));
+        expect(fetch).toHaveBeenNthCalledWith(2, `${baseUrl}/v1/models`, expect.objectContaining({ signal: expect.any(AbortSignal) }));
     });
 
     it('should throw error when health check fails', async () => {
@@ -51,7 +51,7 @@ describe('checkLLMStudioAvailability', () => {
             .toThrow('Failed to connect to LLMStudio: Health check failed');
 
         expect(fetch).toHaveBeenCalledTimes(1);
-        expect(fetch).toHaveBeenCalledWith(`${baseUrl}/v1/health`);
+        expect(fetch).toHaveBeenCalledWith(`${baseUrl}/v1/health`, expect.objectContaining({ signal: expect.any(AbortSignal) }));
     });
 
     it('should throw error when no models are available', async () => {

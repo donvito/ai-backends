@@ -245,7 +245,6 @@ const initialize = async () => {
     app.get('/api/admin', (c) => c.redirect('/admin', 301))
     await configureRoutes(app)
     await configureApiDocs(app)
-    await checkProvidersAvailability()
     return app;
 };
 
