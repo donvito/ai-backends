@@ -1,13 +1,14 @@
+import { fetchWithTimeout } from '../utils/fetchWithTimeout';
 import type { ProviderConfig, OllamaResponse } from './types';
 
 
 export async function checkOllamaAvailability(baseUrl: string): Promise<ProviderConfig> {
     try {
         // Check health first
-        await fetch(`${baseUrl}/api/health`);
+        await fetchWithTimeout(`${baseUrl}/api/health`);
 
         // Check for available models
-        const modelsResponse = await fetch(`${baseUrl}/api/tags`);
+        const modelsResponse = await fetchWithTimeout(`${baseUrl}/api/tags`);
         const modelsData: OllamaResponse = await modelsResponse.json();
 
         if (modelsData.models.length === 0) {
