@@ -7,7 +7,7 @@ import { z } from '@hono/zod-openapi';
  * take a shared `state` plus a map of typed `questions` and return structured,
  * calibrated answers. These schemas are deliberately independent from the
  * generative `llmRequestSchema` / `providersSupported` so that an evaluation
- * provider can never be selected for a text-generation endpoint (and vice versa).
+ * model is never sent to a text-generation endpoint.
  *
  * The request/response shapes mirror the TypeSafe HTTP API so answers can be
  * returned essentially intact (probabilities and confidence included).
@@ -110,10 +110,15 @@ export const noulQuestionSchema = z.object({
     .optional(),
 });
 
+export const booleanQuestionSchema = noulQuestionSchema.extend({
+  type: z.literal('boolean'),
+});
+
 export const questionSchema = z.discriminatedUnion('type', [
   choiceQuestionSchema,
   scoreQuestionSchema,
   noulQuestionSchema,
+  booleanQuestionSchema,
 ]);
 
 export const evaluationQuestionsSchema = z
@@ -128,7 +133,7 @@ export const evaluationQuestionsSchema = z
 // Request: config
 // ---------------------------------------------------------------------------
 
-export const evaluationProvidersSupported = z.enum(['typesafe']);
+export const evaluationProvidersSupported = z.enum(['typesafe', 'aigateway']);
 
 export const evaluationConfigSchema = z.object({
   provider: evaluationProvidersSupported.default('typesafe').describe('Evaluation provider to use'),
@@ -136,7 +141,7 @@ export const evaluationConfigSchema = z.object({
     .string()
     .min(1)
     .optional()
-    .describe('Evaluation model to use (defaults to the provider default, e.g. jev-latest)'),
+    .describe('Evaluation model (defaults to jev-latest for TypeSafe or typesafe-ai/jev for AI Gateway)'),
 });
 
 export const evaluatePayloadSchema = z.object({
@@ -181,9 +186,23 @@ export const noulAnswerSchema = z
   })
   .passthrough();
 
-export const answerSchema = z.discriminatedUnion('type', [choiceAnswerSchema, scoreAnswerSchema, noulAnswerSchema]);
+export const booleanAnswerSchema = z.object({
+  type: z.literal('boolean'),
+  probability: probability.describe('Probability that the answer is true'),
+});
+
+export const answerSchema = z.discriminatedUnion('type', [choiceAnswerSchema, scoreAnswerSchema, noulAnswerSchema, booleanAnswerSchema]);
 
 export const evaluationAnswersSchema = z.record(z.string(), answerSchema);
+
+export const gatewayAnswerSchema = z.discriminatedUnion('type', [
+  choiceAnswerSchema.partial({ probabilities: true, confidence: true }),
+  scoreAnswerSchema.partial({ probabilities: true, confidence: true }),
+  noulAnswerSchema,
+  booleanAnswerSchema,
+]);
+
+export const gatewayEvaluationAnswersSchema = z.record(z.string(), gatewayAnswerSchema);
 
 export const evaluationUsageSchema = z.object({
   input_tokens: z.number().int().nonnegative(),
@@ -194,7 +213,7 @@ export const evaluationUsageSchema = z.object({
 export const evaluateResponseSchema = z.object({
   provider: evaluationProvidersSupported.describe('The evaluation provider that was used'),
   model: z.string().describe('The resolved model that answered (e.g. a versioned jev model)'),
-  answers: evaluationAnswersSchema,
+  answers: gatewayEvaluationAnswersSchema,
   usage: evaluationUsageSchema,
 });
 
@@ -211,6 +230,7 @@ export type EvaluationState = z.infer<typeof evaluationStateSchema>;
 export type ChoiceQuestion = z.infer<typeof choiceQuestionSchema>;
 export type ScoreQuestion = z.infer<typeof scoreQuestionSchema>;
 export type NoulQuestion = z.infer<typeof noulQuestionSchema>;
+export type BooleanQuestion = z.infer<typeof booleanQuestionSchema>;
 export type EvaluationQuestion = z.infer<typeof questionSchema>;
 export type EvaluationQuestions = z.infer<typeof evaluationQuestionsSchema>;
 export type EvaluationProviderName = z.infer<typeof evaluationProvidersSupported>;
@@ -218,8 +238,9 @@ export type EvaluationConfig = z.infer<typeof evaluationConfigSchema>;
 export type ChoiceAnswer = z.infer<typeof choiceAnswerSchema>;
 export type ScoreAnswer = z.infer<typeof scoreAnswerSchema>;
 export type NoulAnswer = z.infer<typeof noulAnswerSchema>;
+export type BooleanAnswer = z.infer<typeof booleanAnswerSchema>;
 export type EvaluationAnswer = z.infer<typeof answerSchema>;
-export type EvaluationAnswers = z.infer<typeof evaluationAnswersSchema>;
+export type EvaluationAnswers = z.infer<typeof gatewayEvaluationAnswersSchema>;
 export type EvaluationUsage = z.infer<typeof evaluationUsageSchema>;
 export type EvaluateReq = z.infer<typeof evaluateRequestSchema>;
 export type EvaluateRes = z.infer<typeof evaluateResponseSchema>;

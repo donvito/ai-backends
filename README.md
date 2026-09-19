@@ -97,6 +97,7 @@ These are not text-generation models. They answer typed questions about a piece 
 | Provider                                    | Description                                                        | Status    |
 | ------------------------------------------- | ------------------------------------------------------------------ | --------- |
 | [TypeSafe Jev](https://docs.typesafe.ai/)   | System One decision model: `choice`, `score`, and `noul` questions | Available |
+| [Jev via Vercel AI Gateway](https://vercel.com/docs/ai-gateway/sdks-and-apis/ai-sdk) | Jev evaluation through the AI SDK with `AI_GATEWAY_API_KEY` | Available |
 
 
 ## Set up environment variables
@@ -377,13 +378,16 @@ Fast, structured decisions for your code instead of generated text. Send a share
 
 | Endpoint          | Description                                                                          |
 | ----------------- | ------------------------------------------------------------------------------------ |
-| **/api/evaluate** | Answer `choice`, `score`, and `noul` questions about a state with probabilities      |
+| **/api/evaluate** | Answer `choice`, `score`, `boolean`, and `noul` questions about a state with probabilities |
 
 | Question | Asks for                                          | Answer                                                   |
 | -------- | ------------------------------------------------- | -------------------------------------------------------- |
 | `choice` | One option from a set you define                  | `choice`, `probabilities` per option, `confidence`       |
 | `score`  | A position on an ordered scale you define         | fractional `score`, `legend`, `probabilities`, `confidence` |
 | `noul`   | Yes or no                                         | `noul`, the probability (0–1) of yes                     |
+| `boolean` | Yes or no                                       | `probability`, the probability (0–1) of true             |
+
+Both providers accept `boolean` and the legacy `noul` type and return the corresponding answer shape. Gateway choice/score distributions and confidence are optional; score answers always include the requested rubric as `legend`.
 
 ```bash
 curl -X POST http://localhost:3000/api/v1/evaluate \
@@ -432,7 +436,39 @@ curl -X POST http://localhost:3000/api/v1/evaluate \
 
 Try it interactively in the [Jev Playground](http://localhost:3000/api/v1/jev-demo), which ships with presets for agent routing, support ticket triage, prompt injection guarding, PR risk review, and invoice compliance.
 
-Set `TYPESAFE_API_KEY` in `.env` or add the key under **API Keys** in the [Admin Dashboard](#admin-dashboard). Evaluation providers are kept separate from the generative LLM providers: `typesafe` is not accepted by text endpoints such as `/api/summarize`, and LLM providers are not accepted by `/api/evaluate`. Upstream `429`/`529` responses are retried with exponential backoff.
+For direct TypeSafe access, set `TYPESAFE_API_KEY` in `.env` or add the key under **API Keys** in the [Admin Dashboard](#admin-dashboard). Direct TypeSafe remains the default when `config` is omitted. Its upstream `429`/`529` responses are retried with exponential backoff.
+
+#### Jev through Vercel AI Gateway
+
+Create a Gateway API key using the Vercel CLI:
+
+```bash
+vercel ai-gateway api-keys create --name my-api-key
+```
+
+Set the printed key as `AI_GATEWAY_API_KEY` on the server, or add it under **AI Gateway** in the Admin Dashboard. No `TYPESAFE_API_KEY` is needed for this provider. The backend calls the AI SDK's `experimental_evaluate` with a Gateway evaluation model:
+
+```bash
+curl -X POST http://localhost:3000/api/v1/evaluate \
+  -H "Authorization: Bearer $DEFAULT_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "payload": {
+      "state": "The support agent issued a full refund to the customer.",
+      "questions": {
+        "refunded": {
+          "type": "boolean",
+          "instructions": "Was a refund issued?"
+        }
+      }
+    },
+    "config": { "provider": "aigateway", "model": "typesafe-ai/jev" }
+  }'
+```
+
+The answer is shaped as `"refunded": { "type": "boolean", "probability": 0.99 }` (the probability varies). `AIGATEWAY_EVALUATION_MODEL` overrides the default `typesafe-ai/jev`; `typesafe-ai/jev-latest` is also supported by the SDK. `AIGATEWAY_EVALUATION_TIMEOUT` defaults to 30000 milliseconds for the whole request, including up to two SDK retries on transient failures.
+
+Evaluation uses the AI SDK's Gateway endpoint, independently of the chat settings `AIGATEWAY_BASE_URL` and `AIGATEWAY_MODEL`. Evaluation providers and models are selected by this endpoint's own registry; `typesafe` remains unavailable to generative endpoints. In the Jev Playground, select **Vercel AI Gateway** to use the Gateway model with any preset.
 
 More to come...check swagger docs for updated endpoints.
 
@@ -520,6 +556,14 @@ Run the unit tests with `bun run test`. The TypeSafe integration test is opt-in 
 ```bash
 TYPESAFE_API_KEY=... bun run test:integration
 ```
+
+To run the live Jev Gateway test, set `AI_GATEWAY_API_KEY` and run:
+
+```bash
+bun x vitest run src/services/__tests__/aigateway-evaluation.integration.test.ts
+```
+
+It exercises the evaluation route with boolean, legacy noul, choice, and score questions. Live tests are skipped when the corresponding key is absent.
 
 The project is in active development. More endpoints and providers will be added in the future. If you want to support me with API credits from your provider, please contact me.
 
