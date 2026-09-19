@@ -42,6 +42,11 @@ export interface AIGatewayConfig extends ServiceConfig {
   model: string;
   chatModel: string;
   baseURL?: string;
+  /** Base URL of the gateway's AI SDK protocol surface (hosts /evaluation-model). */
+  evaluationBaseURL: string;
+  /** Default evaluation model served through the gateway (Jev). */
+  evaluationModel: string;
+  evaluationTimeout: number;
 }
 
 export interface LlamaCppConfig extends ServiceConfig {
@@ -151,6 +156,9 @@ export const aigatewayConfig: AIGatewayConfig = {
   model: process.env.AIGATEWAY_MODEL || '',
   chatModel: process.env.AIGATEWAY_CHAT_MODEL || '',
   baseURL: process.env.AIGATEWAY_BASE_URL || 'https://ai-gateway.vercel.sh/v1',
+  evaluationBaseURL: (process.env.AIGATEWAY_EVALUATION_BASE_URL || 'https://ai-gateway.vercel.sh/v4/ai').replace(/\/+$/, ''),
+  evaluationModel: process.env.AIGATEWAY_EVALUATION_MODEL || 'typesafe-ai/jev',
+  evaluationTimeout: parseInt(process.env.AIGATEWAY_EVALUATION_TIMEOUT || '10000'),
 };
 
 // LlamaCpp Configuration

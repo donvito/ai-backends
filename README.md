@@ -434,6 +434,8 @@ Try it interactively in the [Jev Playground](http://localhost:3000/api/v1/jev-de
 
 Set `TYPESAFE_API_KEY` in `.env` or add the key under **API Keys** in the [Admin Dashboard](#admin-dashboard). Evaluation providers are kept separate from the generative LLM providers: `typesafe` is not accepted by text endpoints such as `/api/summarize`, and LLM providers are not accepted by `/api/evaluate`. Upstream `429`/`529` responses are retried with exponential backoff.
 
+Jev can also be reached through [Vercel AI Gateway](https://vercel.com/docs/ai-gateway/modalities/evaluation) instead of calling TypeSafe directly: set `AI_GATEWAY_API_KEY` and use `"config": { "provider": "aigateway", "model": "typesafe-ai/jev" }`. The request and response shapes are identical — the gateway's `boolean` answers are translated back to `noul`, and score `legend` is reconstructed from the question criteria.
+
 More to come...check swagger docs for updated endpoints.
 
 ## Tech Stack
