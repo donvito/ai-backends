@@ -209,7 +209,8 @@ export class AIGatewayEvaluationProvider implements EvaluationProvider {
   private async backoff(attempt: number, retryAfterMs: number | undefined, reason: string): Promise<void> {
     const exponential = this.retryBaseDelayMs * 2 ** attempt;
     const jitter = this.random() * this.retryBaseDelayMs * 0.5;
-    const delay = Math.min(this.retryMaxDelayMs, retryAfterMs ?? exponential + jitter);
+    // Retry-After is the upstream rate-limit deadline; only cap our own backoff.
+    const delay = retryAfterMs ?? Math.min(this.retryMaxDelayMs, exponential + jitter);
     console.warn(`[AIGateway] ${reason}; retrying in ${Math.round(delay)}ms (attempt ${attempt + 1}/${this.maxRetries})`);
     await this.sleep(delay);
   }
