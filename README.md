@@ -97,6 +97,7 @@ These are not text-generation models. They answer typed questions about a piece 
 | Provider                                    | Description                                                        | Status    |
 | ------------------------------------------- | ------------------------------------------------------------------ | --------- |
 | [TypeSafe Jev](https://docs.typesafe.ai/)   | System One decision model: `choice`, `score`, and `noul` questions | Available |
+| [Jev via Vercel AI Gateway](https://vercel.com/docs/ai-gateway/sdks-and-apis/ai-sdk) | Same Jev model (`typesafe-ai/jev`) routed through the Vercel AI Gateway with your `AI_GATEWAY_API_KEY` (`provider: "aigateway"`) | Available |
 
 
 ## Set up environment variables
@@ -156,6 +157,11 @@ TYPESAFE_API_KEY=your-typesafe-api-key
 TYPESAFE_BASE_URL=https://api.typesafe.ai
 TYPESAFE_MODEL=jev-latest
 TYPESAFE_TIMEOUT=10000
+
+# Jev via Vercel AI Gateway (optional; reuses AI_GATEWAY_API_KEY, select with config.provider="aigateway")
+AIGATEWAY_EVALUATION_BASE_URL=https://ai-gateway.vercel.sh/v4/ai
+AIGATEWAY_EVALUATION_MODEL=typesafe-ai/jev
+AIGATEWAY_EVALUATION_TIMEOUT=10000
 ```
 
 ### LLM Gateway Setup (Recommended for Cloud Providers)
@@ -434,6 +440,22 @@ Try it interactively in the [Jev Playground](http://localhost:3000/api/v1/jev-de
 
 Set `TYPESAFE_API_KEY` in `.env` or add the key under **API Keys** in the [Admin Dashboard](#admin-dashboard). Evaluation providers are kept separate from the generative LLM providers: `typesafe` is not accepted by text endpoints such as `/api/summarize`, and LLM providers are not accepted by `/api/evaluate`. Upstream `429`/`529` responses are retried with exponential backoff.
 
+**Jev through the Vercel AI Gateway.** If you already use the [Vercel AI Gateway](https://vercel.com/docs/ai-gateway/sdks-and-apis/ai-sdk), you can run the same model without a TypeSafe account by setting `config.provider` to `"aigateway"`. AIBackends speaks the AI SDK evaluation protocol (the same wire format as `experimental_evaluate({ model: 'typesafe-ai/jev' })`) and authenticates with `AI_GATEWAY_API_KEY`. Create a key with `vercel ai-gateway api-keys create --name my-api-key`, then:
+
+```json
+{
+  "payload": {
+    "state": "The support agent issued a full refund to the customer.",
+    "questions": {
+      "refunded": { "type": "noul", "instructions": "Was a refund issued?" }
+    }
+  },
+  "config": { "provider": "aigateway", "model": "typesafe-ai/jev" }
+}
+```
+
+The request and response shapes are identical to the direct `typesafe` provider: `noul` questions are sent to the gateway as the AI SDK's `boolean` type and mapped back to `noul` answers, and `confidence` is taken from TypeSafe's provider metadata when the gateway returns it.
+
 More to come...check swagger docs for updated endpoints.
 
 ## Tech Stack
@@ -515,10 +537,11 @@ LLMs.txt Example
 
 Check swagger docs for examples.
 
-Run the unit tests with `bun run test`. The TypeSafe integration test is opt-in and only runs when a real key is provided:
+Run the unit tests with `bun run test`. The TypeSafe and AI Gateway integration tests are opt-in and only run when a real key is provided:
 
 ```bash
 TYPESAFE_API_KEY=... bun run test:integration
+AI_GATEWAY_API_KEY=... bun run test:integration
 ```
 
 The project is in active development. More endpoints and providers will be added in the future. If you want to support me with API credits from your provider, please contact me.

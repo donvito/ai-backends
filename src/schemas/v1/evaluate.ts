@@ -128,7 +128,11 @@ export const evaluationQuestionsSchema = z
 // Request: config
 // ---------------------------------------------------------------------------
 
-export const evaluationProvidersSupported = z.enum(['typesafe']);
+/**
+ * `typesafe` calls TypeSafe's API directly; `aigateway` routes the same Jev
+ * model through the Vercel AI Gateway (model slug `typesafe-ai/jev`).
+ */
+export const evaluationProvidersSupported = z.enum(['typesafe', 'aigateway']);
 
 export const evaluationConfigSchema = z.object({
   provider: evaluationProvidersSupported.default('typesafe').describe('Evaluation provider to use'),
@@ -136,7 +140,9 @@ export const evaluationConfigSchema = z.object({
     .string()
     .min(1)
     .optional()
-    .describe('Evaluation model to use (defaults to the provider default, e.g. jev-latest)'),
+    .describe(
+      'Evaluation model to use (defaults to the provider default: jev-latest for typesafe, typesafe-ai/jev for aigateway)'
+    ),
 });
 
 export const evaluatePayloadSchema = z.object({

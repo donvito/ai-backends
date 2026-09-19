@@ -1,6 +1,7 @@
 import { OpenAPIHono } from '@hono/zod-openapi';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { __setEvaluationProviderForTests } from '../../../services/evaluation';
+import { AIGatewayEvaluationProvider } from '../../../services/aigateway-evaluation';
 import { TypeSafeEvaluationProvider } from '../../../services/typesafe';
 import evaluateRoute from '../evaluate';
 
@@ -74,6 +75,37 @@ function useProvider(fetchMock: ReturnType<typeof vi.fn>, options: Record<string
   );
 }
 
+function useGatewayProvider(fetchMock: ReturnType<typeof vi.fn>, options: Record<string, unknown> = {}) {
+  __setEvaluationProviderForTests(
+    new AIGatewayEvaluationProvider({
+      apiKey: 'vck-test',
+      baseURL: 'https://ai-gateway.test/v4/ai',
+      timeout: 1_000,
+      maxRetries: 1,
+      fetch: fetchMock as any,
+      sleep: async () => {},
+      random: () => 0,
+      ...options,
+    })
+  );
+}
+
+const gatewayBody = {
+  answers: {
+    route: {
+      type: 'choice',
+      choice: 'accounting',
+      probabilities: { accounting: 0.94, research: 0.02, coder: 0.01, human: 0.03 },
+    },
+    needs_clarification: { type: 'boolean', probability: 0.18 },
+  },
+  usage: { inputTokens: 123, outputTokens: 20 },
+  providerMetadata: {
+    typesafe: { confidence: { route: 0.91, needs_clarification: 0.8 } },
+    gateway: { routing: { canonicalSlug: 'typesafe-ai/jev' } },
+  },
+};
+
 describe('POST /api/v1/evaluate', () => {
   let app: OpenAPIHono;
 
@@ -117,6 +149,46 @@ describe('POST /api/v1/evaluate', () => {
     expect(res.status).toBe(200);
     const sent = JSON.parse((fetchMock.mock.calls[0] as unknown as [string, RequestInit])[1].body as string);
     expect(sent.model).toBe('jev-latest');
+  });
+
+  it('routes provider=aigateway through the Vercel AI Gateway and returns the same contract', async () => {
+    const typesafeFetch = vi.fn();
+    useProvider(typesafeFetch);
+    const gatewayFetch = vi.fn(async () => jsonResponse(gatewayBody));
+    useGatewayProvider(gatewayFetch);
+
+    const res = await post(app, { payload: validRequest.payload, config: { provider: 'aigateway' } });
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body).toEqual({
+      provider: 'aigateway',
+      model: 'typesafe-ai/jev',
+      answers: {
+        route: { ...gatewayBody.answers.route, confidence: 0.91 },
+        needs_clarification: { type: 'noul', noul: 0.18 },
+      },
+      usage: { input_tokens: 123, output_tokens: 20, total_tokens: 143 },
+      apiVersion: '1.0.0',
+    });
+
+    expect(typesafeFetch).not.toHaveBeenCalled();
+    const [url, init] = gatewayFetch.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('https://ai-gateway.test/v4/ai/evaluation-model');
+    expect((init.headers as Record<string, string>)['ai-model-id']).toBe('typesafe-ai/jev');
+    const sent = JSON.parse(init.body as string);
+    expect(sent.questions.needs_clarification.type).toBe('boolean');
+  });
+
+  it('returns 503 when provider=aigateway is not configured', async () => {
+    const fetchMock = vi.fn();
+    useGatewayProvider(fetchMock, { apiKey: '' });
+
+    const res = await post(app, { payload: validRequest.payload, config: { provider: 'aigateway' } });
+
+    expect(res.status).toBe(503);
+    expect((await res.json()).error).toMatch(/"aigateway" is not configured/);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('returns 400 for an invalid AIBackends request without calling the provider', async () => {

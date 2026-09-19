@@ -176,6 +176,9 @@ export async function getServiceStatus() {
         baseURL: aigatewayConfig.baseURL,
         model: aigatewayConfig.model,
         chatModel: aigatewayConfig.chatModel,
+        hasApiKey: !!aigatewayConfig.apiKey,
+        // Also usable as an evaluation provider for POST /api/v1/evaluate (Jev via the gateway).
+        evaluationModel: aigatewayConfig.evaluationModel,
       }
     },
     llamacpp: {
