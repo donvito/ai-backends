@@ -34,6 +34,10 @@ const upstreamResponseSchema = z
   })
   .passthrough();
 
+type TypeSafeEvaluationResponse = EvaluationResponse & {
+  answers: z.infer<typeof evaluationAnswersSchema>;
+};
+
 export type FetchLike = (input: string, init: RequestInit) => Promise<Response>;
 
 export interface TypeSafeClientOptions {
@@ -98,7 +102,7 @@ export class TypeSafeEvaluationProvider implements EvaluationProvider {
     return this.apiKey.length > 0;
   }
 
-  async evaluate(state: EvaluationState, questions: EvaluationQuestions, model?: string): Promise<EvaluationResponse> {
+  async evaluate(state: EvaluationState, questions: EvaluationQuestions, model?: string): Promise<TypeSafeEvaluationResponse> {
     if (!this.isConfigured()) {
       throw new EvaluationError('TypeSafe is not configured. Set TYPESAFE_API_KEY or add a key in the admin dashboard.', {
         code: 'not_configured',
@@ -108,7 +112,9 @@ export class TypeSafeEvaluationProvider implements EvaluationProvider {
     const body = JSON.stringify({
       model: model || this.defaultModel,
       state,
-      questions,
+      questions: Object.fromEntries(Object.entries(questions).map(([id, question]) => [
+        id, question.type === 'boolean' ? { ...question, type: 'noul' } : question,
+      ])),
     });
 
     for (let attempt = 0; ; attempt++) {
@@ -125,7 +131,14 @@ export class TypeSafeEvaluationProvider implements EvaluationProvider {
       }
 
       if (response.ok) {
-        return this.parseResponse(response);
+        const result = await this.parseResponse(response);
+        for (const [id, question] of Object.entries(questions)) {
+          const answer = result.answers[id];
+          if (question.type === 'boolean' && answer?.type === 'noul') {
+            result.answers[id] = { type: 'boolean', probability: answer.noul };
+          }
+        }
+        return result;
       }
 
       const retryAfterMs = parseRetryAfter(response.headers.get('retry-after'));
@@ -170,7 +183,7 @@ export class TypeSafeEvaluationProvider implements EvaluationProvider {
     await this.sleep(delay);
   }
 
-  private async parseResponse(response: Response): Promise<EvaluationResponse> {
+  private async parseResponse(response: Response): Promise<TypeSafeEvaluationResponse> {
     let json: unknown;
     try {
       json = await response.json();

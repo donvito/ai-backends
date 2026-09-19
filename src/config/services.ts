@@ -42,6 +42,8 @@ export interface AIGatewayConfig extends ServiceConfig {
   model: string;
   chatModel: string;
   baseURL?: string;
+  evaluationModel: string;
+  evaluationTimeout: number;
 }
 
 export interface LlamaCppConfig extends ServiceConfig {
@@ -151,6 +153,8 @@ export const aigatewayConfig: AIGatewayConfig = {
   model: process.env.AIGATEWAY_MODEL || '',
   chatModel: process.env.AIGATEWAY_CHAT_MODEL || '',
   baseURL: process.env.AIGATEWAY_BASE_URL || 'https://ai-gateway.vercel.sh/v1',
+  evaluationModel: process.env.AIGATEWAY_EVALUATION_MODEL || 'typesafe-ai/jev',
+  evaluationTimeout: parseInt(process.env.AIGATEWAY_EVALUATION_TIMEOUT || '30000'),
 };
 
 // LlamaCpp Configuration

@@ -6,6 +6,8 @@ import type {
   EvaluationState,
   EvaluationUsage,
 } from '../schemas/v1/evaluate';
+import { AIGatewayEvaluationProvider } from './aigateway-evaluation';
+import { TypeSafeEvaluationProvider } from './typesafe';
 
 /**
  * Evaluation / Decision service layer.
@@ -17,8 +19,7 @@ import type {
  * separate from text-generation providers while leaving room for additional
  * decision models (including small local ones) later.
  *
- * With a single implementation there is no registry yet; `getEvaluationProvider`
- * is the one place to extend when a second provider arrives.
+ * `getEvaluationProvider` resolves evaluation-specific provider instances.
  */
 
 export interface EvaluationResponse {
@@ -83,15 +84,19 @@ export function isEvaluationError(error: unknown): error is EvaluationError {
 }
 
 let typesafeProvider: EvaluationProvider | undefined;
+let aigatewayProvider: EvaluationProvider | undefined;
 
 export async function getEvaluationProvider(name: EvaluationProviderName): Promise<EvaluationProvider> {
   switch (name) {
     case 'typesafe': {
       if (!typesafeProvider) {
-        const { TypeSafeEvaluationProvider } = await import('./typesafe');
         typesafeProvider = new TypeSafeEvaluationProvider();
       }
       return typesafeProvider;
+    }
+    case 'aigateway': {
+      aigatewayProvider ??= new AIGatewayEvaluationProvider();
+      return aigatewayProvider;
     }
     default: {
       const unknown: never = name;
@@ -101,8 +106,12 @@ export async function getEvaluationProvider(name: EvaluationProviderName): Promi
 }
 
 /** Test hook: replace the provider instance returned by `getEvaluationProvider`. */
-export function __setEvaluationProviderForTests(provider: EvaluationProvider | undefined): void {
-  typesafeProvider = provider;
+export function __setEvaluationProviderForTests(
+  provider: EvaluationProvider | undefined,
+  name: EvaluationProviderName = provider?.name ?? 'typesafe'
+): void {
+  if (name === 'aigateway') aigatewayProvider = provider;
+  else typesafeProvider = provider;
 }
 
 /**
