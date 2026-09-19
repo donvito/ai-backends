@@ -234,6 +234,20 @@ describe('TypeSafeEvaluationProvider', () => {
     expect(sleep.mock.calls[0][0]).toBe(2_000);
   });
 
+  it('honors Retry-After even when it exceeds the backoff cap', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse({ error: 'rate limited' }, 429, { 'Retry-After': '30' }))
+      .mockResolvedValueOnce(jsonResponse(upstreamBody));
+    const { provider, sleep } = createProvider(fetchMock, { retryMaxDelayMs: 8_000 });
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    await provider.evaluate(state, questions);
+
+    expect(sleep).toHaveBeenCalledTimes(1);
+    expect(sleep.mock.calls[0][0]).toBe(30_000);
+  });
+
   it('gives up on 429 after maxRetries and surfaces rate_limited with retryAfterMs', async () => {
     const fetchMock = vi.fn(async () => jsonResponse({ error: 'rate limited' }, 429, { 'Retry-After': '30' }));
     const { provider, sleep } = createProvider(fetchMock, { maxRetries: 2 });

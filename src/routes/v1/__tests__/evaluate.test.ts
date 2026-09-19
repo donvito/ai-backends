@@ -1,6 +1,7 @@
 import { OpenAPIHono } from '@hono/zod-openapi';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { __setEvaluationProviderForTests } from '../../../services/evaluation';
+import { AIGatewayEvaluationProvider } from '../../../services/aigateway-evaluation';
 import { TypeSafeEvaluationProvider } from '../../../services/typesafe';
 import evaluateRoute from '../evaluate';
 
@@ -137,6 +138,56 @@ describe('POST /api/v1/evaluate', () => {
     expect(body.error).toBe('Invalid evaluation request');
     expect(JSON.stringify(body.details)).toContain('at least 2 levels');
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('serves aigateway requests through Vercel AI Gateway with translated answers', async () => {
+    const gatewayBody = {
+      answers: {
+        route: { type: 'choice', choice: 'accounting', probabilities: { accounting: 0.94, human: 0.06 } },
+        needs_clarification: { type: 'boolean', probability: 0.18 },
+      },
+      usage: { inputTokens: 40, outputTokens: 10 },
+      providerMetadata: { typesafe: { confidence: { route: 0.91 } } },
+    };
+    const fetchMock = vi.fn(async () => jsonResponse(gatewayBody));
+    __setEvaluationProviderForTests(
+      new AIGatewayEvaluationProvider({
+        apiKey: 'vck-test',
+        baseURL: 'https://ai-gateway.test/v4/ai',
+        timeout: 1_000,
+        fetch: fetchMock as any,
+        sleep: async () => {},
+      })
+    );
+
+    const res = await post(app, {
+      ...validRequest,
+      config: { provider: 'aigateway', model: 'typesafe-ai/jev' },
+    });
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.provider).toBe('aigateway');
+    expect(body.model).toBe('typesafe-ai/jev');
+    expect(body.answers.needs_clarification).toEqual({ type: 'noul', noul: 0.18 });
+    expect(body.answers.route.confidence).toBe(0.91);
+
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('https://ai-gateway.test/v4/ai/evaluation-model');
+    const sent = JSON.parse(init.body as string);
+    expect(sent.questions.needs_clarification.type).toBe('boolean');
+  });
+
+  it('returns 503 when aigateway is requested without AI_GATEWAY_API_KEY', async () => {
+    __setEvaluationProviderForTests(
+      new AIGatewayEvaluationProvider({ apiKey: '', baseURL: 'https://ai-gateway.test/v4/ai' })
+    );
+
+    const res = await post(app, { ...validRequest, config: { provider: 'aigateway' } });
+
+    expect(res.status).toBe(503);
+    const body = await res.json();
+    expect(body.error).toMatch(/not configured/i);
   });
 
   it('returns 400 for an empty question map', async () => {

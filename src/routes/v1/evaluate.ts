@@ -42,7 +42,7 @@ function evaluationErrorResponse(c: Context, error: EvaluationError) {
     case 'timeout':
       return c.json({ error: 'Evaluation provider did not respond in time' }, 504)
     case 'unauthorized':
-      return c.json({ error: 'Evaluation provider authentication failed. Check the configured TypeSafe API key.' }, 502)
+      return c.json({ error: 'Evaluation provider authentication failed. Check the configured API key.' }, 502)
     case 'network':
     case 'invalid_response':
     case 'upstream_error':
@@ -146,7 +146,9 @@ router.openapi(
       'decision model (TypeSafe Jev) and returns structured answers. `choice` returns the selected option with a full ' +
       'probability distribution and confidence; `score` returns a probability-weighted score over ordered levels with a ' +
       'legend, probabilities, and confidence; `noul` returns the probability (0-1) that a yes/no question is true. ' +
-      'This model does not generate text; keep each question a small, atomic judgment and compose them in code.',
+      'This model does not generate text; keep each question a small, atomic judgment and compose them in code. ' +
+      'Two providers serve Jev: `typesafe` calls api.typesafe.ai directly (TYPESAFE_API_KEY), `aigateway` routes the ' +
+      'same evaluation through Vercel AI Gateway as `typesafe-ai/jev` (AI_GATEWAY_API_KEY).',
     tags: ['Evaluation'],
   }),
   handleEvaluateRequest as any

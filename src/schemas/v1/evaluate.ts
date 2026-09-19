@@ -3,14 +3,18 @@ import { z } from '@hono/zod-openapi';
 /**
  * Schemas for the Evaluation / Decision API (POST /api/v1/evaluate).
  *
- * Evaluation providers (TypeSafe's Jev today) are not generative models: they
- * take a shared `state` plus a map of typed `questions` and return structured,
- * calibrated answers. These schemas are deliberately independent from the
- * generative `llmRequestSchema` / `providersSupported` so that an evaluation
- * provider can never be selected for a text-generation endpoint (and vice versa).
+ * Evaluation providers (TypeSafe's Jev, direct or via Vercel AI Gateway) are
+ * not generative models: they take a shared `state` plus a map of typed
+ * `questions` and return structured, calibrated answers. These schemas are
+ * deliberately independent from the generative `llmRequestSchema` /
+ * `providersSupported` so that an evaluation provider can never be selected
+ * for a text-generation endpoint (and vice versa).
  *
  * The request/response shapes mirror the TypeSafe HTTP API so answers can be
  * returned essentially intact (probabilities and confidence included).
+ * Providers that speak a different wire format (e.g. Vercel AI Gateway, which
+ * calls booleans "boolean" instead of "noul") translate to and from these
+ * shapes internally.
  */
 
 // ---------------------------------------------------------------------------
@@ -128,15 +132,17 @@ export const evaluationQuestionsSchema = z
 // Request: config
 // ---------------------------------------------------------------------------
 
-export const evaluationProvidersSupported = z.enum(['typesafe']);
+export const evaluationProvidersSupported = z.enum(['typesafe', 'aigateway']);
 
 export const evaluationConfigSchema = z.object({
-  provider: evaluationProvidersSupported.default('typesafe').describe('Evaluation provider to use'),
+  provider: evaluationProvidersSupported
+    .default('typesafe')
+    .describe('Evaluation provider: typesafe (direct) or aigateway (Jev via Vercel AI Gateway)'),
   model: z
     .string()
     .min(1)
     .optional()
-    .describe('Evaluation model to use (defaults to the provider default, e.g. jev-latest)'),
+    .describe('Evaluation model to use (defaults to the provider default, e.g. jev-latest or typesafe-ai/jev)'),
 });
 
 export const evaluatePayloadSchema = z.object({

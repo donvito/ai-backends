@@ -10,15 +10,13 @@ import type {
 /**
  * Evaluation / Decision service layer.
  *
- * Evaluation providers (TypeSafe's Jev is the first) answer typed questions
- * about a piece of state with calibrated probabilities. They do not generate
- * text, so they intentionally do NOT implement `AIProvider` and are not part of
- * the generative `serviceRegistry`. This keeps "System One" decision models
- * separate from text-generation providers while leaving room for additional
- * decision models (including small local ones) later.
- *
- * With a single implementation there is no registry yet; `getEvaluationProvider`
- * is the one place to extend when a second provider arrives.
+ * Evaluation providers (TypeSafe's Jev — direct, or via Vercel AI Gateway)
+ * answer typed questions about a piece of state with calibrated probabilities.
+ * They do not generate text, so they intentionally do NOT implement
+ * `AIProvider` and are not part of the generative `serviceRegistry`. This keeps
+ * "System One" decision models separate from text-generation providers while
+ * leaving room for additional decision models (including small local ones)
+ * later.
  */
 
 export interface EvaluationResponse {
@@ -82,27 +80,40 @@ export function isEvaluationError(error: unknown): error is EvaluationError {
   return error instanceof EvaluationError || (error instanceof Error && error.name === 'EvaluationError');
 }
 
-let typesafeProvider: EvaluationProvider | undefined;
+const providers: Partial<Record<EvaluationProviderName, EvaluationProvider>> = {};
 
 export async function getEvaluationProvider(name: EvaluationProviderName): Promise<EvaluationProvider> {
+  const cached = providers[name];
+  if (cached) return cached;
+
   switch (name) {
     case 'typesafe': {
-      if (!typesafeProvider) {
-        const { TypeSafeEvaluationProvider } = await import('./typesafe');
-        typesafeProvider = new TypeSafeEvaluationProvider();
-      }
-      return typesafeProvider;
+      const { TypeSafeEvaluationProvider } = await import('./typesafe');
+      providers.typesafe = new TypeSafeEvaluationProvider();
+      break;
+    }
+    case 'aigateway': {
+      const { AIGatewayEvaluationProvider } = await import('./aigateway-evaluation');
+      providers.aigateway = new AIGatewayEvaluationProvider();
+      break;
     }
     default: {
       const unknown: never = name;
       throw new EvaluationError(`Unsupported evaluation provider: ${String(unknown)}`, { code: 'invalid_request' });
     }
   }
+  return providers[name]!;
 }
 
-/** Test hook: replace the provider instance returned by `getEvaluationProvider`. */
+/** Test hook: replace a provider instance (all of them when called with `undefined`). */
 export function __setEvaluationProviderForTests(provider: EvaluationProvider | undefined): void {
-  typesafeProvider = provider;
+  if (provider) {
+    providers[provider.name] = provider;
+  } else {
+    for (const key of Object.keys(providers) as EvaluationProviderName[]) {
+      delete providers[key];
+    }
+  }
 }
 
 /**
