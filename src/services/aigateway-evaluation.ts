@@ -1,6 +1,11 @@
 import { z } from 'zod';
 import { aigatewayConfig } from '../config/services';
-import type { EvaluationAnswers, EvaluationQuestions, EvaluationState } from '../schemas/v1/evaluate';
+import {
+  evaluationAnswersSchema,
+  type EvaluationAnswers,
+  type EvaluationQuestions,
+  type EvaluationState,
+} from '../schemas/v1/evaluate';
 import { EvaluationError, type EvaluationProvider, type EvaluationResponse } from './evaluation';
 import { parseRetryAfter, type FetchLike } from './typesafe';
 
@@ -283,6 +288,8 @@ function toGatewayQuestions(questions: EvaluationQuestions): Record<string, unkn
 }
 
 type GatewayAnswers = z.infer<typeof gatewayResponseSchema>['answers'];
+type GatewayAnswer = GatewayAnswers[string];
+type RequestedQuestion = EvaluationQuestions[string];
 
 function fromGatewayAnswers(
   answers: GatewayAnswers,
@@ -291,39 +298,108 @@ function fromGatewayAnswers(
 ): EvaluationAnswers {
   const mapped: EvaluationAnswers = {};
   for (const [key, answer] of Object.entries(answers)) {
-    switch (answer.type) {
-      case 'boolean':
-        mapped[key] = { type: 'noul', noul: answer.probability };
-        break;
-      case 'choice':
-        mapped[key] = {
-          type: 'choice',
-          choice: answer.choice,
-          probabilities: answer.probabilities ?? {},
-          confidence: confidence[key] ?? 0,
-        };
-        break;
-      case 'score': {
-        // The gateway drops `legend`; rebuild it from the request's ordered criteria.
-        const question = questions[key];
-        const legend: Record<string, string> = {};
-        if (question?.type === 'score') {
-          question.criteria.forEach((level, index) => {
-            legend[String(index)] = level;
-          });
+    mapped[key] = translateAnswer(key, answer, questions[key], confidence[key]);
+  }
+  // Missing calibration is an upstream defect, not a real zero — validate the
+  // translated answers so fabricated probabilities/confidence never reach clients.
+  const validated = evaluationAnswersSchema.safeParse(mapped);
+  if (!validated.success) {
+    throw new EvaluationError('AI Gateway returned invalid answer calibration', {
+      code: 'invalid_response',
+      details: validated.error.flatten(),
+    });
+  }
+  return validated.data;
+}
+
+function translateAnswer(
+  key: string,
+  answer: GatewayAnswer,
+  question: RequestedQuestion | undefined,
+  confidence: number | undefined
+): EvaluationAnswers[string] {
+  switch (answer.type) {
+    case 'boolean': {
+      if (question?.type !== 'noul') throw mismatchedAnswer(key, answer.type, question);
+      return { type: 'noul', noul: answer.probability };
+    }
+    case 'choice': {
+      if (question?.type !== 'choice') throw mismatchedAnswer(key, answer.type, question);
+      const probabilities = requireProbabilities(key, answer.probabilities);
+      for (const option of Object.keys(probabilities)) {
+        if (!(option in question.criteria)) {
+          throw new EvaluationError(
+            `AI Gateway returned a probability for unknown option "${option}" in question "${key}"`,
+            { code: 'invalid_response' }
+          );
         }
-        mapped[key] = {
-          type: 'score',
-          score: answer.score,
-          legend,
-          probabilities: answer.probabilities ?? {},
-          confidence: confidence[key] ?? 0,
-        };
-        break;
       }
+      if (!(answer.choice in question.criteria)) {
+        throw new EvaluationError(`AI Gateway chose unknown option "${answer.choice}" for question "${key}"`, {
+          code: 'invalid_response',
+        });
+      }
+      return {
+        type: 'choice',
+        choice: answer.choice,
+        probabilities,
+        confidence: requireConfidence(key, confidence),
+      };
+    }
+    case 'score': {
+      if (question?.type !== 'score') throw mismatchedAnswer(key, answer.type, question);
+      const probabilities = requireProbabilities(key, answer.probabilities);
+      for (const level of Object.keys(probabilities)) {
+        const index = Number(level);
+        if (!Number.isInteger(index) || index < 0 || index >= question.criteria.length) {
+          throw new EvaluationError(
+            `AI Gateway returned a probability for out-of-range level "${level}" in question "${key}"`,
+            { code: 'invalid_response' }
+          );
+        }
+      }
+      if (!Number.isFinite(answer.score)) {
+        throw new EvaluationError(`AI Gateway returned a non-finite score for question "${key}"`, {
+          code: 'invalid_response',
+        });
+      }
+      // The gateway drops `legend`; rebuild it from the request's ordered criteria.
+      const legend: Record<string, string> = {};
+      question.criteria.forEach((level, index) => {
+        legend[String(index)] = level;
+      });
+      return {
+        type: 'score',
+        score: answer.score,
+        legend,
+        probabilities,
+        confidence: requireConfidence(key, confidence),
+      };
     }
   }
-  return mapped;
+}
+
+function requireProbabilities(key: string, probabilities: Record<string, number> | undefined): Record<string, number> {
+  if (!probabilities || Object.keys(probabilities).length === 0) {
+    throw new EvaluationError(`AI Gateway omitted the probability distribution for question "${key}"`, {
+      code: 'invalid_response',
+    });
+  }
+  return probabilities;
+}
+
+function requireConfidence(key: string, confidence: number | undefined): number {
+  if (confidence === undefined || !Number.isFinite(confidence)) {
+    throw new EvaluationError(`AI Gateway omitted confidence for question "${key}"`, { code: 'invalid_response' });
+  }
+  return confidence;
+}
+
+function mismatchedAnswer(key: string, answerType: string, question: RequestedQuestion | undefined): never {
+  throw new EvaluationError(
+    `AI Gateway answered question "${key}" with type "${answerType}" but the request asked "${question?.type ?? 'no such question'}"`,
+    { code: 'invalid_response' }
+  );
 }
 
 async function readErrorBody(response: Response): Promise<unknown> {

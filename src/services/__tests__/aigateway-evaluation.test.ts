@@ -158,18 +158,104 @@ describe('AIGatewayEvaluationProvider', () => {
     });
   });
 
-  it('defaults missing probabilities/confidence so the public schema still holds', async () => {
+  it('rejects choice answers missing probabilities or confidence instead of fabricating them', async () => {
     const fetchMock = vi.fn(async () =>
       jsonResponse({ answers: { route: { type: 'choice', choice: 'billing' } }, usage: { inputTokens: 5 } })
     );
     const { provider } = createProvider(fetchMock);
 
-    const result = await provider.evaluate(state, {
-      route: { type: 'choice', instructions: 'Route', criteria: { billing: 'b', other: null } },
-    });
+    const error = await expectEvaluationError(
+      provider.evaluate(state, {
+        route: { type: 'choice', instructions: 'Route', criteria: { billing: 'b', other: null } },
+      })
+    );
+    expect(error.code).toBe('invalid_response');
+    expect(error.message).toContain('probability distribution');
+  });
 
-    expect(result.answers.route).toEqual({ type: 'choice', choice: 'billing', probabilities: {}, confidence: 0 });
-    expect(result.usage).toEqual({ input_tokens: 5, output_tokens: 0, total_tokens: 5 });
+  it('rejects choice answers whose confidence is absent from providerMetadata', async () => {
+    const fetchMock = vi.fn(async () =>
+      jsonResponse({
+        answers: { route: { type: 'choice', choice: 'billing', probabilities: { billing: 1, other: 0 } } },
+        providerMetadata: { typesafe: { confidence: {} } },
+      })
+    );
+    const { provider } = createProvider(fetchMock);
+
+    const error = await expectEvaluationError(
+      provider.evaluate(state, {
+        route: { type: 'choice', instructions: 'Route', criteria: { billing: 'b', other: null } },
+      })
+    );
+    expect(error.code).toBe('invalid_response');
+    expect(error.message).toContain('confidence');
+  });
+
+  it('rejects calibration that does not match the request criteria', async () => {
+    const fetchMock = vi.fn(async () =>
+      jsonResponse({
+        answers: { route: { type: 'choice', choice: 'alien', probabilities: { billing: 0.5, alien: 0.5 } } },
+        providerMetadata: { typesafe: { confidence: { route: 0.5 } } },
+      })
+    );
+    const { provider } = createProvider(fetchMock);
+
+    const error = await expectEvaluationError(
+      provider.evaluate(state, {
+        route: { type: 'choice', instructions: 'Route', criteria: { billing: 'b', other: null } },
+      })
+    );
+    expect(error.code).toBe('invalid_response');
+  });
+
+  it('rejects score probabilities keyed outside the requested levels', async () => {
+    const fetchMock = vi.fn(async () =>
+      jsonResponse({
+        answers: { urgency: { type: 'score', score: 1.5, probabilities: { '0': 0.5, '9': 0.5 } } },
+        providerMetadata: { typesafe: { confidence: { urgency: 0.5 } } },
+      })
+    );
+    const { provider } = createProvider(fetchMock);
+
+    const error = await expectEvaluationError(
+      provider.evaluate(state, {
+        urgency: { type: 'score', instructions: 'How urgent?', criteria: ['low', 'high'] },
+      })
+    );
+    expect(error.code).toBe('invalid_response');
+    expect(error.message).toContain('out-of-range');
+  });
+
+  it('rejects out-of-range probabilities via the public answer schema', async () => {
+    const fetchMock = vi.fn(async () =>
+      jsonResponse({
+        answers: { refunded: { type: 'boolean', probability: 1.5 } },
+      })
+    );
+    const { provider } = createProvider(fetchMock);
+
+    const error = await expectEvaluationError(
+      provider.evaluate(state, {
+        refunded: { type: 'noul', instructions: 'Was a refund issued?' },
+      })
+    );
+    expect(error.code).toBe('invalid_response');
+    expect(error.message).toContain('calibration');
+  });
+
+  it('rejects answers for questions that were never asked', async () => {
+    const fetchMock = vi.fn(async () =>
+      jsonResponse({ answers: { surprise: { type: 'boolean', probability: 0.5 } } })
+    );
+    const { provider } = createProvider(fetchMock);
+
+    const error = await expectEvaluationError(
+      provider.evaluate(state, {
+        refunded: { type: 'noul', instructions: 'Was a refund issued?' },
+      })
+    );
+    expect(error.code).toBe('invalid_response');
+    expect(error.message).toContain('no such question');
   });
 
   it('rejects responses with an unexpected shape', async () => {
